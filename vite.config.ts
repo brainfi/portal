@@ -4,7 +4,12 @@ import { resolve } from 'path'
 
 export default defineConfig({
   plugins: [react()],
+  root: 'portal',
   resolve: {
-    alias: { '@': resolve(__dirname, 'src') }
+    alias: { '@': resolve(__dirname, 'portal/src') }
+  },
+  build: {
+    outDir: '../dist',
+    emptyOutDir: true,
   }
 })
