@@ -16,7 +16,7 @@ const navItems = [
     items: [
       { label: 'Ajustes', path: '/ajustes', icon: <SettingsIcon />, disabled: false },
       { label: 'Integraciones', path: '/integraciones', icon: <PlugIcon />, disabled: true },
-      { label: 'Help desk', path: '/help', icon: <HelpIcon />, disabled: false },
+      { label: 'Help desk', path: '/help', icon: <HelpIcon />, disabled: true },
     ]
   }
 ]
