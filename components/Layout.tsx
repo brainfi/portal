@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
 import Sidebar from './Sidebar'
 
@@ -8,59 +9,93 @@ interface LayoutProps {
 
 export default function Layout({ children, title = 'Dashboard' }: LayoutProps) {
   const { user } = useAuth()
+  const [sidebarOpen, setSidebarOpen] = useState(false)
   const name = user?.email?.split('@')[0] ?? 'Usuario'
-  const initials = name.slice(0, 2).toUpperCase()
+  const displayName = name.charAt(0).toUpperCase() + name.slice(1)
+  const hour = new Date().getHours()
+  const greeting = hour < 12 ? 'Buenos días' : hour < 20 ? 'Buenas tardes' : 'Buenas noches'
 
   return (
-    <div style={{ display: 'flex', height: '100vh', overflow: 'hidden', background: '#F8F9FB' }}>
-      <Sidebar />
+    <div style={{ display:'flex', height:'100vh', overflow:'hidden', background:'#F4F5F7' }}>
 
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', minWidth: 0 }}>
+      {/* Overlay móvil */}
+      {sidebarOpen && (
+        <div
+          onClick={() => setSidebarOpen(false)}
+          style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.4)', zIndex:40, display:'none' }}
+          className="mobile-overlay"
+        />
+      )}
+
+      <style>{`
+        @media (max-width: 768px) {
+          .sidebar-wrap {
+            position: fixed !important;
+            left: ${sidebarOpen ? '0' : '-220px'} !important;
+            top: 0 !important;
+            height: 100vh !important;
+            z-index: 50 !important;
+            transition: left 0.25s ease !important;
+            box-shadow: ${sidebarOpen ? '4px 0 24px rgba(0,0,0,0.12)' : 'none'} !important;
+          }
+          .mobile-overlay {
+            display: ${sidebarOpen ? 'block' : 'none'} !important;
+          }
+          .hamburger { display: flex !important; }
+          .topbar-period { display: none !important; }
+          .main-content { width: 100% !important; }
+          .kpi-grid-3 { grid-template-columns: 1fr !important; }
+          .kpi-col3 { grid-column: auto !important; grid-row: auto !important; }
+          .cashflow-kpis { grid-template-columns: 1fr 1fr !important; }
+          .previsiones-table { overflow-x: auto !important; display: block !important; }
+        }
+        @media (min-width: 769px) {
+          .hamburger { display: none !important; }
+          .sidebar-wrap { position: relative !important; left: 0 !important; }
+        }
+      `}</style>
+
+      <div className="sidebar-wrap" style={{ flexShrink:0 }}>
+        <Sidebar onClose={() => setSidebarOpen(false)} />
+      </div>
+
+      <div className="main-content" style={{ flex:1, display:'flex', flexDirection:'column', overflow:'hidden', minWidth:0 }}>
         {/* Topbar */}
-        <header style={{
-          padding: '8px 20px', background: '#fff', borderBottom: '1px solid #E5E7EB',
-          display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0
-        }}>
-          <div style={{ fontSize: 11, color: '#6B7280' }}>
-            Mi empresa <span style={{ color: '#9CA3AF' }}>›</span> {title} · Abril 2026
+        <header style={{ padding:'0 16px', height:60, background:'#fff', borderBottom:'1px solid #EAECF0', display:'flex', alignItems:'center', justifyContent:'space-between', flexShrink:0 }}>
+          <div style={{ display:'flex', alignItems:'center', gap:12 }}>
+            {/* Hamburger */}
+            <button
+              className="hamburger"
+              onClick={() => setSidebarOpen(!sidebarOpen)}
+              style={{ display:'none', alignItems:'center', justifyContent:'center', width:32, height:32, border:'1px solid #EAECF0', borderRadius:7, background:'#fff', cursor:'pointer', flexShrink:0 }}
+            >
+              <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="#6B7280" strokeWidth="1.5">
+                <path d="M2 4h12M2 8h12M2 12h12"/>
+              </svg>
+            </button>
+            <div>
+              <div style={{ fontSize:14, fontWeight:600, color:'#111827' }}>{greeting}, {displayName} 👋</div>
+              <div style={{ fontSize:11, color:'#9CA3AF', marginTop:1 }}>Resumen financiero · Abril 2026</div>
+            </div>
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            {/* Search */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6, background: '#F8F9FB', border: '1px solid #E5E7EB', borderRadius: 8, padding: '6px 10px', width: 170 }}>
-              <SearchIcon />
-              <span style={{ fontSize: 11, color: '#9CA3AF', flex: 1 }}>Buscar aquí...</span>
-              <span style={{ fontSize: 9, color: '#9CA3AF', background: '#fff', border: '1px solid #E5E7EB', padding: '1px 4px', borderRadius: 3 }}>⌘K</span>
+          <div style={{ display:'flex', alignItems:'center', gap:8 }}>
+            <div className="topbar-period" style={{ display:'flex', alignItems:'center', gap:5, fontSize:11, color:'#374151', background:'#F9FAFB', border:'1px solid #EAECF0', borderRadius:7, padding:'5px 10px', cursor:'pointer' }}>
+              <svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="#6B7280" strokeWidth="1.5"><rect x="2" y="2" width="12" height="12" rx="1.5"/><line x1="2" y1="6" x2="14" y2="6"/></svg>
+              Abril 2026
             </div>
-            {/* Bell */}
-            <div style={{ width: 30, height: 30, borderRadius: '50%', border: '1px solid #E5E7EB', background: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', cursor: 'pointer' }}>
-              <BellIcon />
-              <div style={{ position: 'absolute', top: 5, right: 5, width: 6, height: 6, borderRadius: '50%', background: '#DC2626', border: '1.5px solid white' }} />
-            </div>
-            {/* Avatar */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: 7, cursor: 'pointer' }}>
-              <div style={{ width: 30, height: 30, borderRadius: '50%', background: 'linear-gradient(135deg,#00BCD4,#0D2E6E)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 600, color: '#fff' }}>
-                {initials}
-              </div>
-              <div>
-                <div style={{ fontSize: 11, fontWeight: 600, color: '#111827' }}>{name}</div>
-                <div style={{ fontSize: 9, color: '#9CA3AF' }}>Admin</div>
-              </div>
+            <div className="topbar-period" style={{ fontSize:11, color:'#374151', background:'#F9FAFB', border:'1px solid #EAECF0', borderRadius:7, padding:'5px 10px', cursor:'pointer' }}>Último mes</div>
+            <div style={{ width:30, height:30, borderRadius:7, border:'1px solid #EAECF0', background:'#fff', display:'flex', alignItems:'center', justifyContent:'center', cursor:'pointer', position:'relative' }}>
+              <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="#6B7280" strokeWidth="1.5"><path d="M8 2a5 5 0 015 5v2l1 2H2l1-2V7a5 5 0 015-5zM6 13a2 2 0 004 0"/></svg>
+              <div style={{ position:'absolute', top:6, right:6, width:5, height:5, borderRadius:'50%', background:'#DC2626', border:'1.5px solid white' }} />
             </div>
           </div>
         </header>
 
         {/* Content */}
-        <main style={{ flex: 1, overflow: 'auto', padding: '14px 20px', display: 'flex', flexDirection: 'column', gap: 12 }}>
+        <main style={{ flex:1, overflow:'auto', padding:'14px 16px', display:'flex', flexDirection:'column', gap:12 }}>
           {children}
         </main>
       </div>
     </div>
   )
-}
-
-function SearchIcon() {
-  return <svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="#9CA3AF" strokeWidth="1.5"><circle cx="7" cy="7" r="5"/><path d="M11 11l3 3"/></svg>
-}
-function BellIcon() {
-  return <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="#6B7280" strokeWidth="1.5"><path d="M8 2a5 5 0 015 5v2l1 2H2l1-2V7a5 5 0 015-5zM6 13a2 2 0 004 0"/></svg>
 }

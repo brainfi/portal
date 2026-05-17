@@ -117,7 +117,7 @@ function CashflowChart() {
         </AreaChart>
       </ResponsiveContainer>
 
-      <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:8, marginTop:14, paddingTop:12, borderTop:'1px solid #F3F4F6' }}>
+      <div className="cashflow-kpis" style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:8, marginTop:14, paddingTop:12, borderTop:'1px solid #F3F4F6' }}>
         {[
           { label:'Total entradas', val:'€94.200', color:'#00BCD4' },
           { label:'Total salidas', val:'€43.800', color:'#0D2E6E' },
@@ -154,7 +154,15 @@ export default function Dashboard() {
     <Layout title="Dashboard">
 
       {/* KPI GRID */}
-      <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gridTemplateRows:'auto auto', gap:10, flexShrink:0 }}>
+      <style>{`
+        @media (max-width: 768px) {
+          .kpi-grid-3 { grid-template-columns: 1fr !important; }
+          .kpi-col3 { grid-column: auto !important; grid-row: auto !important; }
+          .cashflow-kpis { grid-template-columns: 1fr 1fr !important; }
+          .table-wrap { overflow-x: auto; display: block; }
+        }
+      `}</style>
+      <div className="kpi-grid-3" style={{ display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gridTemplateRows:'auto auto', gap:10, flexShrink:0 }}>
 
         {/* Supervivencia */}
         <div style={cardStyle}>
@@ -183,7 +191,7 @@ export default function Dashboard() {
         </div>
 
         {/* Cobros pendientes — 2 filas */}
-        <div style={{ ...cardStyle, gridColumn:3, gridRow:'1/3', display:'flex', flexDirection:'column' }}>
+        <div className="kpi-col3" style={{ ...cardStyle, gridColumn:3, gridRow:'1/3', display:'flex', flexDirection:'column' }}>
           <div style={{ display:'flex', alignItems:'flex-start', justifyContent:'space-between' }}>
             <div>
               <div style={{ fontSize:11, color:'#9CA3AF' }}>Cobros pendientes</div>
@@ -244,7 +252,7 @@ export default function Dashboard() {
             <div style={{ fontSize:10, color:'#6B7280', background:'#F9FAFB', border:'1px solid #EAECF0', borderRadius:6, padding:'4px 9px', cursor:'pointer' }}>Filtrar ▾</div>
           </div>
         </div>
-        <table style={{ width:'100%', borderCollapse:'collapse' }}>
+        <div className="table-wrap"><table style={{ width:'100%', borderCollapse:'collapse', minWidth:500 }}>
           <thead>
             <tr>
               {['Concepto','Vencimiento','Categoría','Periodicidad','Importe','Estado','Días'].map(h => (
@@ -280,7 +288,7 @@ export default function Dashboard() {
               </tr>
             ))}
           </tbody>
-        </table>
+        </table></div>
       </div>
 
     </Layout>
