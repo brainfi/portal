@@ -113,16 +113,47 @@ export default function Dashboard() {
         }
       `}</style>
 
-      {/* HERO */}
-      <div style={{ background:'#0D2E6E', borderRadius:14, padding:'20px 22px', position:'relative', overflow:'hidden', flexShrink:0 }}>
-        <div style={{ position:'absolute', right:-30, top:-30, width:180, height:180, borderRadius:'50%', border:'1px solid rgba(255,255,255,0.07)' }} />
-        <div style={{ position:'absolute', right:50, top:40, width:100, height:100, borderRadius:'50%', border:'1px solid rgba(255,255,255,0.04)' }} />
-        <div style={{ fontSize:11, color:'rgba(255,255,255,0.45)', marginBottom:6 }}>Tu dinero real hoy</div>
-        <div style={{ display:'flex', alignItems:'baseline', gap:10, marginBottom:4 }}>
-          <span style={{ fontSize:34, fontWeight:600, color:'#fff', letterSpacing:'-0.03em' }}>5.620 €</span>
-          <span style={{ fontSize:12, fontWeight:500, color:'#4ade80', background:'rgba(74,222,128,0.12)', padding:'2px 9px', borderRadius:99 }}>↑ 12,4%</span>
+      {/* HERO + 3 KPIs en la misma fila */}
+      <div className="dash-grid3" style={{ display:'grid', gridTemplateColumns:'1fr 1fr 1fr 1fr', gap:10, flexShrink:0 }}>
+
+        {/* Tu dinero real hoy — azul marino */}
+        <div style={{ background:'#0D2E6E', borderRadius:12, padding:'16px 18px', position:'relative', overflow:'hidden' }}>
+          <div style={{ position:'absolute', right:-20, top:-20, width:120, height:120, borderRadius:'50%', border:'1px solid rgba(255,255,255,0.07)' }} />
+          <div style={{ fontSize:11, color:'rgba(255,255,255,0.45)', marginBottom:6 }}>Tu dinero real hoy</div>
+          <div style={{ display:'flex', alignItems:'baseline', gap:8, marginBottom:4 }}>
+            <span style={{ fontSize:26, fontWeight:600, color:'#fff', letterSpacing:'-0.03em' }}>5.620 €</span>
+            <span style={{ fontSize:11, fontWeight:500, color:'#4ade80', background:'rgba(74,222,128,0.12)', padding:'2px 8px', borderRadius:99 }}>↑ 12,4%</span>
+          </div>
+          <div style={{ fontSize:10, color:'rgba(255,255,255,0.35)' }}>Tras pagar todo lo comprometido · Abril 2026</div>
         </div>
-        <div style={{ fontSize:11, color:'rgba(255,255,255,0.35)' }}>Tras pagar todo lo comprometido · Abril 2026</div>
+
+        {/* Resistencia */}
+        <div style={card}>
+          <div style={{ fontSize:11, color:'#9CA3AF', marginBottom:8, display:'flex', alignItems:'center', gap:5, fontWeight:500 }}>
+            <i className="ti ti-shield" aria-hidden="true" style={{ fontSize:13, color:'#1d6fd8' }} />Resistencia
+          </div>
+          <div style={{ fontSize:22, fontWeight:600, color:'#111827', letterSpacing:'-0.02em', marginBottom:4 }}>47 días <span style={{ fontSize:12, color:'#1d6fd8', fontWeight:500 }}>↑ 16,0%</span></div>
+          <div style={{ fontSize:10, color:'#9CA3AF' }}>vs. 40 días periodo anterior</div>
+        </div>
+
+        {/* Punto de equilibrio */}
+        <div style={card}>
+          <div style={{ fontSize:11, color:'#9CA3AF', marginBottom:8, display:'flex', alignItems:'center', gap:5, fontWeight:500 }}>
+            <i className="ti ti-chart-dots" aria-hidden="true" style={{ fontSize:13, color:'#1d6fd8' }} />Punto de equilibrio
+          </div>
+          <div style={{ fontSize:22, fontWeight:600, color:'#111827', letterSpacing:'-0.02em', marginBottom:4 }}>6.100 € <span style={{ fontSize:12, color:'#DC2626', fontWeight:500 }}>↓ 8,2%</span></div>
+          <div style={{ fontSize:10, color:'#9CA3AF' }}>vs. 4.116,50 € periodo anterior</div>
+        </div>
+
+        {/* Reserva impuestos */}
+        <div style={{ background:'#EFF6FF', border:'0.5px solid #BFDBFE', borderRadius:12, padding:'16px 18px' }}>
+          <div style={{ fontSize:11, color:'#1d4ed8', marginBottom:8, display:'flex', alignItems:'center', gap:5, fontWeight:500 }}>
+            <i className="ti ti-receipt-tax" aria-hidden="true" style={{ fontSize:13, color:'#1d6fd8' }} />Reserva para impuestos
+          </div>
+          <div style={{ fontSize:22, fontWeight:600, color:'#1e3a8a', letterSpacing:'-0.02em', marginBottom:4 }}>2.720 € <span style={{ fontSize:12, color:'#1d6fd8', fontWeight:500 }}>↑ 35,2%</span></div>
+          <div style={{ fontSize:10, color:'#1d6fd8' }}>IVA Q2 estimado: 3.900 € · 68 días</div>
+        </div>
+
       </div>
 
       {/* CASHFLOW */}
@@ -220,8 +251,8 @@ export default function Dashboard() {
               </div>
               <div style={{ fontSize:13, fontWeight:600, color: c.danger ? '#DC2626' : '#111827' }}>{formatCurrency(c.importe)}</div>
               <div className="dash-cobro-hide" style={{ fontSize:11, fontWeight:500, color: c.danger ? '#DC2626' : '#111827' }}>{c.pct}%</div>
-              <div style={{ height:10, background:'#F3F4F6', borderRadius:99, overflow:'hidden' }}>
-                <div style={{ height:10, width:`${c.pct}%`, background:c.barColor, borderRadius:99 }} />
+              <div style={{ height:6, background:'#F3F4F6', borderRadius:99, overflow:'hidden' }}>
+                <div style={{ height:6, width:`${c.pct}%`, background:c.barColor, borderRadius:99 }} />
               </div>
             </div>
           ))}
