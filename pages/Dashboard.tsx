@@ -203,28 +203,24 @@ export default function Dashboard() {
       {/* COBROS PENDIENTES */}
       <div className="dash-section" style={{ display:'flex', gap:10, alignItems:'stretch' }}>
         {/* Panel izquierdo — resumen por días */}
-        <div className="dash-section-left" style={{ width:'calc(25% - 7.5px)', flexShrink:0, display:'flex', flexDirection:'column', gap:0, ...card }}>
-          <div style={{ fontSize:12, fontWeight:600, color:'#111827', marginBottom:12, display:'flex', alignItems:'center', gap:5 }}>
+        <div className="dash-section-left" style={{ width:'calc(25% - 7.5px)', flexShrink:0, ...card }}>
+          <div style={{ fontSize:12, fontWeight:600, color:'#111827', marginBottom:8, display:'flex', alignItems:'center', gap:5 }}>
             <i className="ti ti-trending-up" aria-hidden="true" style={{ fontSize:13, color:'#1d6fd8' }} />Cobros pendientes
           </div>
-          <div style={{ fontSize:11, color:'#9CA3AF', marginBottom:10 }}>Total: <strong style={{ color:'#111827' }}>{formatCurrency(totalCobros)}</strong></div>
-          {cobros.map((c, i) => (
-            <div key={i} style={{ paddingBottom:10, marginBottom:10, borderBottom: i < cobros.length-1 ? '0.5px solid #F3F4F6' : 'none' }}>
-              <div style={{ display:'flex', alignItems:'center', gap:6, marginBottom:6 }}>
-                <div style={{ width:18, height:18, borderRadius:'50%', border:`0.5px solid ${c.iconBorder}`, background:c.iconBg, display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
-                  <i className={`ti ${c.icon}`} aria-hidden="true" style={{ fontSize:9, color:c.iconColor }} />
+          <div style={{ fontSize:20, fontWeight:600, color:'#111827', letterSpacing:'-0.02em', marginBottom:14 }}>{formatCurrency(totalCobros)}</div>
+          <div style={{ display:'flex', flexDirection:'column', gap:12 }}>
+            {cobros.map((c, i) => (
+              <div key={i}>
+                <div style={{ display:'flex', justifyContent:'space-between', marginBottom:5 }}>
+                  <span style={{ fontSize:10, color: c.danger ? '#DC2626' : '#9CA3AF' }}>{c.label} · {c.sublabel}</span>
+                  <span style={{ fontSize:10, fontWeight:600, color: c.danger ? '#DC2626' : '#111827' }}>{formatCurrency(c.importe)}</span>
                 </div>
-                <div>
-                  <span style={{ fontSize:11, fontWeight:500, color: c.danger ? '#DC2626' : '#111827' }}>{c.label}</span>
-                  <span style={{ fontSize:9, color: c.danger ? '#DC2626' : '#9CA3AF', marginLeft:6 }}>{c.sublabel}</span>
+                <div style={{ height:4, background:'#F3F4F6', borderRadius:99 }}>
+                  <div style={{ height:4, width:`${c.pct}%`, background:c.barColor, borderRadius:99 }} />
                 </div>
               </div>
-              <div style={{ fontSize:13, fontWeight:600, color: c.danger ? '#DC2626' : '#111827', marginBottom:5 }}>{formatCurrency(c.importe)}</div>
-              <div style={{ height:10, background:'#F3F4F6', borderRadius:99, overflow:'hidden' }}>
-                <div style={{ height:10, width:`${c.pct}%`, background:c.barColor, borderRadius:99 }} />
-              </div>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
         {/* Tabla detalle */}
         <div style={{ ...card, flex:1, minWidth:0 }}>
@@ -257,30 +253,18 @@ export default function Dashboard() {
           <div style={{ fontSize:12, fontWeight:600, color:'#111827', marginBottom:8, display:'flex', alignItems:'center', gap:5 }}>
             <i className="ti ti-trending-down" aria-hidden="true" style={{ fontSize:13, color:'#1d6fd8' }} />Pagos pendientes
           </div>
-          <div style={{ fontSize:11, color:'#9CA3AF', marginBottom:8 }}>Total: <strong style={{ color:'#111827' }}>{formatCurrency(totalPagos)}</strong></div>
-          <div style={{ position:'relative', display:'flex', justifyContent:'center' }}>
-            <ResponsiveContainer width="100%" height={140}>
-              <PieChart>
-                <Pie data={donutData} cx="50%" cy="50%" innerRadius={42} outerRadius={60} dataKey="value" strokeWidth={0}>
-                  {donutData.map((d, i) => <PieCell key={i} fill={d.color} />)}
-                </Pie>
-              </PieChart>
-            </ResponsiveContainer>
-            <div style={{ position:'absolute', top:'50%', left:'50%', transform:'translate(-50%,-50%)', textAlign:'center', pointerEvents:'none' }}>
-              <div style={{ fontSize:12, fontWeight:600, color:'#111827' }}>{formatCurrency(totalPagos)}</div>
-              <div style={{ fontSize:9, color:'#9CA3AF' }}>total</div>
-            </div>
-          </div>
-          <div style={{ display:'flex', flexDirection:'column', gap:7, marginTop:8 }}>
+          <div style={{ fontSize:20, fontWeight:600, color:'#111827', letterSpacing:'-0.02em', marginBottom:14 }}>{formatCurrency(totalPagos)}</div>
+          <div style={{ display:'flex', flexDirection:'column', gap:12 }}>
             {donutData.map((d, i) => (
-              <div key={i} style={{ display:'flex', alignItems:'center', justifyContent:'space-between' }}>
-                <div style={{ display:'flex', alignItems:'center', gap:6 }}>
-                  <div style={{ width:8, height:8, borderRadius:2, background:d.color, flexShrink:0 }} />
-                  <span style={{ fontSize:10, color:'#6B7280' }}>{d.name}</span>
+              <div key={i}>
+                <div style={{ display:'flex', justifyContent:'space-between', marginBottom:5 }}>
+                  <span style={{ fontSize:10, color:'#9CA3AF' }}>{d.name}</span>
+                  <span style={{ fontSize:10, fontWeight:600, color:'#111827' }}>
+                    {formatCurrency(d.value)} <span style={{ fontSize:9, color:'#9CA3AF', fontWeight:400 }}>{Math.round(d.value/totalPagos*100)}%</span>
+                  </span>
                 </div>
-                <div>
-                  <span style={{ fontSize:10, fontWeight:600, color:'#111827' }}>{formatCurrency(d.value)}</span>
-                  <span style={{ fontSize:9, color:'#9CA3AF', marginLeft:4 }}>{Math.round(d.value/totalPagos*100)}%</span>
+                <div style={{ height:4, background:'#F3F4F6', borderRadius:99 }}>
+                  <div style={{ height:4, width:`${Math.round(d.value/totalPagos*100)}%`, background:d.color, borderRadius:99 }} />
                 </div>
               </div>
             ))}
