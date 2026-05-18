@@ -220,8 +220,8 @@ export default function Dashboard() {
               </div>
               <div style={{ fontSize:13, fontWeight:600, color: c.danger ? '#DC2626' : '#111827' }}>{formatCurrency(c.importe)}</div>
               <div className="dash-cobro-hide" style={{ fontSize:11, fontWeight:500, color: c.danger ? '#DC2626' : '#111827' }}>{c.pct}%</div>
-              <div style={{ height:6, background:'#F3F4F6', borderRadius:99, overflow:'hidden' }}>
-                <div style={{ height:6, width:`${c.pct}%`, background:c.barColor, borderRadius:99 }} />
+              <div style={{ height:10, background:'#F3F4F6', borderRadius:99, overflow:'hidden' }}>
+                <div style={{ height:10, width:`${c.pct}%`, background:c.barColor, borderRadius:99 }} />
               </div>
             </div>
           ))}
