@@ -165,11 +165,7 @@ export default function Dashboard() {
             label="Gastos" value="43.800 €" delta="↑ 12,5% vs periodo ant." deltaUp={false}
             bg="#F9FAFB" textColor="#111827" subColor="#6B7280"
           />
-          <StatCard
-            icon={{ name:'ti-trending-up', bg:'#16A34A' }}
-            label="Saldo neto" value="+50.400 €" delta="↑ 12,3% vs periodo ant." deltaUp
-            bg="#F0FDF4" textColor="#15803D" subColor="#16A34A"
-          />
+
         </div>
         {/* Gráfica */}
         <div style={{ ...card, flex:1, minWidth:0 }}>
