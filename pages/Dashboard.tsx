@@ -118,7 +118,7 @@ export default function Dashboard() {
       `}</style>
 
       {/* FILA HERO — 4 tarjetas */}
-      <div className="dash-hero" style={{ display:'grid', gridTemplateColumns:`${LEFT_W}px 1fr 1fr 1fr`, gap:10, flexShrink:0 }}>
+      <div className="dash-hero" style={{ display:'grid', gridTemplateColumns:'1fr 1fr 1fr 1fr', gap:10, flexShrink:0 }}>
         <div style={{ background:'#0D2E6E', borderRadius:12, padding:'16px 18px', position:'relative', overflow:'hidden' }}>
           <div style={{ position:'absolute', right:-20, top:-20, width:120, height:120, borderRadius:'50%', border:'1px solid rgba(255,255,255,0.07)' }} />
           <div style={{ fontSize:11, color:'rgba(255,255,255,0.45)', marginBottom:6 }}>Tu dinero real hoy</div>
@@ -154,7 +154,7 @@ export default function Dashboard() {
       {/* CASHFLOW — stats izquierda alineados, gráfica derecha */}
       <div className="dash-cf" style={{ display:'flex', gap:10, alignItems:'stretch' }}>
         {/* Panel izquierdo — mismo ancho que "Tu dinero real hoy" */}
-        <div className="dash-cf-left" style={{ width:LEFT_W, flexShrink:0, display:'flex', flexDirection:'column', gap:10 }}>
+        <div className="dash-cf-left" style={{ width:'calc(25% - 7.5px)', flexShrink:0, display:'flex', flexDirection:'column', gap:10 }}>
           <StatCard
             icon={{ name:'ti-arrow-down-left', bg:'#1d6fd8' }}
             label="Ingresos" value="94.200 €" delta="↑ 45,0% vs periodo ant." deltaUp
@@ -203,7 +203,7 @@ export default function Dashboard() {
       {/* COBROS PENDIENTES */}
       <div className="dash-section" style={{ display:'flex', gap:10, alignItems:'stretch' }}>
         {/* Panel izquierdo — resumen por días */}
-        <div className="dash-section-left" style={{ width:LEFT_W, flexShrink:0, display:'flex', flexDirection:'column', gap:0, ...card }}>
+        <div className="dash-section-left" style={{ width:'calc(25% - 7.5px)', flexShrink:0, display:'flex', flexDirection:'column', gap:0, ...card }}>
           <div style={{ fontSize:12, fontWeight:600, color:'#111827', marginBottom:12, display:'flex', alignItems:'center', gap:5 }}>
             <i className="ti ti-trending-up" aria-hidden="true" style={{ fontSize:13, color:'#1d6fd8' }} />Cobros pendientes
           </div>
@@ -253,7 +253,7 @@ export default function Dashboard() {
       {/* PAGOS PENDIENTES */}
       <div className="dash-section" style={{ display:'flex', gap:10, alignItems:'stretch' }}>
         {/* Panel izquierdo — donut */}
-        <div className="dash-section-left" style={{ width:LEFT_W, flexShrink:0, ...card }}>
+        <div className="dash-section-left" style={{ width:'calc(25% - 7.5px)', flexShrink:0, ...card }}>
           <div style={{ fontSize:12, fontWeight:600, color:'#111827', marginBottom:8, display:'flex', alignItems:'center', gap:5 }}>
             <i className="ti ti-trending-down" aria-hidden="true" style={{ fontSize:13, color:'#1d6fd8' }} />Pagos pendientes
           </div>
