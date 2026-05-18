@@ -108,12 +108,17 @@ export default function Dashboard() {
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600&display=swap');
         @media (max-width: 768px) {
-          .dash-hero { grid-template-columns: 1fr !important; }
+          .dash-hero { grid-template-columns: 1fr 1fr !important; }
           .dash-cf { flex-direction: column !important; }
-          .dash-cf-left { width: 100% !important; flex-direction: row !important; gap: 8px !important; }
+          .dash-cf-left { width: 100% !important; flex-direction: column !important; gap: 10px !important; align-self: auto !important; }
+          .dash-cf-left > div { flex: none !important; }
           .dash-section { flex-direction: column !important; }
           .dash-section-left { width: 100% !important; }
           .dash-pago-hide { display: none !important; }
+          .dash-table-hide { display: none !important; }
+        }
+        @media (max-width: 480px) {
+          .dash-hero { grid-template-columns: 1fr !important; }
         }
       `}</style>
 
@@ -154,17 +159,27 @@ export default function Dashboard() {
       {/* CASHFLOW — stats izquierda alineados, gráfica derecha */}
       <div className="dash-cf" style={{ display:'flex', gap:10, alignItems:'stretch' }}>
         {/* Panel izquierdo — mismo ancho que "Tu dinero real hoy" */}
-        <div className="dash-cf-left" style={{ width:'calc(25% - 7.5px)', flexShrink:0, display:'flex', flexDirection:'column', gap:10 }}>
-          <StatCard
-            icon={{ name:'ti-arrow-down-left', bg:'#1d6fd8' }}
-            label="Ingresos" value="94.200 €" delta="↑ 45,0% vs periodo ant." deltaUp
-            bg="#EFF6FF" textColor="#1e3a8a" subColor="#1d4ed8"
-          />
-          <StatCard
-            icon={{ name:'ti-arrow-up-right', bg:'#0D2E6E' }}
-            label="Gastos" value="43.800 €" delta="↑ 12,5% vs periodo ant." deltaUp={false}
-            bg="#F9FAFB" textColor="#111827" subColor="#6B7280"
-          />
+        <div className="dash-cf-left" style={{ width:'calc(25% - 7.5px)', flexShrink:0, display:'flex', flexDirection:'column', gap:10, alignSelf:'stretch' }}>
+          <div style={{ flex:1, padding:'14px 16px', background:'#EFF6FF', borderRadius:10, border:'0.5px solid #EAECF0', display:'flex', flexDirection:'column', justifyContent:'center' }}>
+            <div style={{ display:'flex', alignItems:'center', gap:6, marginBottom:8 }}>
+              <div style={{ width:22, height:22, borderRadius:6, background:'#1d6fd8', display:'flex', alignItems:'center', justifyContent:'center' }}>
+                <i className="ti ti-arrow-down-left" aria-hidden="true" style={{ fontSize:11, color:'#fff' }} />
+              </div>
+              <span style={{ fontSize:10, color:'#1d4ed8', fontWeight:500 }}>Ingresos</span>
+            </div>
+            <div style={{ fontSize:17, fontWeight:600, color:'#1e3a8a', letterSpacing:'-0.02em' }}>94.200 €</div>
+            <div style={{ fontSize:10, color:'#1d6fd8', marginTop:3 }}>↑ 45,0% vs periodo ant.</div>
+          </div>
+          <div style={{ flex:1, padding:'14px 16px', background:'#F9FAFB', borderRadius:10, border:'0.5px solid #EAECF0', display:'flex', flexDirection:'column', justifyContent:'center' }}>
+            <div style={{ display:'flex', alignItems:'center', gap:6, marginBottom:8 }}>
+              <div style={{ width:22, height:22, borderRadius:6, background:'#0D2E6E', display:'flex', alignItems:'center', justifyContent:'center' }}>
+                <i className="ti ti-arrow-up-right" aria-hidden="true" style={{ fontSize:11, color:'#fff' }} />
+              </div>
+              <span style={{ fontSize:10, color:'#6B7280', fontWeight:500 }}>Gastos</span>
+            </div>
+            <div style={{ fontSize:17, fontWeight:600, color:'#111827', letterSpacing:'-0.02em' }}>43.800 €</div>
+            <div style={{ fontSize:10, color:'#DC2626', marginTop:3 }}>↑ 12,5% vs periodo ant.</div>
+          </div>
 
         </div>
         {/* Gráfica */}
@@ -197,98 +212,46 @@ export default function Dashboard() {
       </div>
 
       {/* COBROS PENDIENTES */}
-      <div className="dash-section" style={{ display:'flex', gap:10, alignItems:'stretch' }}>
-        {/* Panel izquierdo — resumen por días */}
-        <div className="dash-section-left" style={{ width:'calc(25% - 7.5px)', flexShrink:0, ...card }}>
-          <div style={{ fontSize:12, fontWeight:600, color:'#111827', marginBottom:8, display:'flex', alignItems:'center', gap:5 }}>
-            <i className="ti ti-trending-up" aria-hidden="true" style={{ fontSize:13, color:'#1d6fd8' }} />Cobros pendientes
-          </div>
-          <div style={{ fontSize:20, fontWeight:600, color:'#111827', letterSpacing:'-0.02em', marginBottom:14 }}>{formatCurrency(totalCobros)}</div>
-          <div style={{ display:'flex', flexDirection:'column', gap:12 }}>
-            {cobros.map((c, i) => (
-              <div key={i}>
-                <div style={{ display:'flex', justifyContent:'space-between', marginBottom:5 }}>
-                  <span style={{ fontSize:10, color: c.danger ? '#DC2626' : '#9CA3AF' }}>{c.label} · {c.sublabel}</span>
-                  <span style={{ fontSize:10, fontWeight:600, color: c.danger ? '#DC2626' : '#111827' }}>{formatCurrency(c.importe)}</span>
-                </div>
-                <div style={{ height:4, background:'#F3F4F6', borderRadius:99 }}>
-                  <div style={{ height:4, width:`${c.pct}%`, background:c.barColor, borderRadius:99 }} />
-                </div>
-              </div>
-            ))}
-          </div>
+      <div style={card}>
+        <div style={{ fontSize:13, fontWeight:600, color:'#111827', marginBottom:8, display:'flex', alignItems:'center', gap:5 }}>
+          <i className="ti ti-trending-up" aria-hidden="true" style={{ fontSize:14, color:'#1d6fd8' }} />Cobros pendientes
         </div>
-        {/* Tabla detalle */}
-        <div style={{ ...card, flex:1, minWidth:0 }}>
-          <div style={{ display:'grid', gridTemplateColumns:'1fr 110px 90px 70px', ...hdrStyle }}>
-            <span>Concepto</span><span>Vencimiento</span><span>Cliente</span><span style={{ textAlign:'right' }}>Importe</span>
-          </div>
-          {clientes.map((c, i) => (
-            <div key={i} style={{ ...rowBase, gridTemplateColumns:'1fr 110px 90px 70px', borderBottom: i < clientes.length-1 ? '0.5px solid #F9FAFB' : 'none' }}>
-              <div style={{ display:'flex', alignItems:'center', gap:8 }}>
-                <div style={{ width:24, height:24, borderRadius:'50%', background:c.bg, color:c.color, display:'flex', alignItems:'center', justifyContent:'center', fontSize:9, fontWeight:600, flexShrink:0 }}>{c.initials}</div>
-                <span style={{ fontSize:11, fontWeight:500, color:'#111827' }}>{c.nombre}</span>
+        <div style={{ fontSize:22, fontWeight:600, color:'#111827', letterSpacing:'-0.02em', marginBottom:14 }}>{formatCurrency(totalCobros)}</div>
+        <div style={{ display:'flex', flexDirection:'column', gap:12 }}>
+          {cobros.map((c, i) => (
+            <div key={i}>
+              <div style={{ display:'flex', justifyContent:'space-between', marginBottom:5 }}>
+                <span style={{ fontSize:10, color: c.danger ? '#DC2626' : '#9CA3AF' }}>{c.label} · {c.sublabel}</span>
+                <span style={{ fontSize:10, fontWeight:600, color: c.danger ? '#DC2626' : '#111827' }}>{formatCurrency(c.importe)}</span>
               </div>
-              <div style={{ fontSize:10, color: c.color, fontWeight:500 }}>{c.sub}</div>
-              <div style={{ fontSize:10, color:'#9CA3AF' }}>{c.pct}</div>
-              <div style={{ textAlign:'right', fontSize:12, fontWeight:600, color:c.color }}>{formatCurrency(c.importe)}</div>
+              <div style={{ height:4, background:'#F3F4F6', borderRadius:99 }}>
+                <div style={{ height:4, width:`${c.pct}%`, background:c.barColor, borderRadius:99 }} />
+              </div>
             </div>
           ))}
-          <div style={{ height:'0.5px', background:'#EAECF0', margin:'10px 0' }} />
-          <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center' }}>
-            <span style={{ fontSize:11, color:'#9CA3AF' }}>Total cobros pendientes</span>
-            <span style={{ fontSize:14, fontWeight:600, color:'#111827' }}>{formatCurrency(totalCobros)}</span>
-          </div>
         </div>
       </div>
 
       {/* PAGOS PENDIENTES */}
-      <div className="dash-section" style={{ display:'flex', gap:10, alignItems:'stretch' }}>
-        {/* Panel izquierdo — donut */}
-        <div className="dash-section-left" style={{ width:'calc(25% - 7.5px)', flexShrink:0, ...card }}>
-          <div style={{ fontSize:12, fontWeight:600, color:'#111827', marginBottom:8, display:'flex', alignItems:'center', gap:5 }}>
-            <i className="ti ti-trending-down" aria-hidden="true" style={{ fontSize:13, color:'#1d6fd8' }} />Pagos pendientes
-          </div>
-          <div style={{ fontSize:20, fontWeight:600, color:'#111827', letterSpacing:'-0.02em', marginBottom:14 }}>{formatCurrency(totalPagos)}</div>
-          <div style={{ display:'flex', flexDirection:'column', gap:12 }}>
-            {donutData.map((d, i) => (
-              <div key={i}>
-                <div style={{ display:'flex', justifyContent:'space-between', marginBottom:5 }}>
-                  <span style={{ fontSize:10, color:'#9CA3AF' }}>{d.name}</span>
-                  <span style={{ fontSize:10, fontWeight:600, color:'#111827' }}>
-                    {formatCurrency(d.value)} <span style={{ fontSize:9, color:'#9CA3AF', fontWeight:400 }}>{Math.round(d.value/totalPagos*100)}%</span>
-                  </span>
-                </div>
-                <div style={{ height:4, background:'#F3F4F6', borderRadius:99 }}>
-                  <div style={{ height:4, width:`${Math.round(d.value/totalPagos*100)}%`, background:d.color, borderRadius:99 }} />
-                </div>
-              </div>
-            ))}
-          </div>
+      <div style={card}>
+        <div style={{ fontSize:13, fontWeight:600, color:'#111827', marginBottom:8, display:'flex', alignItems:'center', gap:5 }}>
+          <i className="ti ti-trending-down" aria-hidden="true" style={{ fontSize:14, color:'#1d6fd8' }} />Pagos pendientes
         </div>
-        {/* Tabla detalle */}
-        <div style={{ ...card, flex:1, minWidth:0 }}>
-          <div style={{ display:'grid', gridTemplateColumns:'1fr 110px 90px 70px', ...hdrStyle }}>
-            <span>Concepto</span><span>Vencimiento</span><span>Tipo</span><span style={{ textAlign:'right' }}>Importe</span>
-          </div>
-          {pagos.map((p, i) => (
-            <div key={i} className="dash-pago-row" style={{ ...rowBase, gridTemplateColumns:'1fr 110px 90px 70px', borderBottom: i < pagos.length-1 ? '0.5px solid #F9FAFB' : 'none' }}>
-              <div style={{ display:'flex', alignItems:'center', gap:5 }}>
-                <span style={{ fontSize:11, fontWeight:500, color:'#111827' }}>{p.concepto}</span>
-                <span style={{ fontSize:10, color:'#9CA3AF' }}>· {p.detalle}</span>
+        <div style={{ fontSize:22, fontWeight:600, color:'#111827', letterSpacing:'-0.02em', marginBottom:14 }}>{formatCurrency(totalPagos)}</div>
+        <div style={{ display:'flex', flexDirection:'column', gap:12 }}>
+          {donutData.map((d, i) => (
+            <div key={i}>
+              <div style={{ display:'flex', justifyContent:'space-between', marginBottom:5 }}>
+                <span style={{ fontSize:10, color:'#9CA3AF' }}>{d.name}</span>
+                <span style={{ fontSize:10, fontWeight:600, color:'#111827' }}>
+                  {formatCurrency(d.value)} <span style={{ fontSize:9, color:'#9CA3AF', fontWeight:400 }}>{Math.round(d.value/totalPagos*100)}%</span>
+                </span>
               </div>
-              <div className="dash-pago-hide" style={{ fontSize:10, color:'#9CA3AF' }}>
-                {p.vencimiento} · <span style={{ color: p.urgente ? '#DC2626' : p.dias <= 30 ? '#D97706' : '#9CA3AF', fontWeight:500 }}>{p.dias}d</span>
+              <div style={{ height:4, background:'#F3F4F6', borderRadius:99 }}>
+                <div style={{ height:4, width:`${Math.round(d.value/totalPagos*100)}%`, background:d.color, borderRadius:99 }} />
               </div>
-              <div className="dash-pago-hide"><TipoBadge tipo={p.tipo} /></div>
-              <div style={{ textAlign:'right', fontSize:12, fontWeight:600, color: p.tipo==='Fiscal' ? '#D97706' : '#111827' }}>{formatCurrency(p.importe)}</div>
             </div>
           ))}
-          <div style={{ height:'0.5px', background:'#EAECF0', margin:'10px 0' }} />
-          <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center' }}>
-            <span style={{ fontSize:11, color:'#9CA3AF' }}>Total pagos pendientes</span>
-            <span style={{ fontSize:14, fontWeight:600, color:'#111827' }}>{formatCurrency(totalPagos)}</span>
-          </div>
         </div>
       </div>
 
