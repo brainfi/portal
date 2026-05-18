@@ -2,9 +2,9 @@ import Layout from '@/components/Layout'
 import { formatCurrency } from '@/lib/formatters'
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
-  ResponsiveContainer, Cell, Line, ComposedChart
+  ResponsiveContainer, Cell, ComposedChart, Line
 } from 'recharts'
-import { PieChart, Pie, Cell as PieCell, Legend } from 'recharts'
+import { PieChart, Pie, Cell as PieCell } from 'recharts'
 
 const cashflowData = [
   { mes:'Ene', entradas:72000, gastos:38000 },
@@ -49,6 +49,10 @@ const donutData = [
 ]
 
 const totalPagos = pagos.reduce((a, p) => a + p.importe, 0)
+const totalCobros = cobros.reduce((a, c) => a + c.importe, 0)
+
+// Column widths — left panel same as "Tu dinero real hoy" card
+const LEFT_W = 220
 
 function CashflowTooltip({ active, payload, label }: any) {
   if (!active || !payload?.length) return null
@@ -79,19 +83,24 @@ function TipoBadge({ tipo }: { tipo: string }) {
   return <span style={{ fontSize:9, padding:'2px 8px', borderRadius:99, whiteSpace:'nowrap', fontWeight:500, background:st.bg, color:st.color }}>{tipo}</span>
 }
 
-function CardTitle({ icon, children }: { icon: string; children: React.ReactNode }) {
+const card: React.CSSProperties = { background:'#fff', border:'0.5px solid #EAECF0', borderRadius:12, padding:'16px 18px' }
+const hdrStyle: React.CSSProperties = { fontSize:10, color:'#9CA3AF', fontWeight:500, paddingBottom:8, borderBottom:'0.5px solid #F3F4F6', marginBottom:2 }
+const rowBase: React.CSSProperties = { display:'grid', alignItems:'center', padding:'9px 0', borderBottom:'0.5px solid #F9FAFB' }
+
+function StatCard({ icon, label, value, delta, deltaUp, bg, textColor, subColor }: any) {
   return (
-    <div style={{ fontSize:13, fontWeight:600, color:'#111827', marginBottom:14, display:'flex', alignItems:'center', gap:6 }}>
-      <i className={`ti ${icon}`} aria-hidden="true" style={{ fontSize:15, color:'#1d6fd8' }} />
-      {children}
+    <div style={{ padding:'14px 16px', background: bg ?? '#F9FAFB', borderRadius:10, border:'0.5px solid #EAECF0' }}>
+      <div style={{ display:'flex', alignItems:'center', gap:6, marginBottom:8 }}>
+        <div style={{ width:22, height:22, borderRadius:6, background: icon.bg, display:'flex', alignItems:'center', justifyContent:'center' }}>
+          <i className={`ti ${icon.name}`} aria-hidden="true" style={{ fontSize:11, color:'#fff' }} />
+        </div>
+        <span style={{ fontSize:10, color: subColor ?? '#6B7280', fontWeight:500 }}>{label}</span>
+      </div>
+      <div style={{ fontSize:17, fontWeight:600, color: textColor ?? '#111827', letterSpacing:'-0.02em' }}>{value}</div>
+      <div style={{ fontSize:10, color: deltaUp ? '#1d6fd8' : '#DC2626', marginTop:3 }}>{delta}</div>
     </div>
   )
 }
-
-const card: React.CSSProperties = { background:'#fff', border:'0.5px solid #EAECF0', borderRadius:12, padding:'16px 18px' }
-const sideCard: React.CSSProperties = { background:'#F9FAFB', border:'0.5px solid #EAECF0', borderRadius:12, padding:'14px 16px' }
-const hdr: React.CSSProperties = { fontSize:10, color:'#9CA3AF', fontWeight:500, paddingBottom:8, borderBottom:'0.5px solid #F3F4F6', marginBottom:2 }
-const rowBase: React.CSSProperties = { display:'grid', alignItems:'center', padding:'9px 0', borderBottom:'0.5px solid #F9FAFB' }
 
 export default function Dashboard() {
   return (
@@ -99,24 +108,17 @@ export default function Dashboard() {
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600&display=swap');
         @media (max-width: 768px) {
-          .dash-grid3 { grid-template-columns: 1fr !important; }
-          .dash-grid23 { grid-template-columns: 1fr !important; }
-          .dash-cf-grid { grid-template-columns: 1fr !important; }
-          .dash-cobro-row { grid-template-columns: 100px 1fr 70px 1fr !important; }
-          .dash-pago-row { grid-template-columns: 1fr 60px !important; }
+          .dash-hero { grid-template-columns: 1fr !important; }
+          .dash-cf { flex-direction: column !important; }
+          .dash-cf-left { width: 100% !important; flex-direction: row !important; gap: 8px !important; }
+          .dash-section { flex-direction: column !important; }
+          .dash-section-left { width: 100% !important; }
           .dash-pago-hide { display: none !important; }
-          .dash-hero-num { font-size: 28px !important; }
-        }
-        @media (max-width: 480px) {
-          .dash-cobro-row { grid-template-columns: 80px 1fr !important; }
-          .dash-cobro-hide { display: none !important; }
         }
       `}</style>
 
-      {/* HERO + 3 KPIs en la misma fila */}
-      <div className="dash-grid3" style={{ display:'grid', gridTemplateColumns:'1fr 1fr 1fr 1fr', gap:10, flexShrink:0 }}>
-
-        {/* Tu dinero real hoy — azul marino */}
+      {/* FILA HERO — 4 tarjetas */}
+      <div className="dash-hero" style={{ display:'grid', gridTemplateColumns:`${LEFT_W}px 1fr 1fr 1fr`, gap:10, flexShrink:0 }}>
         <div style={{ background:'#0D2E6E', borderRadius:12, padding:'16px 18px', position:'relative', overflow:'hidden' }}>
           <div style={{ position:'absolute', right:-20, top:-20, width:120, height:120, borderRadius:'50%', border:'1px solid rgba(255,255,255,0.07)' }} />
           <div style={{ fontSize:11, color:'rgba(255,255,255,0.45)', marginBottom:6 }}>Tu dinero real hoy</div>
@@ -126,8 +128,6 @@ export default function Dashboard() {
           </div>
           <div style={{ fontSize:10, color:'rgba(255,255,255,0.35)' }}>Tras pagar todo lo comprometido · Abril 2026</div>
         </div>
-
-        {/* Resistencia */}
         <div style={card}>
           <div style={{ fontSize:11, color:'#9CA3AF', marginBottom:8, display:'flex', alignItems:'center', gap:5, fontWeight:500 }}>
             <i className="ti ti-shield" aria-hidden="true" style={{ fontSize:13, color:'#1d6fd8' }} />Resistencia
@@ -135,8 +135,6 @@ export default function Dashboard() {
           <div style={{ fontSize:22, fontWeight:600, color:'#111827', letterSpacing:'-0.02em', marginBottom:4 }}>47 días <span style={{ fontSize:12, color:'#1d6fd8', fontWeight:500 }}>↑ 16,0%</span></div>
           <div style={{ fontSize:10, color:'#9CA3AF' }}>vs. 40 días periodo anterior</div>
         </div>
-
-        {/* Punto de equilibrio */}
         <div style={card}>
           <div style={{ fontSize:11, color:'#9CA3AF', marginBottom:8, display:'flex', alignItems:'center', gap:5, fontWeight:500 }}>
             <i className="ti ti-chart-dots" aria-hidden="true" style={{ fontSize:13, color:'#1d6fd8' }} />Punto de equilibrio
@@ -144,8 +142,6 @@ export default function Dashboard() {
           <div style={{ fontSize:22, fontWeight:600, color:'#111827', letterSpacing:'-0.02em', marginBottom:4 }}>6.100 € <span style={{ fontSize:12, color:'#DC2626', fontWeight:500 }}>↓ 8,2%</span></div>
           <div style={{ fontSize:10, color:'#9CA3AF' }}>vs. 4.116,50 € periodo anterior</div>
         </div>
-
-        {/* Reserva impuestos */}
         <div style={{ background:'#EFF6FF', border:'0.5px solid #BFDBFE', borderRadius:12, padding:'16px 18px' }}>
           <div style={{ fontSize:11, color:'#1d4ed8', marginBottom:8, display:'flex', alignItems:'center', gap:5, fontWeight:500 }}>
             <i className="ti ti-receipt-tax" aria-hidden="true" style={{ fontSize:13, color:'#1d6fd8' }} />Reserva para impuestos
@@ -153,26 +149,46 @@ export default function Dashboard() {
           <div style={{ fontSize:22, fontWeight:600, color:'#1e3a8a', letterSpacing:'-0.02em', marginBottom:4 }}>2.720 € <span style={{ fontSize:12, color:'#1d6fd8', fontWeight:500 }}>↑ 35,2%</span></div>
           <div style={{ fontSize:10, color:'#1d6fd8' }}>IVA Q2 estimado: 3.900 € · 68 días</div>
         </div>
-
       </div>
 
-      {/* CASHFLOW */}
-      <div style={card}>
-        <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:14 }}>
-          <CardTitle icon="ti-arrows-exchange">Cash Flow</CardTitle>
-          <div style={{ display:'flex', gap:6 }}>
-            <span style={{ fontSize:10, fontWeight:500, padding:'3px 10px', borderRadius:99, background:'#EFF6FF', color:'#1d4ed8', border:'0.5px solid #BFDBFE' }}>Mensual</span>
-            <span style={{ fontSize:10, padding:'3px 10px', borderRadius:99, color:'#9CA3AF', border:'0.5px solid #EAECF0' }}>Diario</span>
-          </div>
+      {/* CASHFLOW — stats izquierda alineados, gráfica derecha */}
+      <div className="dash-cf" style={{ display:'flex', gap:10, alignItems:'stretch' }}>
+        {/* Panel izquierdo — mismo ancho que "Tu dinero real hoy" */}
+        <div className="dash-cf-left" style={{ width:LEFT_W, flexShrink:0, display:'flex', flexDirection:'column', gap:10 }}>
+          <StatCard
+            icon={{ name:'ti-arrow-down-left', bg:'#1d6fd8' }}
+            label="Ingresos" value="94.200 €" delta="↑ 45,0% vs periodo ant." deltaUp
+            bg="#EFF6FF" textColor="#1e3a8a" subColor="#1d4ed8"
+          />
+          <StatCard
+            icon={{ name:'ti-arrow-up-right', bg:'#0D2E6E' }}
+            label="Gastos" value="43.800 €" delta="↑ 12,5% vs periodo ant." deltaUp={false}
+            bg="#F9FAFB" textColor="#111827" subColor="#6B7280"
+          />
+          <StatCard
+            icon={{ name:'ti-trending-up', bg:'#16A34A' }}
+            label="Saldo neto" value="+50.400 €" delta="↑ 12,3% vs periodo ant." deltaUp
+            bg="#F0FDF4" textColor="#15803D" subColor="#16A34A"
+          />
         </div>
-        <div className="dash-cf-grid" style={{ display:'grid', gridTemplateColumns:'1fr 180px', gap:16, alignItems:'center' }}>
-          <ResponsiveContainer width="100%" height={150}>
+        {/* Gráfica */}
+        <div style={{ ...card, flex:1, minWidth:0 }}>
+          <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:12 }}>
+            <div style={{ fontSize:13, fontWeight:600, color:'#111827', display:'flex', alignItems:'center', gap:6 }}>
+              <i className="ti ti-arrows-exchange" aria-hidden="true" style={{ fontSize:14, color:'#1d6fd8' }} />Cash Flow
+            </div>
+            <div style={{ display:'flex', gap:6 }}>
+              <span style={{ fontSize:10, fontWeight:500, padding:'3px 10px', borderRadius:99, background:'#EFF6FF', color:'#1d4ed8', border:'0.5px solid #BFDBFE' }}>Mensual</span>
+              <span style={{ fontSize:10, padding:'3px 10px', borderRadius:99, color:'#9CA3AF', border:'0.5px solid #EAECF0' }}>Diario</span>
+            </div>
+          </div>
+          <ResponsiveContainer width="100%" height={160}>
             <ComposedChart data={cashflowData} barGap={2} margin={{ top:4, right:4, left:0, bottom:0 }}>
               <CartesianGrid strokeDasharray="0" stroke="#F3F4F6" vertical={false} />
               <XAxis dataKey="mes" tick={{ fontSize:8, fill:'#9CA3AF' }} axisLine={false} tickLine={false} />
               <YAxis tick={{ fontSize:8, fill:'#9CA3AF' }} axisLine={false} tickLine={false} tickFormatter={v => `€${v/1000}k`} width={36} />
               <Tooltip content={<CashflowTooltip />} cursor={{ fill:'rgba(0,0,0,0.02)' }} />
-              <Bar dataKey="entradas" radius={[3,3,0,0]} maxBarSize={18}>
+              <Bar dataKey="entradas" radius={[3,3,0,0]} maxBarSize={20}>
                 {cashflowData.map((_, i) => <Cell key={i} fill={i===3 ? '#1d6fd8' : '#93C5FD'} />)}
               </Bar>
               <Bar dataKey="gastos" radius={[3,3,0,0]} maxBarSize={10}>
@@ -181,132 +197,81 @@ export default function Dashboard() {
               <Line type="monotone" dataKey="neto" stroke="#00BCD4" strokeWidth={1.5} dot={false} />
             </ComposedChart>
           </ResponsiveContainer>
-          <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
-            <div style={{ padding:'12px 14px', background:'#EFF6FF', borderRadius:10 }}>
-              <div style={{ display:'flex', alignItems:'center', gap:6, marginBottom:6 }}>
-                <div style={{ width:22, height:22, borderRadius:6, background:'#1d6fd8', display:'flex', alignItems:'center', justifyContent:'center' }}>
-                  <i className="ti ti-arrow-down-left" aria-hidden="true" style={{ fontSize:11, color:'#fff' }} />
-                </div>
-                <span style={{ fontSize:10, color:'#1d4ed8', fontWeight:500 }}>Ingresos</span>
-              </div>
-              <div style={{ fontSize:16, fontWeight:600, color:'#1e3a8a' }}>94.200 €</div>
-              <div style={{ fontSize:10, color:'#1d6fd8', marginTop:2 }}>↑ 45,0% vs periodo ant.</div>
-            </div>
-            <div style={{ padding:'12px 14px', background:'#F9FAFB', borderRadius:10 }}>
-              <div style={{ display:'flex', alignItems:'center', gap:6, marginBottom:6 }}>
-                <div style={{ width:22, height:22, borderRadius:6, background:'#0D2E6E', display:'flex', alignItems:'center', justifyContent:'center' }}>
-                  <i className="ti ti-arrow-up-right" aria-hidden="true" style={{ fontSize:11, color:'#fff' }} />
-                </div>
-                <span style={{ fontSize:10, color:'#6B7280', fontWeight:500 }}>Gastos</span>
-              </div>
-              <div style={{ fontSize:16, fontWeight:600, color:'#111827' }}>43.800 €</div>
-              <div style={{ fontSize:10, color:'#DC2626', marginTop:2 }}>↑ 12,5% vs periodo ant.</div>
-            </div>
-          </div>
         </div>
       </div>
 
-
-
       {/* COBROS PENDIENTES */}
-      <div className="dash-grid23" style={{ display:'grid', gridTemplateColumns:'2fr 1fr', gap:10, alignItems:'start' }}>
-        <div style={card}>
-          <CardTitle icon="ti-trending-up">Cobros pendientes</CardTitle>
-          <div style={{ display:'grid', gridTemplateColumns:'120px 1fr 100px 1fr', ...hdr }}>
-            <span>Días vencidos</span><span>Importe</span><span>% s/ total</span><span></span>
+      <div className="dash-section" style={{ display:'flex', gap:10, alignItems:'stretch' }}>
+        {/* Panel izquierdo — resumen por días */}
+        <div className="dash-section-left" style={{ width:LEFT_W, flexShrink:0, display:'flex', flexDirection:'column', gap:0, ...card }}>
+          <div style={{ fontSize:12, fontWeight:600, color:'#111827', marginBottom:12, display:'flex', alignItems:'center', gap:5 }}>
+            <i className="ti ti-trending-up" aria-hidden="true" style={{ fontSize:13, color:'#1d6fd8' }} />Cobros pendientes
           </div>
+          <div style={{ fontSize:11, color:'#9CA3AF', marginBottom:10 }}>Total: <strong style={{ color:'#111827' }}>{formatCurrency(totalCobros)}</strong></div>
           {cobros.map((c, i) => (
-            <div key={i} className="dash-cobro-row" style={{ ...rowBase, gridTemplateColumns:'120px 1fr 100px 1fr', borderBottom: i < cobros.length-1 ? '0.5px solid #F9FAFB' : 'none' }}>
-              <div style={{ display:'flex', alignItems:'center', gap:8 }}>
-                <div style={{ width:20, height:20, borderRadius:'50%', border:`0.5px solid ${c.iconBorder}`, background:c.iconBg, display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
-                  <i className={`ti ${c.icon}`} aria-hidden="true" style={{ fontSize:10, color:c.iconColor }} />
+            <div key={i} style={{ paddingBottom:10, marginBottom:10, borderBottom: i < cobros.length-1 ? '0.5px solid #F3F4F6' : 'none' }}>
+              <div style={{ display:'flex', alignItems:'center', gap:6, marginBottom:6 }}>
+                <div style={{ width:18, height:18, borderRadius:'50%', border:`0.5px solid ${c.iconBorder}`, background:c.iconBg, display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
+                  <i className={`ti ${c.icon}`} aria-hidden="true" style={{ fontSize:9, color:c.iconColor }} />
                 </div>
                 <div>
-                  <div style={{ fontSize:11, fontWeight:500, color: c.danger ? '#DC2626' : '#111827' }}>{c.label}</div>
-                  <div style={{ fontSize:9, color: c.danger ? '#DC2626' : '#9CA3AF' }}>{c.sublabel}</div>
+                  <span style={{ fontSize:11, fontWeight:500, color: c.danger ? '#DC2626' : '#111827' }}>{c.label}</span>
+                  <span style={{ fontSize:9, color: c.danger ? '#DC2626' : '#9CA3AF', marginLeft:6 }}>{c.sublabel}</span>
                 </div>
               </div>
-              <div style={{ fontSize:13, fontWeight:600, color: c.danger ? '#DC2626' : '#111827' }}>{formatCurrency(c.importe)}</div>
-              <div className="dash-cobro-hide" style={{ fontSize:11, fontWeight:500, color: c.danger ? '#DC2626' : '#111827' }}>{c.pct}%</div>
-              <div style={{ height:6, background:'#F3F4F6', borderRadius:99, overflow:'hidden' }}>
-                <div style={{ height:6, width:`${c.pct}%`, background:c.barColor, borderRadius:99 }} />
+              <div style={{ fontSize:13, fontWeight:600, color: c.danger ? '#DC2626' : '#111827', marginBottom:5 }}>{formatCurrency(c.importe)}</div>
+              <div style={{ height:10, background:'#F3F4F6', borderRadius:99, overflow:'hidden' }}>
+                <div style={{ height:10, width:`${c.pct}%`, background:c.barColor, borderRadius:99 }} />
               </div>
             </div>
           ))}
         </div>
-        <div style={sideCard}>
-          <div style={{ fontSize:12, fontWeight:600, color:'#111827', marginBottom:12, display:'flex', alignItems:'center', gap:5 }}>
-            <i className="ti ti-users" aria-hidden="true" style={{ fontSize:13, color:'#1d6fd8' }} />Top deuda por cliente
+        {/* Tabla detalle */}
+        <div style={{ ...card, flex:1, minWidth:0 }}>
+          <div style={{ display:'grid', gridTemplateColumns:'1fr 110px 90px 70px', ...hdrStyle }}>
+            <span>Concepto</span><span>Vencimiento</span><span>Cliente</span><span style={{ textAlign:'right' }}>Importe</span>
           </div>
           {clientes.map((c, i) => (
-            <div key={i} style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'8px 0', borderBottom: i < clientes.length-1 ? '0.5px solid #EAECF0' : 'none' }}>
+            <div key={i} style={{ ...rowBase, gridTemplateColumns:'1fr 110px 90px 70px', borderBottom: i < clientes.length-1 ? '0.5px solid #F9FAFB' : 'none' }}>
               <div style={{ display:'flex', alignItems:'center', gap:8 }}>
-                <div style={{ width:26, height:26, borderRadius:'50%', background:c.bg, color:c.color, display:'flex', alignItems:'center', justifyContent:'center', fontSize:9, fontWeight:600, flexShrink:0 }}>{c.initials}</div>
-                <div>
-                  <div style={{ fontSize:11, fontWeight:500, color:'#111827' }}>{c.nombre}</div>
-                  <div style={{ fontSize:9, color:c.color }}>{c.sub}</div>
-                </div>
+                <div style={{ width:24, height:24, borderRadius:'50%', background:c.bg, color:c.color, display:'flex', alignItems:'center', justifyContent:'center', fontSize:9, fontWeight:600, flexShrink:0 }}>{c.initials}</div>
+                <span style={{ fontSize:11, fontWeight:500, color:'#111827' }}>{c.nombre}</span>
               </div>
-              <div style={{ textAlign:'right' }}>
-                <div style={{ fontSize:12, fontWeight:600, color:c.color }}>{formatCurrency(c.importe)}</div>
-                <div style={{ fontSize:9, color:'#9CA3AF' }}>{c.pct}</div>
-              </div>
+              <div style={{ fontSize:10, color: c.color, fontWeight:500 }}>{c.sub}</div>
+              <div style={{ fontSize:10, color:'#9CA3AF' }}>{c.pct}</div>
+              <div style={{ textAlign:'right', fontSize:12, fontWeight:600, color:c.color }}>{formatCurrency(c.importe)}</div>
             </div>
           ))}
           <div style={{ height:'0.5px', background:'#EAECF0', margin:'10px 0' }} />
-          <div style={{ display:'flex', justifyContent:'space-between' }}>
-            <span style={{ fontSize:10, color:'#9CA3AF' }}>Total pendiente</span>
-            <span style={{ fontSize:11, fontWeight:600, color:'#111827' }}>12.680 €</span>
+          <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center' }}>
+            <span style={{ fontSize:11, color:'#9CA3AF' }}>Total cobros pendientes</span>
+            <span style={{ fontSize:14, fontWeight:600, color:'#111827' }}>{formatCurrency(totalCobros)}</span>
           </div>
         </div>
       </div>
 
       {/* PAGOS PENDIENTES */}
-      <div className="dash-grid23" style={{ display:'grid', gridTemplateColumns:'2fr 1fr', gap:10, alignItems:'start' }}>
-        <div style={card}>
-          <CardTitle icon="ti-trending-down">Pagos pendientes</CardTitle>
-          <div style={{ display:'grid', gridTemplateColumns:'1fr 110px 90px 70px', ...hdr }}>
-            <span>Concepto</span><span>Vencimiento</span><span>Tipo</span><span style={{ textAlign:'right' }}>Importe</span>
+      <div className="dash-section" style={{ display:'flex', gap:10, alignItems:'stretch' }}>
+        {/* Panel izquierdo — donut */}
+        <div className="dash-section-left" style={{ width:LEFT_W, flexShrink:0, ...card }}>
+          <div style={{ fontSize:12, fontWeight:600, color:'#111827', marginBottom:8, display:'flex', alignItems:'center', gap:5 }}>
+            <i className="ti ti-trending-down" aria-hidden="true" style={{ fontSize:13, color:'#1d6fd8' }} />Pagos pendientes
           </div>
-          {pagos.map((p, i) => (
-            <div key={i} className="dash-pago-row" style={{ ...rowBase, gridTemplateColumns:'1fr 110px 90px 70px', borderBottom: i < pagos.length-1 ? '0.5px solid #F9FAFB' : 'none' }}>
-              <div style={{ display:'flex', alignItems:'center', gap:5 }}>
-                <span style={{ fontSize:11, fontWeight:500, color:'#111827' }}>{p.concepto}</span>
-                <span style={{ fontSize:10, color:'#9CA3AF' }}>· {p.detalle}</span>
-              </div>
-              <div style={{ fontSize:10, color:'#9CA3AF' }}>
-                {p.vencimiento} · <span style={{ color: p.urgente ? '#DC2626' : p.dias <= 30 ? '#D97706' : '#9CA3AF', fontWeight:500 }}>{p.dias}d</span>
-              </div>
-              <div className="dash-pago-hide"><TipoBadge tipo={p.tipo} /></div>
-              <div style={{ textAlign:'right', fontSize:12, fontWeight:600, color: p.tipo==='Fiscal' ? '#D97706' : '#111827' }}>{formatCurrency(p.importe)}</div>
-            </div>
-          ))}
-          <div style={{ height:'0.5px', background:'#EAECF0', margin:'10px 0' }} />
-          <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center' }}>
-            <span style={{ fontSize:11, color:'#9CA3AF' }}>Total pagos pendientes</span>
-            <span style={{ fontSize:15, fontWeight:600, color:'#111827' }}>{formatCurrency(totalPagos)}</span>
-          </div>
-        </div>
-
-        {/* DONUT */}
-        <div style={sideCard}>
-          <div style={{ fontSize:12, fontWeight:600, color:'#111827', marginBottom:4, display:'flex', alignItems:'center', gap:5 }}>
-            <i className="ti ti-chart-donut" aria-hidden="true" style={{ fontSize:13, color:'#1d6fd8' }} />Por tipo de pago
-          </div>
+          <div style={{ fontSize:11, color:'#9CA3AF', marginBottom:8 }}>Total: <strong style={{ color:'#111827' }}>{formatCurrency(totalPagos)}</strong></div>
           <div style={{ position:'relative', display:'flex', justifyContent:'center' }}>
-            <ResponsiveContainer width="100%" height={160}>
+            <ResponsiveContainer width="100%" height={140}>
               <PieChart>
-                <Pie data={donutData} cx="50%" cy="50%" innerRadius={48} outerRadius={70} dataKey="value" strokeWidth={0}>
+                <Pie data={donutData} cx="50%" cy="50%" innerRadius={42} outerRadius={60} dataKey="value" strokeWidth={0}>
                   {donutData.map((d, i) => <PieCell key={i} fill={d.color} />)}
                 </Pie>
               </PieChart>
             </ResponsiveContainer>
             <div style={{ position:'absolute', top:'50%', left:'50%', transform:'translate(-50%,-50%)', textAlign:'center', pointerEvents:'none' }}>
-              <div style={{ fontSize:13, fontWeight:600, color:'#111827' }}>{formatCurrency(totalPagos)}</div>
+              <div style={{ fontSize:12, fontWeight:600, color:'#111827' }}>{formatCurrency(totalPagos)}</div>
               <div style={{ fontSize:9, color:'#9CA3AF' }}>total</div>
             </div>
           </div>
-          <div style={{ display:'flex', flexDirection:'column', gap:8, marginTop:4 }}>
+          <div style={{ display:'flex', flexDirection:'column', gap:7, marginTop:8 }}>
             {donutData.map((d, i) => (
               <div key={i} style={{ display:'flex', alignItems:'center', justifyContent:'space-between' }}>
                 <div style={{ display:'flex', alignItems:'center', gap:6 }}>
@@ -319,6 +284,30 @@ export default function Dashboard() {
                 </div>
               </div>
             ))}
+          </div>
+        </div>
+        {/* Tabla detalle */}
+        <div style={{ ...card, flex:1, minWidth:0 }}>
+          <div style={{ display:'grid', gridTemplateColumns:'1fr 110px 90px 70px', ...hdrStyle }}>
+            <span>Concepto</span><span>Vencimiento</span><span>Tipo</span><span style={{ textAlign:'right' }}>Importe</span>
+          </div>
+          {pagos.map((p, i) => (
+            <div key={i} className="dash-pago-row" style={{ ...rowBase, gridTemplateColumns:'1fr 110px 90px 70px', borderBottom: i < pagos.length-1 ? '0.5px solid #F9FAFB' : 'none' }}>
+              <div style={{ display:'flex', alignItems:'center', gap:5 }}>
+                <span style={{ fontSize:11, fontWeight:500, color:'#111827' }}>{p.concepto}</span>
+                <span style={{ fontSize:10, color:'#9CA3AF' }}>· {p.detalle}</span>
+              </div>
+              <div className="dash-pago-hide" style={{ fontSize:10, color:'#9CA3AF' }}>
+                {p.vencimiento} · <span style={{ color: p.urgente ? '#DC2626' : p.dias <= 30 ? '#D97706' : '#9CA3AF', fontWeight:500 }}>{p.dias}d</span>
+              </div>
+              <div className="dash-pago-hide"><TipoBadge tipo={p.tipo} /></div>
+              <div style={{ textAlign:'right', fontSize:12, fontWeight:600, color: p.tipo==='Fiscal' ? '#D97706' : '#111827' }}>{formatCurrency(p.importe)}</div>
+            </div>
+          ))}
+          <div style={{ height:'0.5px', background:'#EAECF0', margin:'10px 0' }} />
+          <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center' }}>
+            <span style={{ fontSize:11, color:'#9CA3AF' }}>Total pagos pendientes</span>
+            <span style={{ fontSize:14, fontWeight:600, color:'#111827' }}>{formatCurrency(totalPagos)}</span>
           </div>
         </div>
       </div>
