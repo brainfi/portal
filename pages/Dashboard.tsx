@@ -224,8 +224,8 @@ export default function Dashboard() {
                 <span style={{ fontSize:10, color: c.danger ? '#DC2626' : '#9CA3AF' }}>{c.label} · {c.sublabel}</span>
                 <span style={{ fontSize:10, fontWeight:600, color: c.danger ? '#DC2626' : '#111827' }}>{formatCurrency(c.importe)}</span>
               </div>
-              <div style={{ height:4, background:'#F3F4F6', borderRadius:99 }}>
-                <div style={{ height:4, width:`${c.pct}%`, background:c.barColor, borderRadius:99 }} />
+              <div style={{ height:8, background:'#F3F4F6', borderRadius:99 }}>
+                <div style={{ height:8, width:`${c.pct}%`, background:c.barColor, borderRadius:99 }} />
               </div>
             </div>
           ))}
@@ -247,8 +247,8 @@ export default function Dashboard() {
                   {formatCurrency(d.value)} <span style={{ fontSize:9, color:'#9CA3AF', fontWeight:400 }}>{Math.round(d.value/totalPagos*100)}%</span>
                 </span>
               </div>
-              <div style={{ height:4, background:'#F3F4F6', borderRadius:99 }}>
-                <div style={{ height:4, width:`${Math.round(d.value/totalPagos*100)}%`, background:d.color, borderRadius:99 }} />
+              <div style={{ height:8, background:'#F3F4F6', borderRadius:99 }}>
+                <div style={{ height:8, width:`${Math.round(d.value/totalPagos*100)}%`, background:d.color, borderRadius:99 }} />
               </div>
             </div>
           ))}
