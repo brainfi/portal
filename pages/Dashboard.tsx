@@ -1,294 +1,244 @@
 import Layout from '@/components/Layout'
-import { mockPrevisiones, mockEvolucion } from '@/lib/mockData'
+import { mockPrevisiones } from '@/lib/mockData'
 import { formatCurrency, formatDate } from '@/lib/formatters'
 import {
-  AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip,
-  ResponsiveContainer, Legend
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
+  ResponsiveContainer, ReferenceLine, Cell, LineChart, Line, Legend
 } from 'recharts'
 
-function Badge({ children, color, bg }: { children: React.ReactNode; color: string; bg: string }) {
-  return <span style={{ fontSize:9, fontWeight:500, color, background:bg, padding:'2px 8px', borderRadius:99 }}>{children}</span>
-}
+const cashflowData = [
+  { mes:'Ene', entradas:72000, gastos:38000 },
+  { mes:'Feb', entradas:78000, gastos:40000 },
+  { mes:'Mar', entradas:82000, gastos:41000 },
+  { mes:'Abr', entradas:94200, gastos:43800 },
+  { mes:'May', entradas:88000, gastos:42000 },
+  { mes:'Jun', entradas:96000, gastos:44000 },
+  { mes:'Jul', entradas:90000, gastos:43000 },
+  { mes:'Ago', entradas:98000, gastos:45000 },
+  { mes:'Sep', entradas:92000, gastos:43500 },
+  { mes:'Oct', entradas:102000, gastos:46000 },
+  { mes:'Nov', entradas:106000, gastos:47000 },
+  { mes:'Dic', entradas:110000, gastos:48000 },
+].map(d => ({ ...d, neto: d.entradas - d.gastos }))
 
-function IATag() {
-  return (
-    <div style={{ fontSize:9, fontWeight:600, color:'#00BCD4', textTransform:'uppercase', letterSpacing:'0.06em', margin:'10px 0 2px', display:'flex', alignItems:'center', gap:3 }}>
-      <svg width="9" height="9" viewBox="0 0 16 16" fill="none" stroke="#00BCD4" strokeWidth="1.5"><circle cx="8" cy="8" r="6"/><path d="M8 5v3l1.5 1"/></svg>
-      IA
-    </div>
-  )
-}
+const pagos = [
+  { concepto:'IVA Q2 · Mod. 303', detalle:'AEAT · Autoliquidación', vencimiento:'20 jul', dias:68, tipo:'Fiscal', importe:3900, urgente:true },
+  { concepto:'IRPF · Mod. 111', detalle:'AEAT · Retenciones', vencimiento:'20 jul', dias:68, tipo:'Fiscal', importe:4200, urgente:true },
+  { concepto:'Nóminas · Mayo', detalle:'8 empleados · SS incluida', vencimiento:'30 abr', dias:21, tipo:'Gasto fijo', importe:18400, urgente:false },
+  { concepto:'Alquiler oficina', detalle:'Contrato anual', vencimiento:'1 may', dias:22, tipo:'Gasto fijo', importe:2100, urgente:false },
+  { concepto:'Adobe Creative Cloud', detalle:'5 licencias', vencimiento:'5 may', dias:26, tipo:'Suscripción', importe:290, urgente:false },
+  { concepto:'HubSpot CRM', detalle:'Plan Pro', vencimiento:'10 may', dias:31, tipo:'Suscripción', importe:450, urgente:false },
+]
 
-function PBar({ pct, color }: { pct: number; color: string }) {
-  return (
-    <div style={{ height:3, background:'#F3F4F6', borderRadius:99, margin:'8px 0 4px', overflow:'hidden' }}>
-      <div style={{ height:3, width:`${Math.min(pct,100)}%`, background:color, borderRadius:99 }} />
-    </div>
-  )
-}
-
-function FranjaBar({ label, amount, total, bgColor, fillColor, textColor, risk, riskColor }: {
-  label: string; amount: number; total: number; bgColor: string; fillColor: string; textColor: string; risk: string; riskColor: string
-}) {
-  const pct = Math.round((amount / total) * 100)
-  return (
-    <div style={{ marginBottom:10 }}>
-      <div style={{ height:22, background:bgColor, borderRadius:6, overflow:'hidden' }}>
-        <div style={{ height:'100%', width:`${pct}%`, background:fillColor, borderRadius:6, display:'flex', alignItems:'center', paddingLeft:10, fontSize:10, fontWeight:600, color:textColor, whiteSpace:'nowrap' }}>
-          {formatCurrency(amount)}
-        </div>
-      </div>
-      <div style={{ display:'flex', justifyContent:'space-between', marginTop:4 }}>
-        <span style={{ fontSize:9, color:'#9CA3AF' }}>{label}</span>
-        <span style={{ fontSize:9, color:riskColor }}>{risk}</span>
-      </div>
-    </div>
-  )
-}
-
-const cashflowData = mockEvolucion.map((d, i) => ({
-  mes: d.mes,
-  entradas: d.ingresos,
-  salidas: d.gastos,
-  neto: d.ingresos - d.gastos,
-}))
+const cobros = [
+  { label:'30 días', sublabel:'Riesgo bajo', importe:2500, total:12680, pct:19.7, color:'#93C5FD', iconColor:'#6B7280', iconBg:'transparent', iconBorder:'#D1D5DB' },
+  { label:'60 días', sublabel:'Riesgo medio', importe:5300, total:12680, pct:41.8, color:'#3B82F6', iconColor:'#D97706', iconBg:'#FFFBEB', iconBorder:'#FDE68A' },
+  { label:'+60 días', sublabel:'Riesgo alto', importe:4880, total:12680, pct:38.5, color:'#1d4ed8', iconColor:'#DC2626', iconBg:'#FEF2F2', iconBorder:'#FECACA', danger:true },
+]
 
 function CashflowTooltip({ active, payload, label }: any) {
   if (!active || !payload?.length) return null
   return (
-    <div style={{ background:'#1F2937', borderRadius:10, padding:'10px 14px', fontSize:11, boxShadow:'0 4px 16px rgba(0,0,0,0.2)' }}>
+    <div style={{ background:'#1F2937', borderRadius:10, padding:'10px 14px', fontSize:11, boxShadow:'0 4px 16px rgba(0,0,0,0.2)', fontFamily:'Plus Jakarta Sans, sans-serif' }}>
       <div style={{ fontWeight:600, color:'white', marginBottom:8 }}>{label} 2026</div>
-      {payload.map((p: any) => (
-        <div key={p.dataKey} style={{ display:'flex', alignItems:'center', gap:6, marginBottom:4 }}>
-          <div style={{ width:8, height:8, borderRadius:2, background:p.color }} />
-          <span style={{ color:'rgba(255,255,255,0.75)' }}>
-            {p.dataKey === 'entradas' ? 'Entradas' : p.dataKey === 'salidas' ? 'Salidas' : 'Neto'}: {formatCurrency(p.value)}
-          </span>
-        </div>
-      ))}
+      {[
+        { key:'entradas', label:'Ingresos', color:'#1d6fd8' },
+        { key:'gastos', label:'Gastos', color:'#0D2E6E' },
+        { key:'neto', label:'Neto', color:'#00BCD4' },
+      ].map(item => {
+        const p = payload.find((x: any) => x.dataKey === item.key)
+        if (!p) return null
+        return (
+          <div key={item.key} style={{ display:'flex', alignItems:'center', gap:6, marginBottom:4 }}>
+            <div style={{ width:8, height:8, borderRadius:2, background:item.color }} />
+            <span style={{ color:'rgba(255,255,255,0.75)' }}>{item.label}: {formatCurrency(p.value)}</span>
+          </div>
+        )
+      })}
     </div>
   )
 }
 
-function CashflowChart() {
+function TipoBadge({ tipo }: { tipo: string }) {
+  const styles: Record<string, { bg: string; color: string }> = {
+    'Fiscal': { bg:'#FFFBEB', color:'#92400E' },
+    'Gasto fijo': { bg:'#F3F4F6', color:'#6B7280' },
+    'Suscripción': { bg:'#EFF6FF', color:'#1d4ed8' },
+  }
+  const s = styles[tipo] ?? styles['Gasto fijo']
+  return <span style={{ fontSize:9, padding:'2px 8px', borderRadius:99, whiteSpace:'nowrap', fontWeight:500, background:s.bg, color:s.color }}>{tipo}</span>
+}
+
+function CardTitle({ icon, children }: { icon: string; children: React.ReactNode }) {
   return (
-    <div>
-      <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:16 }}>
-        <div>
-          <div style={{ fontSize:13, fontWeight:600, color:'#111827' }}>Cashflow</div>
-          <div style={{ fontSize:10, color:'#9CA3AF', marginTop:2 }}>Entradas, salidas y saldo neto · 2026</div>
-        </div>
-        <div style={{ display:'flex', alignItems:'center', gap:14 }}>
-          <div style={{ display:'flex', alignItems:'center', gap:4, fontSize:10, color:'#9CA3AF' }}>
-            <div style={{ width:20, height:2, background:'#00BCD4', borderRadius:99 }}/>Entradas
-          </div>
-          <div style={{ display:'flex', alignItems:'center', gap:4, fontSize:10, color:'#9CA3AF' }}>
-            <svg width="20" height="4"><line x1="0" y1="2" x2="20" y2="2" stroke="#0D2E6E" strokeWidth="1.5" strokeDasharray="5,3"/></svg>Salidas
-          </div>
-          <div style={{ display:'flex', alignItems:'center', gap:4, fontSize:10, color:'#9CA3AF' }}>
-            <div style={{ width:20, height:2, background:'#16A34A', borderRadius:99 }}/>Saldo neto
-          </div>
-        </div>
-      </div>
-
-      <ResponsiveContainer width="100%" height={180}>
-        <AreaChart data={cashflowData} margin={{ top:4, right:4, left:0, bottom:0 }}>
-          <defs>
-            <linearGradient id="gradIn" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="#00BCD4" stopOpacity={0.15}/>
-              <stop offset="100%" stopColor="#00BCD4" stopOpacity={0}/>
-            </linearGradient>
-            <linearGradient id="gradNet" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="#16A34A" stopOpacity={0.1}/>
-              <stop offset="100%" stopColor="#16A34A" stopOpacity={0}/>
-            </linearGradient>
-            <linearGradient id="gradOut" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="#0D2E6E" stopOpacity={0.06}/>
-              <stop offset="100%" stopColor="#0D2E6E" stopOpacity={0}/>
-            </linearGradient>
-          </defs>
-          <CartesianGrid strokeDasharray="0" stroke="#F3F4F6" vertical={false}/>
-          <XAxis dataKey="mes" tick={{ fontSize:9, fill:'#9CA3AF' }} axisLine={false} tickLine={false}/>
-          <YAxis tick={{ fontSize:8, fill:'#9CA3AF' }} axisLine={false} tickLine={false} tickFormatter={v => `€${v/1000}k`} width={36}/>
-          <Tooltip content={<CashflowTooltip />} cursor={{ stroke:'#E5E7EB', strokeWidth:1, strokeDasharray:'3 3' }}/>
-          <Area type="monotone" dataKey="entradas" stroke="#00BCD4" strokeWidth={2} fill="url(#gradIn)" dot={false} activeDot={{ r:4, fill:'#00BCD4', stroke:'white', strokeWidth:1.5 }}/>
-          <Area type="monotone" dataKey="salidas" stroke="#0D2E6E" strokeWidth={1.5} strokeDasharray="5 3" fill="url(#gradOut)" dot={false} activeDot={{ r:4, fill:'#0D2E6E', stroke:'white', strokeWidth:1.5 }}/>
-          <Area type="monotone" dataKey="neto" stroke="#16A34A" strokeWidth={2} fill="url(#gradNet)" dot={false} activeDot={{ r:4, fill:'#16A34A', stroke:'white', strokeWidth:1.5 }}/>
-        </AreaChart>
-      </ResponsiveContainer>
-
-      <div className="cashflow-kpis" style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:8, marginTop:14, paddingTop:12, borderTop:'1px solid #F3F4F6' }}>
-        {[
-          { label:'Total entradas', val:'€94.200', color:'#00BCD4' },
-          { label:'Total salidas', val:'€43.800', color:'#0D2E6E' },
-          { label:'Saldo neto', val:'+€50.400', color:'#16A34A' },
-          { label:'VS mes anterior', val:'↑ +12,3%', color:'#16A34A' },
-        ].map((k,i) => (
-          <div key={k.label} style={{ textAlign:'center', borderLeft: i>0 ? '1px solid #F3F4F6' : 'none' }}>
-            <div style={{ fontSize:9, color:'#9CA3AF', marginBottom:3 }}>{k.label}</div>
-            <div style={{ fontSize:13, fontWeight:600, color:k.color }}>{k.val}</div>
-          </div>
-        ))}
-      </div>
+    <div style={{ fontSize:13, fontWeight:600, color:'#111827', marginBottom:14, display:'flex', alignItems:'center', gap:6 }}>
+      <i className={`ti ${icon}`} aria-hidden="true" style={{ fontSize:15, color:'#1d6fd8' }} />
+      {children}
     </div>
   )
 }
 
-const cardStyle: React.CSSProperties = { background:'#fff', border:'1px solid #EAECF0', borderRadius:12, padding:'16px 18px' }
+const card: React.CSSProperties = { background:'#fff', border:'0.5px solid #EAECF0', borderRadius:14, padding:'16px 18px' }
+const hdrCell: React.CSSProperties = { fontSize:10, color:'#9CA3AF', fontWeight:500 }
+const row: React.CSSProperties = { display:'grid', alignItems:'center', padding:'9px 0', borderBottom:'0.5px solid #F9FAFB' }
 
 export default function Dashboard() {
-  const supervivencia = 5620
-  const fiscalReserva = 2720
-  const fiscalEstimado = 3900
-  const fiscalPct = Math.round((fiscalReserva / fiscalEstimado) * 100)
-  const rendimientoPct = 66
-  const facturado = 6100
-  const objetivo = 9200
-  const cobrosTotal = 12680
-  const cobros30 = 2500
-  const cobros60 = 5300
-  const cobros90 = 4880
-  const resistenciaDias = 47
-
   return (
     <Layout title="Dashboard">
-
-      {/* KPI GRID */}
       <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600&display=swap');
+        .brainfi-portal * { font-family: 'Plus Jakarta Sans', sans-serif !important; }
         @media (max-width: 768px) {
-          .kpi-grid-3 { grid-template-columns: 1fr !important; }
-          .kpi-col3 { grid-column: auto !important; grid-row: auto !important; }
-          .cashflow-kpis { grid-template-columns: 1fr 1fr !important; }
-          .table-wrap { overflow-x: auto; display: block; }
+          .kpi-grid { grid-template-columns: 1fr !important; }
+          .cf-grid { grid-template-columns: 1fr !important; }
+          .pago-row { grid-template-columns: 1fr 80px !important; }
+          .pago-row .pago-hide { display: none !important; }
         }
       `}</style>
-      <div className="kpi-grid-3" style={{ display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gridTemplateRows:'auto auto', gap:10, flexShrink:0 }}>
 
-        {/* Supervivencia */}
-        <div style={cardStyle}>
-          <div style={{ fontSize:11, color:'#9CA3AF', marginBottom:6 }}>Supervivencia · Tu dinero real hoy</div>
-          <div style={{ fontSize:22, fontWeight:600, color:'#111827', letterSpacing:'-0.03em', marginBottom:5 }}>{formatCurrency(supervivencia)}</div>
-          <div style={{ display:'flex', alignItems:'center', gap:6, marginBottom:4 }}>
-            <span style={{ fontSize:10, fontWeight:500, color:'#16A34A', background:'#DCFCE7', padding:'2px 7px', borderRadius:99 }}>↑ Posición sólida</span>
-            <span style={{ fontSize:10, color:'#9CA3AF' }}>tras compromisos del mes</span>
-          </div>
-          <PBar pct={62} color="#00BCD4" />
-          <IATag />
-          <div style={{ fontSize:10, color:'#6B7280', lineHeight:1.55 }}>Reserva <strong>{formatCurrency(fiscalReserva)}</strong> para el IVA del 20 jul — ese dinero no es tuyo.</div>
+      {/* HERO */}
+      <div style={{ background:'#0D2E6E', borderRadius:16, padding:'22px 24px', position:'relative', overflow:'hidden', flexShrink:0 }}>
+        <div style={{ position:'absolute', right:-30, top:-30, width:180, height:180, borderRadius:'50%', border:'1px solid rgba(255,255,255,0.07)' }} />
+        <div style={{ position:'absolute', right:50, top:40, width:100, height:100, borderRadius:'50%', border:'1px solid rgba(255,255,255,0.04)' }} />
+        <div style={{ fontSize:11, color:'rgba(255,255,255,0.45)', marginBottom:8 }}>Tu dinero real hoy</div>
+        <div style={{ display:'flex', alignItems:'baseline', gap:12, marginBottom:6 }}>
+          <span style={{ fontSize:36, fontWeight:600, color:'#fff', letterSpacing:'-0.03em' }}>5.620 €</span>
+          <span style={{ fontSize:12, fontWeight:500, color:'#4ade80', background:'rgba(74,222,128,0.12)', padding:'3px 10px', borderRadius:99 }}>↑ 12,4%</span>
         </div>
-
-        {/* Rendimiento */}
-        <div style={cardStyle}>
-          <div style={{ fontSize:11, color:'#9CA3AF', marginBottom:6 }}>Rendimiento mensual · Punto de equilibrio</div>
-          <div style={{ fontSize:22, fontWeight:600, color:'#111827', letterSpacing:'-0.03em', marginBottom:5 }}>{rendimientoPct}%</div>
-          <div style={{ display:'flex', justifyContent:'space-between', fontSize:9, color:'#9CA3AF', marginTop:2 }}>
-            <span>Facturado: {formatCurrency(facturado)}</span><span>Objetivo: {formatCurrency(objetivo)}</span>
-          </div>
-          <PBar pct={rendimientoPct} color="#00BCD4" />
-          <div style={{ fontSize:10, color:'#6B7280' }}>Faltan <strong>{formatCurrency(objetivo - facturado)}</strong> para cubrir costes fijos.</div>
-          <IATag />
-          <div style={{ fontSize:10, color:'#6B7280', lineHeight:1.55 }}>Necesitas <strong>3-4 presupuestos</strong> cerrados esta semana. Ticket medio: €900.</div>
-        </div>
-
-        {/* Cobros pendientes — 2 filas */}
-        <div className="kpi-col3" style={{ ...cardStyle, gridColumn:3, gridRow:'1/3', display:'flex', flexDirection:'column' }}>
-          <div style={{ display:'flex', alignItems:'flex-start', justifyContent:'space-between' }}>
-            <div>
-              <div style={{ fontSize:11, color:'#9CA3AF' }}>Cobros pendientes</div>
-              <div style={{ fontSize:10, color:'#9CA3AF' }}>Te deben en total</div>
-            </div>
-            <div style={{ fontSize:22, fontWeight:600, color:'#111827', letterSpacing:'-0.03em' }}>{formatCurrency(cobrosTotal)}</div>
-          </div>
-          <IATag />
-          <div style={{ fontSize:10, color:'#6B7280', lineHeight:1.55, marginBottom:14 }}>
-            <strong>Llama hoy a Mercadona</strong> (91 días vencida, €2.800). Los €5.300 de Lantero vencen en 16 días.
-          </div>
-          <div style={{ height:'0.5px', background:'#F3F4F6', margin:'0 0 12px' }} />
-          <FranjaBar label="<30 días" amount={cobros30} total={cobrosTotal} bgColor="#EFF6FF" fillColor="#BFDBFE" textColor="#1E40AF" risk="Riesgo bajo" riskColor="#6B7280" />
-          <FranjaBar label="31-60 días" amount={cobros60} total={cobrosTotal} bgColor="#EFF6FF" fillColor="#93C5FD" textColor="#1E3A8A" risk="Riesgo medio" riskColor="#6B7280" />
-          <FranjaBar label="+60 días" amount={cobros90} total={cobrosTotal} bgColor="#EFF6FF" fillColor="#3B82F6" textColor="#fff" risk="Riesgo alto" riskColor="#DC2626" />
-        </div>
-
-        {/* Resistencia */}
-        <div style={cardStyle}>
-          <div style={{ fontSize:11, color:'#9CA3AF', marginBottom:6 }}>Resistencia · Aguantas sin vender</div>
-          <div style={{ fontSize:22, fontWeight:600, color:'#111827', letterSpacing:'-0.03em', marginBottom:5 }}>{resistenciaDias} días</div>
-          <div style={{ display:'flex', alignItems:'center', gap:6, marginBottom:4 }}>
-            <span style={{ fontSize:10, fontWeight:500, color:'#D97706', background:'#FFFBEB', padding:'2px 7px', borderRadius:99 }}>↑ Zona de atención</span>
-            <span style={{ fontSize:10, color:'#9CA3AF' }}>objetivo: 60 días</span>
-          </div>
-          <PBar pct={(resistenciaDias/90)*100} color="#D97706" />
-          <IATag />
-          <div style={{ fontSize:10, color:'#6B7280', lineHeight:1.55 }}>Factura <strong>€1.500 más</strong> o reduce gastos en €180 para llegar a zona segura.</div>
-        </div>
-
-        {/* Fiscal */}
-        <div style={{ ...cardStyle, background:'#FFFBEB', borderColor:'#FDE68A' }}>
-          <div style={{ fontSize:11, color:'#B45309', marginBottom:6 }}>Fiscal · Reserva para Hacienda</div>
-          <div style={{ fontSize:22, fontWeight:600, color:'#92400E', letterSpacing:'-0.03em', marginBottom:5 }}>{formatCurrency(fiscalReserva)}</div>
-          <PBar pct={fiscalPct} color="#D97706" />
-          <div style={{ display:'flex', justifyContent:'space-between', fontSize:9, color:'#92400E', marginBottom:2 }}>
-            <span>T2 · IVA trimestre en curso</span><span>vence 20 jul · 68d</span>
-          </div>
-          <div style={{ fontSize:9, fontWeight:600, color:'#D97706', textTransform:'uppercase', letterSpacing:'0.06em', margin:'10px 0 2px' }}>IA</div>
-          <div style={{ fontSize:10, color:'#78350F', lineHeight:1.55 }}>IVA estimado subirá a <strong>~{formatCurrency(fiscalEstimado)}</strong>. Provisiona ahora. Vence <strong>20 julio</strong>.</div>
-        </div>
-
+        <div style={{ fontSize:11, color:'rgba(255,255,255,0.35)' }}>Tras pagar todo lo comprometido · Abril 2026</div>
       </div>
 
       {/* CASHFLOW */}
-      <div style={{ ...cardStyle, flexShrink:0 }}>
-        <CashflowChart />
-      </div>
-
-      {/* PREVISIONES */}
-      <div style={{ ...cardStyle, flexShrink:0 }}>
-        <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:10 }}>
-          <span style={{ fontSize:13, fontWeight:600, color:'#111827' }}>Previsiones</span>
+      <div style={card}>
+        <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:14 }}>
+          <CardTitle icon="ti-arrows-exchange">Cash Flow</CardTitle>
           <div style={{ display:'flex', gap:6 }}>
-            <div style={{ display:'flex', alignItems:'center', gap:4, fontSize:10, color:'#6B7280', background:'#F9FAFB', border:'1px solid #EAECF0', borderRadius:6, padding:'4px 9px' }}>
-              <svg width="9" height="9" viewBox="0 0 16 16" fill="none" stroke="#9CA3AF" strokeWidth="1.5"><circle cx="7" cy="7" r="5"/><path d="M11 11l3 3"/></svg>Buscar
-            </div>
-            <div style={{ fontSize:10, color:'#6B7280', background:'#F9FAFB', border:'1px solid #EAECF0', borderRadius:6, padding:'4px 9px', cursor:'pointer' }}>Filtrar ▾</div>
+            <span style={{ fontSize:10, fontWeight:500, padding:'3px 10px', borderRadius:99, background:'#EFF6FF', color:'#1d4ed8', border:'0.5px solid #BFDBFE' }}>Mensual</span>
+            <span style={{ fontSize:10, padding:'3px 10px', borderRadius:99, color:'#9CA3AF', border:'0.5px solid #EAECF0' }}>Diario</span>
           </div>
         </div>
-        <div className="table-wrap"><table style={{ width:'100%', borderCollapse:'collapse', minWidth:500 }}>
-          <thead>
-            <tr>
-              {['Concepto','Vencimiento','Categoría','Periodicidad','Importe','Estado','Días'].map(h => (
-                <th key={h} style={{ fontSize:10, fontWeight:500, color:'#9CA3AF', textAlign:'left', padding:'6px 10px', borderBottom:'1px solid #F3F4F6' }}>{h}</th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {mockPrevisiones.map(p => (
-              <tr key={p.id}>
-                <td style={{ padding:'7px 10px', borderBottom:'1px solid #F9FAFB' }}>
-                  <div style={{ fontWeight:500, color:'#111827', fontSize:11 }}>{p.concepto}</div>
-                  <div style={{ fontSize:9, color:'#9CA3AF' }}>{p.detalle}</div>
-                </td>
-                <td style={{ fontSize:10, color:'#9CA3AF', padding:'7px 10px', borderBottom:'1px solid #F9FAFB' }}>{formatDate(p.vencimiento)}</td>
-                <td style={{ padding:'7px 10px', borderBottom:'1px solid #F9FAFB' }}>
-                  <Badge
-                    color={p.categoria==='Fiscal'?'#92400E':p.categoria==='Gasto fijo'?'#991B1B':'#6B21A8'}
-                    bg={p.categoria==='Fiscal'?'#FFFBEB':p.categoria==='Gasto fijo'?'#FEF2F2':'#F5F3FF'}
-                  >{p.categoria}</Badge>
-                </td>
-                <td style={{ fontSize:10, color:'#9CA3AF', padding:'7px 10px', borderBottom:'1px solid #F9FAFB' }}>{p.periodicidad}</td>
-                <td style={{ fontSize:11, fontWeight:600, padding:'7px 10px', borderBottom:'1px solid #F9FAFB', color:p.categoria==='Fiscal'?'#D97706':'#DC2626' }}>{formatCurrency(p.importe)}</td>
-                <td style={{ padding:'7px 10px', borderBottom:'1px solid #F9FAFB' }}>
-                  <Badge
-                    color={p.estado==='Pendiente'?'#92400E':'#6B7280'}
-                    bg={p.estado==='Pendiente'?'#FFFBEB':'#F3F4F6'}
-                  >{p.estado}</Badge>
-                </td>
-                <td style={{ padding:'7px 10px', borderBottom:'1px solid #F9FAFB' }}>
-                  <span style={{ fontSize:10, fontWeight:500, color:p.urgente?'#DC2626':p.diasRestantes<=30?'#D97706':'#9CA3AF' }}>{p.diasRestantes} días</span>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table></div>
+        <div className="cf-grid" style={{ display:'grid', gridTemplateColumns:'1fr 180px', gap:16, alignItems:'center' }}>
+          <ResponsiveContainer width="100%" height={130}>
+            <BarChart data={cashflowData} barGap={2} margin={{ top:4, right:4, left:0, bottom:0 }}>
+              <CartesianGrid strokeDasharray="0" stroke="#F3F4F6" vertical={false} />
+              <XAxis dataKey="mes" tick={{ fontSize:8, fill:'#9CA3AF', fontFamily:'Plus Jakarta Sans' }} axisLine={false} tickLine={false} />
+              <YAxis tick={{ fontSize:8, fill:'#9CA3AF' }} axisLine={false} tickLine={false} tickFormatter={v => `€${v/1000}k`} width={32} />
+              <Tooltip content={<CashflowTooltip />} cursor={{ fill:'rgba(0,0,0,0.02)' }} />
+              <Bar dataKey="entradas" radius={[3,3,0,0]} maxBarSize={16}>
+                {cashflowData.map((_, i) => <Cell key={i} fill={i===3 ? '#1d6fd8' : '#93C5FD'} />)}
+              </Bar>
+              <Bar dataKey="gastos" radius={[3,3,0,0]} maxBarSize={10}>
+                {cashflowData.map((_, i) => <Cell key={i} fill={i===3 ? '#0D2E6E' : '#7986CB'} />)}
+              </Bar>
+              <Line type="monotone" dataKey="neto" stroke="#00BCD4" strokeWidth={1.5} dot={false} />
+            </BarChart>
+          </ResponsiveContainer>
+          <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
+            <div style={{ padding:'12px 14px', background:'#EFF6FF', borderRadius:10 }}>
+              <div style={{ display:'flex', alignItems:'center', gap:6, marginBottom:6 }}>
+                <div style={{ width:24, height:24, borderRadius:6, background:'#1d6fd8', display:'flex', alignItems:'center', justifyContent:'center' }}>
+                  <i className="ti ti-arrow-down-left" aria-hidden="true" style={{ fontSize:12, color:'#fff' }} />
+                </div>
+                <span style={{ fontSize:10, color:'#1d4ed8', fontWeight:500 }}>Ingresos</span>
+              </div>
+              <div style={{ fontSize:16, fontWeight:600, color:'#1e3a8a', letterSpacing:'-0.02em' }}>94.200 €</div>
+              <div style={{ fontSize:10, color:'#1d6fd8', marginTop:2 }}>↑ 45,0% vs periodo ant.</div>
+            </div>
+            <div style={{ padding:'12px 14px', background:'#F9FAFB', borderRadius:10 }}>
+              <div style={{ display:'flex', alignItems:'center', gap:6, marginBottom:6 }}>
+                <div style={{ width:24, height:24, borderRadius:6, background:'#0D2E6E', display:'flex', alignItems:'center', justifyContent:'center' }}>
+                  <i className="ti ti-arrow-up-right" aria-hidden="true" style={{ fontSize:12, color:'#fff' }} />
+                </div>
+                <span style={{ fontSize:10, color:'#6B7280', fontWeight:500 }}>Gastos</span>
+              </div>
+              <div style={{ fontSize:16, fontWeight:600, color:'#111827', letterSpacing:'-0.02em' }}>43.800 €</div>
+              <div style={{ fontSize:10, color:'#DC2626', marginTop:2 }}>↑ 12,5% vs periodo ant.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* 3 KPIs */}
+      <div className="kpi-grid" style={{ display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:10, flexShrink:0 }}>
+        <div style={card}>
+          <div style={{ fontSize:11, color:'#9CA3AF', marginBottom:8, display:'flex', alignItems:'center', gap:5, fontWeight:500 }}>
+            <i className="ti ti-shield" aria-hidden="true" style={{ fontSize:13, color:'#1d6fd8' }} />Resistencia
+          </div>
+          <div style={{ fontSize:22, fontWeight:600, color:'#111827', letterSpacing:'-0.02em', marginBottom:4 }}>
+            47 días <span style={{ fontSize:12, color:'#1d6fd8', fontWeight:500 }}>↑ 16,0%</span>
+          </div>
+          <div style={{ fontSize:10, color:'#9CA3AF' }}>vs. 40 días periodo anterior</div>
+        </div>
+        <div style={card}>
+          <div style={{ fontSize:11, color:'#9CA3AF', marginBottom:8, display:'flex', alignItems:'center', gap:5, fontWeight:500 }}>
+            <i className="ti ti-chart-dots" aria-hidden="true" style={{ fontSize:13, color:'#1d6fd8' }} />Punto de equilibrio
+          </div>
+          <div style={{ fontSize:22, fontWeight:600, color:'#111827', letterSpacing:'-0.02em', marginBottom:4 }}>
+            6.100 € <span style={{ fontSize:12, color:'#DC2626', fontWeight:500 }}>↓ 8,2%</span>
+          </div>
+          <div style={{ fontSize:10, color:'#9CA3AF' }}>vs. 4.116,50 € periodo anterior</div>
+        </div>
+        <div style={{ ...card, background:'#EFF6FF', borderColor:'#BFDBFE' }}>
+          <div style={{ fontSize:11, color:'#1d4ed8', marginBottom:8, display:'flex', alignItems:'center', gap:5, fontWeight:500 }}>
+            <i className="ti ti-receipt-tax" aria-hidden="true" style={{ fontSize:13, color:'#1d6fd8' }} />Reserva para impuestos
+          </div>
+          <div style={{ fontSize:22, fontWeight:600, color:'#1e3a8a', letterSpacing:'-0.02em', marginBottom:4 }}>
+            2.720 € <span style={{ fontSize:12, color:'#1d6fd8', fontWeight:500 }}>↑ 35,2%</span>
+          </div>
+          <div style={{ fontSize:10, color:'#1d6fd8' }}>IVA Q2 estimado: 3.900 € · 68 días</div>
+        </div>
+      </div>
+
+      {/* COBROS PENDIENTES */}
+      <div style={card}>
+        <CardTitle icon="ti-trending-up">Cobros pendientes</CardTitle>
+        <div style={{ display:'grid', gridTemplateColumns:'120px 1fr 120px 1fr', gap:0, ...hdrCell, paddingBottom:8, borderBottom:'0.5px solid #F3F4F6', marginBottom:2 }}>
+          <span>Días vencidos</span><span>Importe</span><span>% s/ total</span><span></span>
+        </div>
+        {cobros.map((c, i) => (
+          <div key={i} style={{ ...row, gridTemplateColumns:'120px 1fr 120px 1fr', borderBottom: i < cobros.length-1 ? '0.5px solid #F9FAFB' : 'none' }}>
+            <div style={{ display:'flex', alignItems:'center', gap:8 }}>
+              <div style={{ width:20, height:20, borderRadius:'50%', border:`0.5px solid ${c.iconBorder}`, background:c.iconBg, display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
+                <i className={`ti ${i===0?'ti-plus':i===1?'ti-arrow-up':'ti-alert-triangle'}`} aria-hidden="true" style={{ fontSize:10, color:c.iconColor }} />
+              </div>
+              <div>
+                <div style={{ fontSize:11, fontWeight:500, color: c.danger ? '#DC2626' : '#111827' }}>{c.label}</div>
+                <div style={{ fontSize:9, color: c.danger ? '#DC2626' : '#9CA3AF' }}>{c.sublabel}</div>
+              </div>
+            </div>
+            <div style={{ fontSize:13, fontWeight:600, color: c.danger ? '#DC2626' : '#111827' }}>{formatCurrency(c.importe)}</div>
+            <div style={{ fontSize:11, fontWeight:500, color: c.danger ? '#DC2626' : '#111827' }}>{c.pct}%</div>
+            <div style={{ height:6, background:'#F3F4F6', borderRadius:99, overflow:'hidden' }}>
+              <div style={{ height:6, width:`${c.pct}%`, background:c.color, borderRadius:99 }} />
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* PAGOS PENDIENTES */}
+      <div style={card}>
+        <CardTitle icon="ti-trending-down">Pagos pendientes</CardTitle>
+        <div style={{ display:'grid', gridTemplateColumns:'1fr 130px 100px 80px', ...hdrCell, paddingBottom:8, borderBottom:'0.5px solid #F3F4F6', marginBottom:2 }}>
+          <span>Concepto</span><span>Vencimiento</span><span>Tipo</span><span style={{ textAlign:'right' }}>Importe</span>
+        </div>
+        {pagos.map((p, i) => (
+          <div key={i} className="pago-row" style={{ ...row, gridTemplateColumns:'1fr 130px 100px 80px', borderBottom: i < pagos.length-1 ? '0.5px solid #F9FAFB' : 'none' }}>
+            <div style={{ display:'flex', alignItems:'center', gap:6 }}>
+              <span style={{ fontSize:11, fontWeight:500, color:'#111827' }}>{p.concepto}</span>
+              <span style={{ fontSize:10, color:'#9CA3AF' }}>· {p.detalle}</span>
+            </div>
+            <div className="pago-hide" style={{ fontSize:10, color:'#9CA3AF' }}>
+              {p.vencimiento} · <span style={{ color: p.urgente ? '#DC2626' : p.dias <= 30 ? '#D97706' : '#9CA3AF', fontWeight:500 }}>{p.dias}d</span>
+            </div>
+            <div className="pago-hide"><TipoBadge tipo={p.tipo} /></div>
+            <div style={{ textAlign:'right', fontSize:12, fontWeight:600, color: p.tipo==='Fiscal' ? '#D97706' : '#111827' }}>{formatCurrency(p.importe)}</div>
+          </div>
+        ))}
+        <div style={{ height:'0.5px', background:'#EAECF0', margin:'10px 0' }} />
+        <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center' }}>
+          <span style={{ fontSize:11, color:'#9CA3AF' }}>Total pagos pendientes</span>
+          <span style={{ fontSize:15, fontWeight:600, color:'#111827' }}>{formatCurrency(pagos.reduce((a,p) => a+p.importe, 0))}</span>
+        </div>
       </div>
 
     </Layout>

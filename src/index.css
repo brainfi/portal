@@ -18,8 +18,10 @@
   --amber-lt: #FFFBEB;
 }
 
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600&family=Nunito:wght@800&display=swap');
+
 body {
-  font-family: 'Inter', sans-serif;
+  font-family: 'Plus Jakarta Sans', sans-serif;
   background: var(--bg);
   color: var(--ink);
   font-size: 13px;
