@@ -77,14 +77,13 @@ export default function Dashboard() {
       {/* Cashflow + Donut */}
       <div className="row2" style={{ display:'grid', gridTemplateColumns:'2fr 1fr', gap:14 }}>
         <div style={{ ...card, padding:'24px' }}>
-          <div style={{ fontSize:9, fontWeight:600, color:'#999', textTransform:'uppercase', letterSpacing:'0.12em', marginBottom:6 }}>Cash Flow</div>
-            <div style={{ display:'flex', gap:14 }}>
-              {[{ c:'#3B5BDB', l:'Ingresos' }, { c:'#EF4444', l:'Gastos' }].map(l => (
-                <div key={l.l} style={{ display:'flex', alignItems:'center', gap:5, fontSize:12, color:'#666' }}>
-                  <div style={{ width:8, height:8, borderRadius:'50%', background:l.c }} />{l.l}
-                </div>
-              ))}
-            </div>
+          <div style={{ fontSize:9, fontWeight:600, color:'#999', textTransform:'uppercase', letterSpacing:'0.12em', marginBottom:12 }}>Cash Flow</div>
+          <div style={{ display:'flex', gap:14, marginBottom:14 }}>
+            {[{ c:'#3B5BDB', l:'Ingresos' }, { c:'#EF4444', l:'Gastos' }].map(l => (
+              <div key={l.l} style={{ display:'flex', alignItems:'center', gap:5, fontSize:12, color:'#666' }}>
+                <div style={{ width:8, height:8, borderRadius:'50%', background:l.c }} />{l.l}
+              </div>
+            ))}
           </div>
           <ResponsiveContainer width="100%" height={200}>
             <AreaChart data={cashflowData} margin={{ top:4, right:4, left:0, bottom:0 }}>
