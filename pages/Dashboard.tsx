@@ -22,7 +22,7 @@ const kpis = [
   { lbl:'Dinero real hoy', val:'5.620 €', delta:'↗ 12,4%', up:true, sub:'vs mes anterior', iconBg:'#EEF1FD', iconColor:'#3B5BDB', icon:'ti-coin' },
   { lbl:'Resistencia sin vender', val:'47 días', delta:'↘ 1,05%', up:false, sub:'vs mes anterior', iconBg:'#FEF0F0', iconColor:'#EF233C', icon:'ti-shield' },
   { lbl:'Reserva para impuestos', val:'2.720 €', delta:'↗ 35,2%', up:true, sub:'IVA Q2 · 68 días', iconBg:'#FFF8E6', iconColor:'#F4A100', icon:'ti-receipt-tax' },
-  { lbl:'Deuda', val:'60.500 €', delta:'↗ 3,8%', up:false, sub:'vs mes anterior', iconBg:'#F0F9F4', iconColor:'#2DC653', icon:'ti-building-bank' },
+  { lbl:'Deuda financiera', val:'60.500 €', delta:'↗ 3,8%', up:false, sub:'vs mes anterior', iconBg:'#F0F9F4', iconColor:'#2DC653', icon:'ti-building-bank' },
 ]
 
 const txns = [
