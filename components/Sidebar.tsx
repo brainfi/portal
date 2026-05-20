@@ -5,12 +5,12 @@ const navGroups = [
   { section:'General', items:[
     { label:'Resumen', path:'/', icon:<GridIcon/>, disabled:false, blurred:false },
     { label:'Cashflow', path:'/cashflow', icon:<CashflowIcon/>, disabled:true, blurred:true },
-    { label:'Análisis', path:'/analisis', icon:<ChartIcon/>, disabled:true, blurred:false },
-    { label:'Impuestos', path:'/impuestos', icon:<TaxIcon/>, disabled:true, blurred:false },
+    { label:'Análisis', path:'/analisis', icon:<ChartIcon/>, disabled:true, blurred:true },
+    { label:'Impuestos', path:'/impuestos', icon:<TaxIcon/>, disabled:true, blurred:true },
   ]},
   { section:'Admin', items:[
     { label:'Ajustes', path:'/ajustes', icon:<SettingsIcon/>, disabled:false, blurred:false },
-    { label:'Integraciones', path:'/integraciones', icon:<PlugIcon/>, disabled:true, blurred:false },
+    { label:'Integraciones', path:'/integraciones', icon:<PlugIcon/>, disabled:true, blurred:true },
   ]}
 ]
 
@@ -28,8 +28,11 @@ export default function Sidebar({ onClose }: SidebarProps) {
     <aside style={{ width:200, background:'#fff', borderRight:'1px solid #E8E8EC', display:'flex', flexDirection:'column', height:'100vh' }}>
       <div style={{ padding:'20px 18px 14px', borderBottom:'1px solid #E8E8EC', display:'flex', alignItems:'center', justifyContent:'space-between' }}>
         <div style={{ display:'flex', alignItems:'center', gap:9 }}>
-          <div style={{ width:28, height:28, background:'linear-gradient(135deg,#00BCD4,#0D2E6E)', borderRadius:7, display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
-            <span style={{ fontFamily:'Nunito,sans-serif', fontWeight:800, fontSize:16, color:'white', lineHeight:1 }}>b</span>
+          <div style={{ width:28, height:28, background:'#4361EE', borderRadius:7, display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+              <path d="M3 2h5a3 3 0 010 6H3V2z" fill="white"/>
+              <path d="M3 8h6a3 3 0 010 6H3V8z" fill="rgba(255,255,255,0.6)"/>
+            </svg>
           </div>
           <div>
             <div style={{ fontSize:9, fontWeight:600, color:'#999', textTransform:'uppercase', letterSpacing:'0.12em' }}>Workspace</div>
@@ -76,7 +79,7 @@ export default function Sidebar({ onClose }: SidebarProps) {
       </nav>
 
       <div style={{ padding:12, borderTop:'1px solid #E8E8EC', display:'flex', alignItems:'center', gap:8 }}>
-        <div style={{ width:28, height:28, borderRadius:'50%', background:'linear-gradient(135deg,#00BCD4,#0D2E6E)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:10, fontWeight:600, color:'#fff', flexShrink:0 }}>{initials}</div>
+        <div style={{ width:28, height:28, borderRadius:'50%', background:'#4361EE', display:'flex', alignItems:'center', justifyContent:'center', fontSize:10, fontWeight:600, color:'#fff', flexShrink:0 }}>{initials}</div>
         <div>
           <div style={{ fontSize:11, fontWeight:600, color:'#1a1a1a' }}>{displayName}</div>
           <div style={{ fontSize:9, color:'#aaa' }}>Admin · Mi empresa</div>
