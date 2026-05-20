@@ -212,46 +212,98 @@ export default function Dashboard() {
       </div>
 
       {/* COBROS PENDIENTES */}
-      <div style={card}>
-        <div style={{ fontSize:13, fontWeight:600, color:'#111827', marginBottom:8, display:'flex', alignItems:'center', gap:5 }}>
-          <i className="ti ti-trending-up" aria-hidden="true" style={{ fontSize:14, color:'#1d6fd8' }} />Cobros pendientes
+      <div style={{ ...card, display:'flex', gap:20, alignItems:'start' }}>
+        {/* Resumen izquierda */}
+        <div style={{ width:'calc(25% - 7.5px)', flexShrink:0 }}>
+          <div style={{ fontSize:13, fontWeight:600, color:'#111827', marginBottom:8, display:'flex', alignItems:'center', gap:5 }}>
+            <i className="ti ti-trending-up" aria-hidden="true" style={{ fontSize:14, color:'#1d6fd8' }} />Cobros pendientes
+          </div>
+          <div style={{ fontSize:22, fontWeight:600, color:'#111827', letterSpacing:'-0.02em', marginBottom:14 }}>{formatCurrency(totalCobros)}</div>
+          <div style={{ display:'flex', flexDirection:'column', gap:12 }}>
+            {cobros.map((c, i) => (
+              <div key={i}>
+                <div style={{ display:'flex', justifyContent:'space-between', marginBottom:5 }}>
+                  <span style={{ fontSize:10, color: c.danger ? '#DC2626' : '#9CA3AF' }}>{c.label} · {c.sublabel}</span>
+                  <span style={{ fontSize:10, fontWeight:600, color: c.danger ? '#DC2626' : '#111827' }}>{formatCurrency(c.importe)}</span>
+                </div>
+                <div style={{ height:4, background:'#F3F4F6', borderRadius:99 }}>
+                  <div style={{ height:4, width:`${c.pct}%`, background:c.barColor, borderRadius:99 }} />
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
-        <div style={{ fontSize:22, fontWeight:600, color:'#111827', letterSpacing:'-0.02em', marginBottom:14 }}>{formatCurrency(totalCobros)}</div>
-        <div style={{ display:'flex', flexDirection:'column', gap:12 }}>
-          {cobros.map((c, i) => (
-            <div key={i}>
-              <div style={{ display:'flex', justifyContent:'space-between', marginBottom:5 }}>
-                <span style={{ fontSize:10, color: c.danger ? '#DC2626' : '#9CA3AF' }}>{c.label} · {c.sublabel}</span>
-                <span style={{ fontSize:10, fontWeight:600, color: c.danger ? '#DC2626' : '#111827' }}>{formatCurrency(c.importe)}</span>
+        {/* Tabla detalle — oculta en móvil */}
+        <div className="dash-table-hide" style={{ flex:1, minWidth:0 }}>
+          <div style={{ display:'grid', gridTemplateColumns:'1fr 130px 70px 70px', ...hdrStyle }}>
+            <span>Cliente</span><span>Vencimiento</span><span>%</span><span style={{ textAlign:'right' }}>Importe</span>
+          </div>
+          {clientes.map((c, i) => (
+            <div key={i} style={{ ...rowBase, gridTemplateColumns:'1fr 130px 70px 70px', borderBottom: i < clientes.length-1 ? '0.5px solid #F9FAFB' : 'none' }}>
+              <div style={{ display:'flex', alignItems:'center', gap:8 }}>
+                <div style={{ width:24, height:24, borderRadius:'50%', background:c.bg, color:c.color, display:'flex', alignItems:'center', justifyContent:'center', fontSize:9, fontWeight:600, flexShrink:0 }}>{c.initials}</div>
+                <span style={{ fontSize:11, fontWeight:500, color:'#111827' }}>{c.nombre}</span>
               </div>
-              <div style={{ height:8, background:'#F3F4F6', borderRadius:99 }}>
-                <div style={{ height:8, width:`${c.pct}%`, background:c.barColor, borderRadius:99 }} />
-              </div>
+              <div style={{ fontSize:10, color:c.color, fontWeight:500 }}>{c.sub}</div>
+              <div style={{ fontSize:10, color:'#9CA3AF' }}>{c.pct}</div>
+              <div style={{ textAlign:'right', fontSize:12, fontWeight:600, color:c.color }}>{formatCurrency(c.importe)}</div>
             </div>
           ))}
+          <div style={{ height:'0.5px', background:'#EAECF0', margin:'10px 0' }} />
+          <div style={{ display:'flex', justifyContent:'space-between' }}>
+            <span style={{ fontSize:11, color:'#9CA3AF' }}>Total cobros pendientes</span>
+            <span style={{ fontSize:13, fontWeight:600, color:'#111827' }}>{formatCurrency(totalCobros)}</span>
+          </div>
         </div>
       </div>
 
       {/* PAGOS PENDIENTES */}
-      <div style={card}>
-        <div style={{ fontSize:13, fontWeight:600, color:'#111827', marginBottom:8, display:'flex', alignItems:'center', gap:5 }}>
-          <i className="ti ti-trending-down" aria-hidden="true" style={{ fontSize:14, color:'#1d6fd8' }} />Pagos pendientes
+      <div style={{ ...card, display:'flex', gap:20, alignItems:'start' }}>
+        {/* Resumen izquierda */}
+        <div style={{ width:'calc(25% - 7.5px)', flexShrink:0 }}>
+          <div style={{ fontSize:13, fontWeight:600, color:'#111827', marginBottom:8, display:'flex', alignItems:'center', gap:5 }}>
+            <i className="ti ti-trending-down" aria-hidden="true" style={{ fontSize:14, color:'#1d6fd8' }} />Pagos pendientes
+          </div>
+          <div style={{ fontSize:22, fontWeight:600, color:'#111827', letterSpacing:'-0.02em', marginBottom:14 }}>{formatCurrency(totalPagos)}</div>
+          <div style={{ display:'flex', flexDirection:'column', gap:12 }}>
+            {donutData.map((d, i) => (
+              <div key={i}>
+                <div style={{ display:'flex', justifyContent:'space-between', marginBottom:5 }}>
+                  <span style={{ fontSize:10, color:'#9CA3AF' }}>{d.name}</span>
+                  <span style={{ fontSize:10, fontWeight:600, color:'#111827' }}>
+                    {formatCurrency(d.value)} <span style={{ fontSize:9, color:'#9CA3AF', fontWeight:400 }}>{Math.round(d.value/totalPagos*100)}%</span>
+                  </span>
+                </div>
+                <div style={{ height:4, background:'#F3F4F6', borderRadius:99 }}>
+                  <div style={{ height:4, width:`${Math.round(d.value/totalPagos*100)}%`, background:d.color, borderRadius:99 }} />
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
-        <div style={{ fontSize:22, fontWeight:600, color:'#111827', letterSpacing:'-0.02em', marginBottom:14 }}>{formatCurrency(totalPagos)}</div>
-        <div style={{ display:'flex', flexDirection:'column', gap:12 }}>
-          {donutData.map((d, i) => (
-            <div key={i}>
-              <div style={{ display:'flex', justifyContent:'space-between', marginBottom:5 }}>
-                <span style={{ fontSize:10, color:'#9CA3AF' }}>{d.name}</span>
-                <span style={{ fontSize:10, fontWeight:600, color:'#111827' }}>
-                  {formatCurrency(d.value)} <span style={{ fontSize:9, color:'#9CA3AF', fontWeight:400 }}>{Math.round(d.value/totalPagos*100)}%</span>
-                </span>
+        {/* Tabla detalle — oculta en móvil */}
+        <div className="dash-table-hide" style={{ flex:1, minWidth:0 }}>
+          <div style={{ display:'grid', gridTemplateColumns:'1fr 110px 90px 70px', ...hdrStyle }}>
+            <span>Concepto</span><span>Vencimiento</span><span>Tipo</span><span style={{ textAlign:'right' }}>Importe</span>
+          </div>
+          {pagos.map((p, i) => (
+            <div key={i} style={{ ...rowBase, gridTemplateColumns:'1fr 110px 90px 70px', borderBottom: i < pagos.length-1 ? '0.5px solid #F9FAFB' : 'none' }}>
+              <div style={{ display:'flex', alignItems:'center', gap:5 }}>
+                <span style={{ fontSize:11, fontWeight:500, color:'#111827' }}>{p.concepto}</span>
+                <span style={{ fontSize:10, color:'#9CA3AF' }}>· {p.detalle}</span>
               </div>
-              <div style={{ height:8, background:'#F3F4F6', borderRadius:99 }}>
-                <div style={{ height:8, width:`${Math.round(d.value/totalPagos*100)}%`, background:d.color, borderRadius:99 }} />
+              <div style={{ fontSize:10, color:'#9CA3AF' }}>
+                {p.vencimiento} · <span style={{ color: p.urgente ? '#DC2626' : p.dias <= 30 ? '#D97706' : '#9CA3AF', fontWeight:500 }}>{p.dias}d</span>
               </div>
+              <div><TipoBadge tipo={p.tipo} /></div>
+              <div style={{ textAlign:'right', fontSize:12, fontWeight:600, color: p.tipo==='Fiscal' ? '#D97706' : '#111827' }}>{formatCurrency(p.importe)}</div>
             </div>
           ))}
+          <div style={{ height:'0.5px', background:'#EAECF0', margin:'10px 0' }} />
+          <div style={{ display:'flex', justifyContent:'space-between' }}>
+            <span style={{ fontSize:11, color:'#9CA3AF' }}>Total pagos pendientes</span>
+            <span style={{ fontSize:13, fontWeight:600, color:'#111827' }}>{formatCurrency(totalPagos)}</span>
+          </div>
         </div>
       </div>
 
