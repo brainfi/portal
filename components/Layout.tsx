@@ -13,7 +13,7 @@ export default function Layout({ children, title = 'Dashboard' }: LayoutProps) {
   const greeting = hour < 12 ? 'Buenos días' : hour < 20 ? 'Buenas tardes' : 'Buenas noches'
 
   return (
-    <div style={{ display:'flex', height:'100vh', overflow:'hidden', background:'#0E1129' }}>
+    <div style={{ display:'flex', height:'100vh', overflow:'hidden', background:'#06081E' }}>
       {sidebarOpen && (
         <div onClick={() => setSidebarOpen(false)} style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.6)', zIndex:40 }} />
       )}
@@ -35,7 +35,7 @@ export default function Layout({ children, title = 'Dashboard' }: LayoutProps) {
       </div>
 
       <div style={{ flex:1, display:'flex', flexDirection:'column', overflow:'hidden', minWidth:0 }}>
-        <header style={{ padding:'0 20px', height:56, background:'#131830', borderBottom:'1px solid rgba(255,255,255,0.07)', display:'flex', alignItems:'center', justifyContent:'space-between', flexShrink:0 }}>
+        <header style={{ padding:'0 20px', height:56, background:'#06081E', borderBottom:'1px solid rgba(255,255,255,0.07)', display:'flex', alignItems:'center', justifyContent:'space-between', flexShrink:0 }}>
           <div style={{ display:'flex', alignItems:'center', gap:12 }}>
             <button className="hamburger" onClick={() => setSidebarOpen(!sidebarOpen)} style={{ display:'none', alignItems:'center', justifyContent:'center', width:32, height:32, border:'1px solid rgba(255,255,255,0.1)', borderRadius:7, background:'rgba(255,255,255,0.05)', cursor:'pointer', flexShrink:0 }}>
               <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="rgba(255,255,255,0.5)" strokeWidth="1.5"><path d="M2 4h12M2 8h12M2 12h12"/></svg>
@@ -53,11 +53,11 @@ export default function Layout({ children, title = 'Dashboard' }: LayoutProps) {
             <div className="topbar-period" style={{ fontSize:10, color:'rgba(255,255,255,0.4)', background:'rgba(255,255,255,0.05)', border:'1px solid rgba(255,255,255,0.08)', borderRadius:7, padding:'5px 10px', cursor:'pointer' }}>Último mes</div>
             <div style={{ width:30, height:30, borderRadius:7, border:'1px solid rgba(255,255,255,0.08)', background:'rgba(255,255,255,0.04)', display:'flex', alignItems:'center', justifyContent:'center', cursor:'pointer', position:'relative' }}>
               <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="rgba(255,255,255,0.4)" strokeWidth="1.5"><path d="M8 2a5 5 0 015 5v2l1 2H2l1-2V7a5 5 0 015-5zM6 13a2 2 0 004 0"/></svg>
-              <div style={{ position:'absolute', top:6, right:6, width:5, height:5, borderRadius:'50%', background:'#00D4E8', border:'1.5px solid #131830' }} />
+              <div style={{ position:'absolute', top:6, right:6, width:5, height:5, borderRadius:'50%', background:'#00E5C4', border:'1.5px solid #06081E' }} />
             </div>
           </div>
         </header>
-        <main style={{ flex:1, overflow:'auto', padding:'16px 20px', display:'flex', flexDirection:'column', gap:12, background:'#0E1129' }}>
+        <main style={{ flex:1, overflow:'auto', padding:'16px 20px', display:'flex', flexDirection:'column', gap:12, background:'#06081E' }}>
           {children}
         </main>
       </div>

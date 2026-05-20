@@ -23,15 +23,15 @@ const navGroups = [
 interface SidebarProps { onClose?: () => void }
 
 const S = {
-  sidebar: { width:210, background:'#131830', borderRight:'1px solid rgba(255,255,255,0.07)', display:'flex', flexDirection:'column' as const, height:'100vh' },
+  sidebar: { width:210, background:'#06081E', borderRight:'1px solid rgba(255,255,255,0.07)', display:'flex', flexDirection:'column' as const, height:'100vh' },
   logo: { padding:'20px 18px 16px', borderBottom:'1px solid rgba(255,255,255,0.07)', display:'flex', alignItems:'center', justifyContent:'space-between' },
   logoInner: { display:'flex', alignItems:'center', gap:9 },
-  mark: { width:28, height:28, background:'#6C8BFF', borderRadius:7, display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 as const },
+  mark: { width:28, height:28, background:'#7B8CFF', borderRadius:7, display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 as const },
   name: { fontSize:17, fontWeight:600, color:'#fff', letterSpacing:'-0.4px', fontFamily:'Inter, sans-serif' },
   nav: { flex:1, padding:'14px 10px', overflowY:'auto' as const },
-  section: { fontSize:9, color:'rgba(255,255,255,0.25)', textTransform:'uppercase' as const, letterSpacing:'0.1em', padding:'0 8px', margin:'14px 0 5px', fontWeight:500 },
+  section: { fontSize:9, color:'rgba(255,255,255,0.3)', textTransform:'uppercase' as const, letterSpacing:'0.1em', padding:'0 8px', margin:'14px 0 5px', fontWeight:500 },
   bottom: { padding:12, borderTop:'1px solid rgba(255,255,255,0.07)', display:'flex', alignItems:'center', gap:8 },
-  av: { width:28, height:28, borderRadius:'50%', background:'linear-gradient(135deg,#00D4E8,#6C8BFF)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:10, fontWeight:600, color:'#fff', flexShrink:0 as const },
+  av: { width:28, height:28, borderRadius:'50%', background:'linear-gradient(135deg,#00E5C4,#5B6EF5)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:10, fontWeight:600, color:'#fff', flexShrink:0 as const },
 }
 
 export default function Sidebar({ onClose }: SidebarProps) {
@@ -82,7 +82,7 @@ export default function Sidebar({ onClose }: SidebarProps) {
                   fontWeight: isActive ? 500 : 400,
                   cursor: item.disabled ? 'not-allowed' : 'pointer',
                 }}>
-                  <span style={{ color: isActive ? '#6C8BFF' : 'rgba(255,255,255,0.25)', display:'flex', flexShrink:0 }}>{item.icon}</span>
+                  <span style={{ color: isActive ? '#7B8CFF' : 'rgba(255,255,255,0.25)', display:'flex', flexShrink:0 }}>{item.icon}</span>
                   {item.label}
                 </button>
               )
@@ -100,7 +100,7 @@ export default function Sidebar({ onClose }: SidebarProps) {
         <div style={S.av}>{initials}</div>
         <div>
           <div style={{ fontSize:11, fontWeight:500, color:'#fff' }}>{displayName}</div>
-          <div style={{ fontSize:9, color:'rgba(255,255,255,0.25)' }}>Admin · Mi empresa</div>
+          <div style={{ fontSize:9, color:'rgba(255,255,255,0.3)' }}>Admin · Mi empresa</div>
         </div>
       </div>
     </aside>
