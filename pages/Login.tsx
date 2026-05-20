@@ -20,8 +20,20 @@ export default function Login() {
   }
 
   return (
-    <div style={{ display:'flex', height:'100vh', overflow:'hidden', fontFamily:'Inter, sans-serif' }}>
-      <div style={{ flex:1, background:'#4361EE', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', position:'relative', overflow:'hidden' }}>
+    <div style={{ display:'flex', height:'100vh', overflow:'hidden', fontFamily:'Inter, sans-serif', flexDirection:'column' }}>
+      <style>{`
+        @media (min-width: 640px) {
+          .login-shell { flex-direction: row !important; }
+          .login-left { display: flex !important; }
+          .login-right { width: 480px !important; height: 100vh !important; overflow-y: auto; }
+        }
+        @media (max-width: 639px) {
+          .login-left { display: none !important; }
+          .login-right { width: 100% !important; height: 100vh !important; }
+        }
+      `}</style>
+      <div className="login-shell" style={{ display:'flex', flex:1, flexDirection:'row', height:'100vh' }}>
+      <div className="login-left" style={{ flex:1, background:'#4361EE', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', position:'relative', overflow:'hidden' }}>
         <div style={{ position:'absolute', top:-100, left:-100, width:400, height:400, borderRadius:'50%', background:'rgba(255,255,255,0.05)' }} />
         <div style={{ position:'absolute', bottom:-80, right:-80, width:320, height:320, borderRadius:'50%', background:'rgba(255,255,255,0.05)' }} />
         <div style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:20, zIndex:1 }}>
@@ -38,7 +50,7 @@ export default function Login() {
         </div>
         <div style={{ position:'absolute', bottom:40, fontSize:11, color:'rgba(255,255,255,0.35)', letterSpacing:'0.05em' }}>app.brainfi.io</div>
       </div>
-      <div style={{ width:480, background:'#fff', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', padding:'48px 56px', flexShrink:0 }}>
+      <div className="login-right" style={{ width:480, background:'#fff', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', padding:'48px 56px', flexShrink:0 }}>
         <div style={{ width:'100%', maxWidth:340 }}>
           <div style={{ marginBottom:32 }}>
             <h1 style={{ fontSize:22, fontWeight:700, color:'#1a1a1a', marginBottom:6, letterSpacing:'-0.02em' }}>Acceder al portal</h1>
@@ -70,6 +82,7 @@ export default function Login() {
             ¿Necesitas acceso?{' '}<a href="mailto:hola@brainfi.io" style={{ color:'#4361EE', fontWeight:500 }}>hola@brainfi.io</a>
           </p>
         </div>
+      </div>
       </div>
     </div>
   )
