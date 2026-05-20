@@ -3,11 +3,11 @@ import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 
 const cashflowData = [
   { mes:'Dic', ingresos:115, gastos:72 },
-  { mes:'Ene', ingresos:110, gastos:78 },
-  { mes:'Feb', ingresos:125, gastos:80 },
-  { mes:'Mar', ingresos:158, gastos:85 },
-  { mes:'Abr', ingresos:140, gastos:75 },
-  { mes:'May', ingresos:68,  gastos:35 },
+  { mes:'Ene', ingresos:110, gastos:78, neto:32 },
+  { mes:'Feb', ingresos:125, gastos:80, neto:45 },
+  { mes:'Mar', ingresos:158, gastos:85, neto:73 },
+  { mes:'Abr', ingresos:140, gastos:75, neto:65 },
+  { mes:'May', ingresos:68,  gastos:35, neto:33 },
 ]
 
 
@@ -35,14 +35,25 @@ function CfTooltip({ active, payload, label }: any) {
   return (
     <div style={{ background:'#fff', border:'1px solid #E8E8EC', borderRadius:10, padding:'10px 14px', fontSize:12 }}>
       <div style={{ fontWeight:600, color:'#1a1a1a', marginBottom:8 }}>{label}</div>
-      {payload.map((p: any) => (
-        <div key={p.dataKey} style={{ display:'flex', alignItems:'center', gap:6, marginBottom:4 }}>
-          <div style={{ width:7, height:7, borderRadius:2, background:p.dataKey === 'ingresos' ? '#3B5BDB' : p.dataKey === 'gastos' ? '#EF4444' : '#7DD3FC' }} />
-          <span style={{ color:'#666' }}>
-            {p.dataKey === 'ingresos' ? 'Ingresos' : p.dataKey === 'gastos' ? 'Gastos' : 'Cashflow neto'}: €{p.value}k
-          </span>
-        </div>
-      ))}
+      {payload.map((p: any) => {
+        const found = p.payload
+        return (
+          <div key="cf" style={{ display:'flex', flexDirection:'column', gap:4 }}>
+            <div style={{ display:'flex', alignItems:'center', gap:6 }}>
+              <div style={{ width:7, height:7, borderRadius:2, background:'#3B5BDB' }} />
+              <span style={{ color:'#666' }}>Ingresos: €{found.ingresos}k</span>
+            </div>
+            <div style={{ display:'flex', alignItems:'center', gap:6 }}>
+              <div style={{ width:7, height:7, borderRadius:2, background:'#EF4444' }} />
+              <span style={{ color:'#666' }}>Gastos: €{found.gastos}k</span>
+            </div>
+            <div style={{ display:'flex', alignItems:'center', gap:6 }}>
+              <div style={{ width:7, height:7, borderRadius:2, background:'#7DD3FC' }} />
+              <span style={{ color:'#666' }}>Cashflow: €{found.neto}k</span>
+            </div>
+          </div>
+        )
+      })}
     </div>
   )
 }
@@ -92,8 +103,6 @@ export default function Dashboard() {
               <XAxis dataKey="mes" tick={{ fontSize:11, fill:'#aaa' }} axisLine={false} tickLine={false}/>
               <YAxis tick={{ fontSize:11, fill:'#aaa' }} axisLine={false} tickLine={false} tickFormatter={v => `€${v}k`} width={40}/>
               <Tooltip content={<CfTooltip />} cursor={{ stroke:'#BAE6FD', strokeWidth:1, strokeDasharray:'3 3' }}/>
-              <Area type="monotone" dataKey="ingresos" stroke="#3B5BDB" strokeWidth={1.5} fill="none" dot={false} activeDot={{ r:4, fill:'#3B5BDB', stroke:'#fff', strokeWidth:2 }}/>
-              <Area type="monotone" dataKey="gastos" stroke="#EF4444" strokeWidth={1.5} strokeDasharray="4 3" fill="none" dot={false} activeDot={{ r:4, fill:'#EF4444', stroke:'#fff', strokeWidth:2 }}/>
               <Area type="monotone" dataKey="neto" stroke="#7DD3FC" strokeWidth={2} fill="url(#gNeto)" dot={false} activeDot={{ r:5, fill:'#0EA5E9', stroke:'#fff', strokeWidth:2 }}/>
             </AreaChart>
           </ResponsiveContainer>
