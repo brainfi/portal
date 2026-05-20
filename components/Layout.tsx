@@ -4,7 +4,7 @@ import Sidebar from './Sidebar'
 
 interface LayoutProps { children: React.ReactNode; title?: string }
 
-export default function Layout({ children, title = 'Dashboard' }: LayoutProps) {
+export default function Layout({ children, title = 'Resumen' }: LayoutProps) {
   const { user } = useAuth()
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const name = user?.email?.split('@')[0] ?? 'Usuario'
@@ -13,14 +13,17 @@ export default function Layout({ children, title = 'Dashboard' }: LayoutProps) {
   const greeting = hour < 12 ? 'Buenos días' : hour < 20 ? 'Buenas tardes' : 'Buenas noches'
 
   return (
-    <div style={{ display:'flex', height:'100vh', overflow:'hidden', background:'#F5F6FA' }}>
+    <div style={{ display:'flex', height:'100vh', overflow:'hidden', background:'#F4F5F7' }}>
       {sidebarOpen && (
-        <div onClick={() => setSidebarOpen(false)} style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.3)', zIndex:40 }} />
+        <div onClick={() => setSidebarOpen(false)} style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.25)', zIndex:40 }} />
       )}
       <style>{`
         @media (max-width: 768px) {
-          .sidebar-wrap { position: fixed !important; left: ${sidebarOpen ? '0' : '-200px'} !important; top: 0; height: 100vh; z-index: 50; transition: left 0.25s ease; box-shadow: ${sidebarOpen ? '4px 0 24px rgba(0,0,0,0.12)' : 'none'}; }
+          .sidebar-wrap { position: fixed !important; left: ${sidebarOpen ? '0' : '-210px'} !important; top: 0; height: 100vh; z-index: 50; transition: left 0.25s ease; box-shadow: ${sidebarOpen ? '4px 0 24px rgba(0,0,0,0.1)' : 'none'}; }
           .hamburger { display: flex !important; }
+          .tb-actions { display: none !important; }
+          .row2 { grid-template-columns: 1fr !important; }
+          .kpi-grid { grid-template-columns: 1fr 1fr !important; }
         }
         @media (min-width: 769px) {
           .hamburger { display: none !important; }
@@ -33,29 +36,27 @@ export default function Layout({ children, title = 'Dashboard' }: LayoutProps) {
       </div>
 
       <div style={{ flex:1, display:'flex', flexDirection:'column', overflow:'hidden', minWidth:0 }}>
-        <main style={{ flex:1, overflow:'auto', padding:'20px', background:'#F5F6FA', display:'flex', flexDirection:'column', gap:16 }}>
-          {/* Page header */}
-          <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start' }}>
-            <div style={{ display:'flex', alignItems:'center', gap:12 }}>
-              <button className="hamburger" onClick={() => setSidebarOpen(!sidebarOpen)} style={{ display:'none', alignItems:'center', justifyContent:'center', width:32, height:32, border:'1px solid #ECEEF3', borderRadius:7, background:'#fff', cursor:'pointer' }}>
-                <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="#8A94A6" strokeWidth="1.5"><path d="M2 4h12M2 8h12M2 12h12"/></svg>
-              </button>
-              <div>
-                <div style={{ fontSize:20, fontWeight:700, color:'#1A1D2E', letterSpacing:'-0.02em' }}>{greeting}, {displayName}</div>
-                <div style={{ fontSize:11, color:'#8A94A6', marginTop:3 }}>Abril 2026 · Resumen financiero de tu empresa</div>
-              </div>
-            </div>
-            <div style={{ display:'flex', gap:8 }}>
-              <button style={{ display:'flex', alignItems:'center', gap:6, background:'#2DC653', color:'#fff', border:'none', borderRadius:8, padding:'8px 14px', fontSize:12, fontWeight:500 }}>
-                <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="8" cy="8" r="6"/><path d="M8 5v3l1.5 1"/></svg>
-                Preguntar a IA
-              </button>
-              <button style={{ display:'flex', alignItems:'center', gap:6, background:'#fff', color:'#1A1D2E', border:'1px solid #ECEEF3', borderRadius:8, padding:'8px 14px', fontSize:12, fontWeight:500, boxShadow:'0 1px 3px rgba(0,0,0,0.06)' }}>
-                <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M2 12l4-4 3 3 4-5"/><path d="M14 2v4H10"/></svg>
-                Exportar informe
-              </button>
-            </div>
+        <div style={{ padding:'20px 28px 0', background:'#F4F5F7', flexShrink:0, position:'relative' }}>
+          <div style={{ display:'flex', alignItems:'center', gap:12, marginBottom:4 }}>
+            <button className="hamburger" onClick={() => setSidebarOpen(!sidebarOpen)} style={{ display:'none', alignItems:'center', justifyContent:'center', width:32, height:32, border:'1px solid #E8E8EC', borderRadius:7, background:'#fff', cursor:'pointer' }}>
+              <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="#888" strokeWidth="1.5"><path d="M2 4h12M2 8h12M2 12h12"/></svg>
+            </button>
+            <div style={{ fontSize:10, fontWeight:600, color:'#999', textTransform:'uppercase', letterSpacing:'0.12em' }}>Workspace · Mi empresa</div>
           </div>
+          <div style={{ fontFamily:'Playfair Display, serif', fontSize:32, fontWeight:400, color:'#1a1a1a', marginBottom:4 }}>{title}</div>
+          <div style={{ fontSize:13, color:'#888', marginBottom:20 }}>El pulso de tu negocio — de un vistazo.</div>
+          <div className="tb-actions" style={{ display:'flex', alignItems:'center', gap:10, position:'absolute', top:20, right:28 }}>
+            <div style={{ display:'flex', alignItems:'center', gap:8, background:'#fff', border:'1px solid #E8E8EC', borderRadius:8, padding:'8px 14px', fontSize:12, color:'#999', width:200 }}>
+              <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="#bbb" strokeWidth="1.5"><circle cx="7" cy="7" r="5"/><path d="M11 11l3 3"/></svg>
+              Buscar...
+            </div>
+            <button style={{ display:'flex', alignItems:'center', gap:6, background:'#1a1a1a', color:'#fff', border:'none', borderRadius:8, padding:'9px 16px', fontSize:13, fontWeight:500, cursor:'pointer' }}>
+              <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2"><path d="M8 2v12M2 8h12"/></svg>
+              Nuevo
+            </button>
+          </div>
+        </div>
+        <main style={{ flex:1, overflow:'auto', padding:'0 28px 28px', background:'#F4F5F7', display:'flex', flexDirection:'column', gap:14 }}>
           {children}
         </main>
       </div>
