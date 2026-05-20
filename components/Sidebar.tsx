@@ -3,14 +3,14 @@ import { useAuth } from '@/contexts/AuthContext'
 
 const navGroups = [
   { section:'General', items:[
-    { label:'Resumen', path:'/', icon:<GridIcon/>, disabled:false, blurred:false },
-    { label:'Cashflow', path:'/cashflow', icon:<CashflowIcon/>, disabled:true, blurred:true },
-    { label:'Análisis', path:'/analisis', icon:<ChartIcon/>, disabled:true, blurred:true },
-    { label:'Impuestos', path:'/impuestos', icon:<TaxIcon/>, disabled:true, blurred:true },
+    { label:'Resumen', path:'/', icon:<GridIcon/>, disabled:false },
+    { label:'Cashflow', path:'/cashflow', icon:<CashflowIcon/>, disabled:true },
+    { label:'Análisis', path:'/analisis', icon:<ChartIcon/>, disabled:true },
+    { label:'Impuestos', path:'/impuestos', icon:<TaxIcon/>, disabled:true },
   ]},
   { section:'Admin', items:[
-    { label:'Ajustes', path:'/ajustes', icon:<SettingsIcon/>, disabled:false, blurred:false },
-    { label:'Integraciones', path:'/integraciones', icon:<PlugIcon/>, disabled:true, blurred:true },
+    { label:'Ajustes', path:'/ajustes', icon:<SettingsIcon/>, disabled:false },
+    { label:'Integraciones', path:'/integraciones', icon:<PlugIcon/>, disabled:true },
   ]}
 ]
 
@@ -23,9 +23,12 @@ export default function Sidebar({ onClose }: SidebarProps) {
   const name = user?.email?.split('@')[0] ?? 'Usuario'
   const displayName = name.charAt(0).toUpperCase() + name.slice(1)
   const initials = displayName.slice(0,2).toUpperCase()
+  const email = user?.email ?? ''
 
   return (
     <aside style={{ width:200, background:'#fff', borderRight:'1px solid #E8E8EC', display:'flex', flexDirection:'column', height:'100vh' }}>
+
+      {/* LOGO */}
       <div style={{ padding:'20px 18px 14px', borderBottom:'1px solid #E8E8EC', display:'flex', alignItems:'center', justifyContent:'space-between' }}>
         <div style={{ display:'flex', alignItems:'center', gap:9 }}>
           <div style={{ width:28, height:28, background:'#4361EE', borderRadius:7, display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
@@ -46,6 +49,7 @@ export default function Sidebar({ onClose }: SidebarProps) {
         )}
       </div>
 
+      {/* NAV */}
       <nav style={{ flex:1, padding:'14px 10px', overflowY:'auto' }}>
         {navGroups.map(group => (
           <div key={group.section}>
@@ -53,18 +57,17 @@ export default function Sidebar({ onClose }: SidebarProps) {
             {group.items.map(item => {
               const isActive = location.pathname === item.path && !item.disabled
               return (
-                <button key={item.label} onClick={() => { if (!item.disabled) { navigate(item.path); onClose?.() } }}
+                <button key={item.label}
+                  onClick={() => { if (!item.disabled) { navigate(item.path); onClose?.() } }}
                   style={{
                     display:'flex', alignItems:'center', gap:9, padding:'8px 10px', fontSize:12,
                     width:'100%', border:'none', borderRadius:8, marginBottom:2, textAlign:'left',
-                    background: isActive ? '#F4F5F7' : 'transparent',
-                    color: isActive ? '#1a1a1a' : '#888',
-                    fontWeight: isActive ? 500 : 400,
-                    cursor: item.disabled ? 'not-allowed' : 'pointer',
-                    filter: item.blurred ? 'blur(2px)' : 'none',
-                    opacity: item.disabled && !item.blurred ? 0.35 : 1,
+                    background: isActive ? '#EEF1FD' : 'transparent',
+                    color: isActive ? '#4361EE' : item.disabled ? '#ccc' : '#888',
+                    fontWeight: isActive ? 600 : 400,
+                    cursor: item.disabled ? 'default' : 'pointer',
                   }}>
-                  <span style={{ display:'flex', flexShrink:0 }}>{item.icon}</span>
+                  <span style={{ display:'flex', flexShrink:0, color: isActive ? '#4361EE' : item.disabled ? '#ddd' : '#aaa' }}>{item.icon}</span>
                   {item.label}
                 </button>
               )
@@ -78,13 +81,19 @@ export default function Sidebar({ onClose }: SidebarProps) {
         </div>
       </nav>
 
-      <div style={{ padding:12, borderTop:'1px solid #E8E8EC', display:'flex', alignItems:'center', gap:8 }}>
-        <div style={{ width:28, height:28, borderRadius:'50%', background:'#4361EE', display:'flex', alignItems:'center', justifyContent:'center', fontSize:10, fontWeight:600, color:'#fff', flexShrink:0 }}>{initials}</div>
-        <div>
-          <div style={{ fontSize:11, fontWeight:600, color:'#1a1a1a' }}>{displayName}</div>
-          <div style={{ fontSize:9, color:'#aaa' }}>Admin · Mi empresa</div>
+      {/* USUARIO — nueva propuesta */}
+      <div style={{ padding:'12px 10px', borderTop:'1px solid #E8E8EC' }}>
+        <div style={{ display:'flex', alignItems:'center', gap:10, padding:'10px 10px', background:'#F4F5F7', borderRadius:10 }}>
+          <div style={{ width:32, height:32, borderRadius:8, background:'#4361EE', display:'flex', alignItems:'center', justifyContent:'center', fontSize:12, fontWeight:700, color:'#fff', flexShrink:0, letterSpacing:'-0.5px' }}>
+            {initials}
+          </div>
+          <div style={{ minWidth:0 }}>
+            <div style={{ fontSize:12, fontWeight:600, color:'#1a1a1a', whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis' }}>{displayName}</div>
+            <div style={{ fontSize:10, color:'#aaa', whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis' }}>{email}</div>
+          </div>
         </div>
       </div>
+
     </aside>
   )
 }
