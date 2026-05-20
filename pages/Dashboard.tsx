@@ -20,12 +20,12 @@ const kpis = [
 ]
 
 const txns = [
-  { name:'Gasto en suministros', sub:'Suministros · 20 may 2026', amount:'-144,46 €', positive:false },
-  { name:'Consultoría — Acme Foundry', sub:'Consultoría · 19 may 2026', amount:'+4.657,19 €', positive:true },
-  { name:'Gasto de viaje', sub:'Viajes · 19 may 2026', amount:'-520,62 €', positive:false },
-  { name:'Gasto en software', sub:'Software · 18 may 2026', amount:'-287,25 €', positive:false },
-  { name:'Licencias — Acme Foundry', sub:'Licencias · 16 may 2026', amount:'+4.158,81 €', positive:true },
-  { name:'Ventas — Northwind Studios', sub:'Ventas · 16 may 2026', amount:'+4.779,39 €', positive:true },
+  { name:'Nóminas · Mayo', sub:'8 empleados · 30 may 2026', amount:'-18.400,00 €' },
+  { name:'Alquiler oficina', sub:'Contrato anual · 1 may 2026', amount:'-2.100,00 €' },
+  { name:'IVA Q2 · Mod. 303', sub:'AEAT · 20 jul 2026', amount:'-3.900,00 €' },
+  { name:'IRPF · Mod. 111', sub:'AEAT · 20 jul 2026', amount:'-4.200,00 €' },
+  { name:'Adobe Creative Cloud', sub:'5 licencias · 5 may 2026', amount:'-290,00 €' },
+  { name:'HubSpot CRM', sub:'Plan Pro · 10 may 2026', amount:'-450,00 €' },
 ]
 
 const card: React.CSSProperties = { background:'#fff', borderRadius:16, border:'1px solid #E8E8EC' }
@@ -157,14 +157,14 @@ export default function Dashboard() {
           </div>
           {txns.map((t, i) => (
             <div key={i} style={{ display:'flex', alignItems:'center', gap:14, padding:'13px 0', borderBottom: i < txns.length-1 ? '1px solid #F4F5F7' : 'none' }}>
-              <div style={{ width:36, height:36, borderRadius:10, background: t.positive ? '#EEF1FD' : '#FFF3E0', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
-                <i className={`ti ${t.positive ? 'ti-arrow-up-right' : 'ti-arrow-down-right'}`} aria-hidden="true" style={{ fontSize:16, color: t.positive ? '#3B5BDB' : '#F4A100' }} />
+              <div style={{ width:36, height:36, borderRadius:10, background:'#FEF2F2', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
+                <i className="ti ti-arrow-down-right" aria-hidden="true" style={{ fontSize:16, color:'#EF4444' }} />
               </div>
               <div style={{ flex:1 }}>
                 <div style={{ fontSize:13, fontWeight:500, color:'#1a1a1a', marginBottom:2 }}>{t.name}</div>
                 <div style={{ fontSize:11, color:'#aaa' }}>{t.sub}</div>
               </div>
-              <div style={{ fontSize:14, fontWeight:500, color: t.positive ? '#3B5BDB' : '#1a1a1a' }}>{t.amount}</div>
+              <div style={{ fontSize:14, fontWeight:500, color:'#EF4444' }}>{t.amount}</div>
             </div>
           ))}
         </div>
