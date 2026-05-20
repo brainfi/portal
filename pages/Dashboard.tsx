@@ -1,6 +1,5 @@
 import Layout from '@/components/Layout'
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
-import { PieChart, Pie, Cell } from 'recharts'
 
 const cashflowData = [
   { mes:'Dic', ingresos:115, gastos:72 },
@@ -11,13 +10,7 @@ const cashflowData = [
   { mes:'May', ingresos:68,  gastos:35 },
 ]
 
-const donutData = [
-  { name:'Nóminas', value:163, color:'#2B4EAD' },
-  { name:'Marketing', value:49.8, color:'#C8A97A' },
-  { name:'Serv. profesionales', value:40.9, color:'#C0504D' },
-  { name:'Viajes', value:23.7, color:'#4472C4' },
-  { name:'Software', value:16.3, color:'#7F8C8D' },
-]
+
 
 const kpis = [
   { lbl:'Dinero real hoy', val:'5.620 €', delta:'↗ 12,4%', up:true, sub:'vs mes anterior', iconBg:'#EEF1FD', iconColor:'#3B5BDB', icon:'ti-coin' },
@@ -71,7 +64,7 @@ export default function Dashboard() {
                 <i className={`ti ${k.icon}`} aria-hidden="true" style={{ fontSize:16, color:k.iconColor }} />
               </div>
             </div>
-            <div style={{ fontFamily:'Playfair Display, serif', fontSize:30, fontWeight:400, color:'#1a1a1a', marginBottom:10, letterSpacing:'-0.01em' }}>{k.val}</div>
+            <div style={{ fontFamily:'Inter, sans-serif', fontSize:30, fontWeight:400, color:'#1a1a1a', marginBottom:10, letterSpacing:'-0.01em' }}>{k.val}</div>
             <div style={{ display:'flex', alignItems:'center', gap:6 }}>
               <span style={{ fontSize:11, fontWeight:600, color: k.up ? '#1a7a3a' : '#b01a2b', background: k.up ? '#d4f5df' : '#fdd', padding:'2px 7px', borderRadius:99 }}>{k.delta}</span>
               <span style={{ fontSize:11, color:'#aaa' }}>{k.sub}</span>
@@ -85,7 +78,7 @@ export default function Dashboard() {
         <div style={{ ...card, padding:'24px' }}>
           <div style={{ fontSize:9, fontWeight:600, color:'#999', textTransform:'uppercase', letterSpacing:'0.12em', marginBottom:6 }}>Cash Flow</div>
           <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:16 }}>
-            <div style={{ fontFamily:'Playfair Display, serif', fontSize:20, fontWeight:400, color:'#1a1a1a' }}>Ingresos vs gastos · últimos 6 meses</div>
+            <div style={{ fontFamily:'Inter, sans-serif', fontSize:20, fontWeight:400, color:'#1a1a1a' }}>Ingresos vs gastos · últimos 6 meses</div>
             <div style={{ display:'flex', gap:14 }}>
               {[{ c:'#3B5BDB', l:'Ingresos' }, { c:'#C8A97A', l:'Gastos' }].map(l => (
                 <div key={l.l} style={{ display:'flex', alignItems:'center', gap:5, fontSize:12, color:'#666' }}>
@@ -116,23 +109,46 @@ export default function Dashboard() {
           </ResponsiveContainer>
         </div>
 
-        <div style={{ ...card, padding:'24px' }}>
-          <div style={{ fontSize:9, fontWeight:600, color:'#999', textTransform:'uppercase', letterSpacing:'0.12em', marginBottom:6 }}>Mezcla de gastos</div>
-          <div style={{ fontFamily:'Playfair Display, serif', fontSize:20, fontWeight:400, color:'#1a1a1a', marginBottom:16 }}>A dónde va</div>
-          <ResponsiveContainer width="100%" height={150}>
-            <PieChart>
-              <Pie data={donutData} cx="50%" cy="50%" innerRadius={46} outerRadius={68} dataKey="value" strokeWidth={2} stroke="#fff">
-                {donutData.map((d, i) => <Cell key={i} fill={d.color}/>)}
-              </Pie>
-            </PieChart>
-          </ResponsiveContainer>
-          <div style={{ display:'flex', flexDirection:'column', gap:10, marginTop:16 }}>
-            {donutData.map((d, i) => (
-              <div key={i} style={{ display:'flex', alignItems:'center', justifyContent:'space-between', fontSize:13 }}>
-                <div style={{ display:'flex', alignItems:'center', gap:8, color:'#444' }}>
-                  <div style={{ width:8, height:8, borderRadius:'50%', background:d.color }} />{d.name}
+        <div style={{ ...card, padding:'24px', display:'flex', flexDirection:'column' }}>
+          <div style={{ fontSize:9, fontWeight:600, color:'#999', textTransform:'uppercase', letterSpacing:'0.12em', marginBottom:6 }}>Salud financiera</div>
+          <div style={{ fontFamily:'Inter, sans-serif', fontSize:20, fontWeight:600, color:'#1a1a1a', marginBottom:4 }}>Salud financiera</div>
+          <div style={{ fontSize:11, color:'#aaa', marginBottom:16 }}>Basado en liquidez, deuda y cobros</div>
+          <div style={{ display:'flex', justifyContent:'center' }}>
+            <svg width="180" height="120" viewBox="0 0 180 120">
+              <defs>
+                <linearGradient id="gaugeG" x1="0" y1="0" x2="1" y2="0">
+                  <stop offset="0%" stopColor="#3B5BDB"/>
+                  <stop offset="100%" stopColor="#7B93FF"/>
+                </linearGradient>
+              </defs>
+              <path d="M 10 105 A 80 80 0 0 1 170 105" fill="none" stroke="#F0F0F2" strokeWidth="14" strokeLinecap="round"/>
+              <path d="M 18 105 A 72 72 0 0 1 162 105" fill="none" stroke="#F0F0F2" strokeWidth="10" strokeLinecap="round"/>
+              <path d="M 25 105 A 65 65 0 0 1 155 105" fill="none" stroke="#F0F0F2" strokeWidth="8" strokeLinecap="round"/>
+              <path d="M 10 105 A 80 80 0 0 1 153 36" fill="none" stroke="url(#gaugeG)" strokeWidth="14" strokeLinecap="round"/>
+              <path d="M 18 105 A 72 72 0 0 1 145 42" fill="none" stroke="#3B5BDB" strokeWidth="10" strokeLinecap="round" opacity="0.45"/>
+              <path d="M 25 105 A 65 65 0 0 1 138 48" fill="none" stroke="#3B5BDB" strokeWidth="8" strokeLinecap="round" opacity="0.2"/>
+              <text x="90" y="95" textAnchor="middle" fontSize="30" fontWeight="700" fill="#1a1a1a" fontFamily="Inter">68%</text>
+              <text x="90" y="112" textAnchor="middle" fontSize="10" fill="#aaa" fontFamily="Inter">salud financiera</text>
+            </svg>
+          </div>
+          <div style={{ height:'0.5px', background:'#E8E8EC', margin:'14px 0' }} />
+          <div style={{ display:'flex', flexDirection:'column', gap:10 }}>
+            {[
+              { label:'Liquidez', pct:82, color:'#3B5BDB' },
+              { label:'Cobros', pct:61, color:'#7B93FF' },
+              { label:'Deuda', pct:58, color:'#C8A97A' },
+            ].map(m => (
+              <div key={m.label} style={{ display:'flex', justifyContent:'space-between', alignItems:'center' }}>
+                <div style={{ display:'flex', alignItems:'center', gap:6 }}>
+                  <div style={{ width:7, height:7, borderRadius:'50%', background:m.color }} />
+                  <span style={{ fontSize:11, color:'#888' }}>{m.label}</span>
                 </div>
-                <div style={{ fontWeight:500, color:'#1a1a1a' }}>{d.value.toFixed(1).replace('.',',')}k €</div>
+                <div style={{ display:'flex', alignItems:'center', gap:8 }}>
+                  <div style={{ width:70, height:4, background:'#F0F0F2', borderRadius:99, overflow:'hidden' }}>
+                    <div style={{ height:4, width:`${m.pct}%`, background:m.color, borderRadius:99 }} />
+                  </div>
+                  <span style={{ fontSize:12, fontWeight:600, color:'#1a1a1a', minWidth:28 }}>{m.pct}%</span>
+                </div>
               </div>
             ))}
           </div>
@@ -147,7 +163,7 @@ export default function Dashboard() {
           <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:16 }}>
             <div>
               <div style={{ fontSize:9, fontWeight:600, color:'#999', textTransform:'uppercase', letterSpacing:'0.12em', marginBottom:6 }}>Actividad</div>
-              <div style={{ fontFamily:'Playfair Display, serif', fontSize:20, fontWeight:400, color:'#1a1a1a' }}>Transacciones recientes</div>
+              <div style={{ fontFamily:'Inter, sans-serif', fontSize:20, fontWeight:600, color:'#1a1a1a' }}>Próximos pagos</div>
             </div>
             <span style={{ fontSize:12, color:'#3B5BDB', fontWeight:500, cursor:'pointer' }}>Ver todas →</span>
           </div>
@@ -172,7 +188,7 @@ export default function Dashboard() {
             <div style={{ fontSize:9, fontWeight:600, color:'#999', textTransform:'uppercase', letterSpacing:'0.12em', display:'flex', alignItems:'center', gap:6, marginBottom:10 }}>
               <i className="ti ti-file-invoice" aria-hidden="true" style={{ fontSize:13 }} />Pendiente de cobro
             </div>
-            <div style={{ fontFamily:'Playfair Display, serif', fontSize:36, fontWeight:400, color:'#1a1a1a', margin:'6px 0', letterSpacing:'-0.02em' }}>61.381 €</div>
+            <div style={{ fontFamily:'Inter, sans-serif', fontSize:36, fontWeight:400, color:'#1a1a1a', margin:'6px 0', letterSpacing:'-0.02em' }}>61.381 €</div>
             <div style={{ fontSize:12, color:'#aaa', marginBottom:16 }}>en facturas enviadas + vencidas</div>
             <button style={{ width:'100%', padding:11, border:'1px solid #E8E8EC', borderRadius:10, background:'#fff', fontSize:13, color:'#1a1a1a', fontWeight:500, cursor:'pointer', fontFamily:'Inter,sans-serif' }}>
               Revisar facturas
@@ -184,7 +200,7 @@ export default function Dashboard() {
             <div style={{ fontSize:9, fontWeight:600, color:'#3B5BDB', textTransform:'uppercase', letterSpacing:'0.12em', display:'flex', alignItems:'center', gap:5, marginBottom:12 }}>
               <i className="ti ti-sparkles" aria-hidden="true" style={{ fontSize:13 }} />IA · brainfi
             </div>
-            <div style={{ fontFamily:'Playfair Display, serif', fontSize:20, fontWeight:400, color:'#1a1a1a', marginBottom:8 }}>Pregunta a tu CFO IA</div>
+            <div style={{ fontFamily:'Inter, sans-serif', fontSize:20, fontWeight:400, color:'#1a1a1a', marginBottom:8 }}>Pregunta a tu CFO IA</div>
             <div style={{ fontSize:13, color:'#555', lineHeight:1.6, marginBottom:18 }}>
               Obtén un análisis instantáneo de tus números — qué funciona, qué no, y qué hacer a continuación.
             </div>

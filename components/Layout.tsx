@@ -43,7 +43,7 @@ export default function Layout({ children, title = 'Resumen' }: LayoutProps) {
             </button>
             <div style={{ fontSize:10, fontWeight:600, color:'#999', textTransform:'uppercase', letterSpacing:'0.12em' }}>Workspace · Mi empresa</div>
           </div>
-          <div style={{ fontFamily:'Playfair Display, serif', fontSize:32, fontWeight:400, color:'#1a1a1a', marginBottom:4 }}>{title}</div>
+          <div style={{ fontFamily:'Inter, sans-serif', fontSize:32, fontWeight:400, color:'#1a1a1a', marginBottom:4 }}>{title}</div>
           <div style={{ fontSize:13, color:'#888', marginBottom:20 }}>El pulso de tu negocio — de un vistazo.</div>
           <div className="tb-actions" style={{ display:'flex', alignItems:'center', gap:10, position:'absolute', top:20, right:28 }}>
             <div style={{ display:'flex', alignItems:'center', gap:8, background:'#fff', border:'1px solid #E8E8EC', borderRadius:8, padding:'8px 14px', fontSize:12, color:'#999', width:200 }}>
