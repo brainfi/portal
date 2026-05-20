@@ -177,7 +177,10 @@ export default function Dashboard() {
               <i className="ti ti-file-invoice" aria-hidden="true" style={{ fontSize:13 }} />Pendiente de cobro
             </div>
             <div style={{ fontFamily:'Inter, sans-serif', fontSize:36, fontWeight:400, color:'#1a1a1a', margin:'6px 0', letterSpacing:'-0.02em' }}>61.381 €</div>
-            <div style={{ fontSize:12, color:'#aaa', marginBottom:16 }}>en facturas enviadas + vencidas</div>
+            <div style={{ display:'flex', alignItems:'center', gap:7, marginBottom:16 }}>
+              <span style={{ fontSize:11, fontWeight:600, color:'#b01a2b', background:'#fdd', padding:'2px 7px', borderRadius:99 }}>↘ 5,3%</span>
+              <span style={{ fontSize:11, color:'#aaa' }}>vs mes anterior</span>
+            </div>
             <button style={{ width:'100%', padding:11, border:'1px solid #E8E8EC', borderRadius:10, background:'#fff', fontSize:13, color:'#1a1a1a', fontWeight:500, cursor:'pointer', fontFamily:'Inter,sans-serif' }}>
               Revisar facturas
             </button>
