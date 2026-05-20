@@ -77,13 +77,16 @@ export default function Dashboard() {
       <div className="row2" style={{ display:'grid', gridTemplateColumns:'2fr 1fr', gap:14 }}>
         <div style={{ ...card, padding:'24px' }}>
           <div style={{ fontSize:9, fontWeight:600, color:'#999', textTransform:'uppercase', letterSpacing:'0.12em', marginBottom:6 }}>Cash Flow</div>
-          <div style={{ display:'flex', gap:14, marginBottom:16 }}>
+          <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:16 }}>
+            <div style={{ fontFamily:'Inter, sans-serif', fontSize:20, fontWeight:400, color:'#1a1a1a' }}>Ingresos vs gastos · últimos 6 meses</div>
+            <div style={{ display:'flex', gap:14 }}>
               {[{ c:'#3B5BDB', l:'Ingresos' }, { c:'#C8A97A', l:'Gastos' }].map(l => (
                 <div key={l.l} style={{ display:'flex', alignItems:'center', gap:5, fontSize:12, color:'#666' }}>
                   <div style={{ width:8, height:8, borderRadius:'50%', background:l.c }} />{l.l}
                 </div>
               ))}
             </div>
+          </div>
           <ResponsiveContainer width="100%" height={200}>
             <AreaChart data={cashflowData} margin={{ top:4, right:4, left:0, bottom:0 }}>
               <defs>
@@ -110,49 +113,47 @@ export default function Dashboard() {
           <div style={{ fontSize:9, fontWeight:600, color:'#999', textTransform:'uppercase', letterSpacing:'0.12em', marginBottom:6 }}>Salud financiera</div>
 
           {/* Gauge barras verticales */}
-          <div style={{ margin:'8px 0 16px' }}>
-            <div style={{ display:'flex', justifyContent:'space-between', alignItems:'baseline', marginBottom:14 }}>
-              <span style={{ fontSize:42, fontWeight:700, color:'#1a1a1a', letterSpacing:'-0.03em', lineHeight:1 }}>68%</span>
+          <div style={{ margin:'8px 0 14px' }}>
+            <div style={{ marginBottom:10 }}>
+              <span style={{ fontSize:30, fontWeight:400, color:'#1a1a1a', letterSpacing:'-0.02em', lineHeight:1, fontFamily:'Inter, sans-serif' }}>68%</span>
             </div>
-            <div style={{ display:'flex', alignItems:'flex-end', gap:3, height:52 }}>
+            <div style={{ display:'flex', alignItems:'flex-end', gap:3, height:40 }}>
               {Array.from({ length: 28 }).map((_, i) => {
                 const filled = i < 19
-                const maxH = 52
-                const minH = 28
-                const h = filled ? minH + ((maxH - minH) * i / 18) : minH
                 return (
                   <div key={i} style={{
-                    flex: 1,
-                    height: filled ? h : 28,
-                    borderRadius: 3,
-                    background: filled
-                      ? `hsl(${220 - i * 2}, ${60 + i}%, ${78 - i * 1.5}%)`
-                      : '#EEF1FD',
+                    flex: 1, height: 40, borderRadius: 3,
+                    background: filled ? '#60A5FA' : '#EEF1FD',
                   }} />
                 )
               })}
             </div>
           </div>
-          <div style={{ height:'0.5px', background:'#E8E8EC', margin:'14px 0' }} />
+          <div style={{ height:'0.5px', background:'#E8E8EC', margin:'12px 0' }} />
           <div style={{ display:'flex', flexDirection:'column', gap:10 }}>
             {[
-              { label:'Liquidez', pct:82, color:'#3B5BDB' },
-              { label:'Cobros', pct:61, color:'#7B93FF' },
-              { label:'Deuda', pct:58, color:'#C8A97A' },
-            ].map(m => (
-              <div key={m.label} style={{ display:'flex', justifyContent:'space-between', alignItems:'center' }}>
-                <div style={{ display:'flex', alignItems:'center', gap:6 }}>
-                  <div style={{ width:7, height:7, borderRadius:'50%', background:m.color }} />
-                  <span style={{ fontSize:11, color:'#888' }}>{m.label}</span>
-                </div>
-                <div style={{ display:'flex', alignItems:'center', gap:8 }}>
-                  <div style={{ width:70, height:4, background:'#F0F0F2', borderRadius:99, overflow:'hidden' }}>
-                    <div style={{ height:4, width:`${m.pct}%`, background:m.color, borderRadius:99 }} />
+              { label:'Liquidez', pct:82, color:'#3B5BDB', bars:28 },
+              { label:'Cobros', pct:61, color:'#7B93FF', bars:28 },
+              { label:'Deuda', pct:58, color:'#C8A97A', bars:28 },
+            ].map(m => {
+              const filled = Math.round(m.pct / 100 * m.bars)
+              return (
+                <div key={m.label} style={{ display:'flex', justifyContent:'space-between', alignItems:'center' }}>
+                  <div style={{ display:'flex', alignItems:'center', gap:6 }}>
+                    <div style={{ width:7, height:7, borderRadius:'50%', background:m.color }} />
+                    <span style={{ fontSize:11, color:'#888' }}>{m.label}</span>
                   </div>
-                  <span style={{ fontSize:12, fontWeight:600, color:'#1a1a1a', minWidth:28 }}>{m.pct}%</span>
+                  <div style={{ display:'flex', alignItems:'center', gap:8 }}>
+                    <div style={{ display:'flex', gap:2 }}>
+                      {Array.from({ length: m.bars }).map((_, i) => (
+                        <div key={i} style={{ width:4, height:14, borderRadius:2, background: i < filled ? m.color : '#EEF1FD' }} />
+                      ))}
+                    </div>
+                    <span style={{ fontSize:11, fontWeight:400, color:'#1a1a1a', minWidth:28 }}>{m.pct}%</span>
+                  </div>
                 </div>
-              </div>
-            ))}
+              )
+            })}
           </div>
         </div>
       </div>
