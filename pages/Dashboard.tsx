@@ -78,8 +78,6 @@ export default function Dashboard() {
       <div className="row2" style={{ display:'grid', gridTemplateColumns:'2fr 1fr', gap:14 }}>
         <div style={{ ...card, padding:'24px' }}>
           <div style={{ fontSize:9, fontWeight:600, color:'#999', textTransform:'uppercase', letterSpacing:'0.12em', marginBottom:12 }}>Cash Flow</div>
-            ))}
-          </div>
           <ResponsiveContainer width="100%" height={200}>
             <AreaChart data={cashflowData} margin={{ top:4, right:4, left:0, bottom:0 }}>
               <defs>
