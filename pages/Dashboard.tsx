@@ -90,7 +90,7 @@ export default function Dashboard() {
               <XAxis dataKey="mes" tick={{ fontSize:11, fill:'#aaa' }} axisLine={false} tickLine={false}/>
               <YAxis tick={{ fontSize:11, fill:'#aaa' }} axisLine={false} tickLine={false} tickFormatter={v => `€${v}k`} width={40}/>
               <Tooltip content={<CfTooltip />} cursor={{ stroke:'#BAE6FD', strokeWidth:1, strokeDasharray:'3 3' }}/>
-              <Area type="monotone" dataKey="neto" stroke="#7DD3FC" strokeWidth={2} fill="url(#gNeto)" dot={false} activeDot={{ r:5, fill:'#0EA5E9', stroke:'#fff', strokeWidth:2 }}/>
+              <Area type="monotone" dataKey="ingresos" stroke="#7DD3FC" strokeWidth={2} fill="url(#gNeto)" dot={false} activeDot={{ r:5, fill:'#0EA5E9', stroke:'#fff', strokeWidth:2 }}/>
             </AreaChart>
           </ResponsiveContainer>
         </div>
