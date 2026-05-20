@@ -37,8 +37,10 @@ function CfTooltip({ active, payload, label }: any) {
       <div style={{ fontWeight:600, color:'#1a1a1a', marginBottom:8 }}>{label}</div>
       {payload.map((p: any) => (
         <div key={p.dataKey} style={{ display:'flex', alignItems:'center', gap:6, marginBottom:4 }}>
-          <div style={{ width:7, height:7, borderRadius:2, background:p.stroke }} />
-          <span style={{ color:'#666' }}>{p.dataKey === 'ingresos' ? 'Ingresos' : 'Gastos'}: €{p.value}k</span>
+          <div style={{ width:7, height:7, borderRadius:2, background:p.dataKey === 'ingresos' ? '#3B5BDB' : p.dataKey === 'gastos' ? '#EF4444' : '#7DD3FC' }} />
+          <span style={{ color:'#666' }}>
+            {p.dataKey === 'ingresos' ? 'Ingresos' : p.dataKey === 'gastos' ? 'Gastos' : 'Cashflow neto'}: €{p.value}k
+          </span>
         </div>
       ))}
     </div>
@@ -90,7 +92,9 @@ export default function Dashboard() {
               <XAxis dataKey="mes" tick={{ fontSize:11, fill:'#aaa' }} axisLine={false} tickLine={false}/>
               <YAxis tick={{ fontSize:11, fill:'#aaa' }} axisLine={false} tickLine={false} tickFormatter={v => `€${v}k`} width={40}/>
               <Tooltip content={<CfTooltip />} cursor={{ stroke:'#BAE6FD', strokeWidth:1, strokeDasharray:'3 3' }}/>
-              <Area type="monotone" dataKey="ingresos" stroke="#7DD3FC" strokeWidth={2} fill="url(#gNeto)" dot={false} activeDot={{ r:5, fill:'#0EA5E9', stroke:'#fff', strokeWidth:2 }}/>
+              <Area type="monotone" dataKey="ingresos" stroke="#3B5BDB" strokeWidth={1.5} fill="none" dot={false} activeDot={{ r:4, fill:'#3B5BDB', stroke:'#fff', strokeWidth:2 }}/>
+              <Area type="monotone" dataKey="gastos" stroke="#EF4444" strokeWidth={1.5} strokeDasharray="4 3" fill="none" dot={false} activeDot={{ r:4, fill:'#EF4444', stroke:'#fff', strokeWidth:2 }}/>
+              <Area type="monotone" dataKey="neto" stroke="#7DD3FC" strokeWidth={2} fill="url(#gNeto)" dot={false} activeDot={{ r:5, fill:'#0EA5E9', stroke:'#fff', strokeWidth:2 }}/>
             </AreaChart>
           </ResponsiveContainer>
         </div>
