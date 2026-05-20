@@ -46,6 +46,7 @@ function CfTooltip({ active, payload, label }: any) {
 }
 
 export default function Dashboard() {
+  // Tabler icons loaded via index.html or index.css — verified below
   return (
     <Layout title="Resumen">
       <style>{`
@@ -77,10 +78,8 @@ export default function Dashboard() {
       <div className="row2" style={{ display:'grid', gridTemplateColumns:'2fr 1fr', gap:14 }}>
         <div style={{ ...card, padding:'24px' }}>
           <div style={{ fontSize:9, fontWeight:600, color:'#999', textTransform:'uppercase', letterSpacing:'0.12em', marginBottom:6 }}>Cash Flow</div>
-          <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:16 }}>
-            <div style={{ fontFamily:'Inter, sans-serif', fontSize:20, fontWeight:400, color:'#1a1a1a' }}>Ingresos vs gastos · últimos 6 meses</div>
             <div style={{ display:'flex', gap:14 }}>
-              {[{ c:'#3B5BDB', l:'Ingresos' }, { c:'#C8A97A', l:'Gastos' }].map(l => (
+              {[{ c:'#3B5BDB', l:'Ingresos' }, { c:'#EF4444', l:'Gastos' }].map(l => (
                 <div key={l.l} style={{ display:'flex', alignItems:'center', gap:5, fontSize:12, color:'#666' }}>
                   <div style={{ width:8, height:8, borderRadius:'50%', background:l.c }} />{l.l}
                 </div>
@@ -95,8 +94,8 @@ export default function Dashboard() {
                   <stop offset="100%" stopColor="#3B5BDB" stopOpacity={0}/>
                 </linearGradient>
                 <linearGradient id="gG" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#C8A97A" stopOpacity={0.1}/>
-                  <stop offset="100%" stopColor="#C8A97A" stopOpacity={0}/>
+                  <stop offset="0%" stopColor="#EF4444" stopOpacity={0.1}/>
+                  <stop offset="100%" stopColor="#EF4444" stopOpacity={0}/>
                 </linearGradient>
               </defs>
               <CartesianGrid strokeDasharray="0" stroke="#F0F0F2" vertical={false}/>
@@ -104,7 +103,7 @@ export default function Dashboard() {
               <YAxis tick={{ fontSize:11, fill:'#aaa' }} axisLine={false} tickLine={false} tickFormatter={v => `€${v}k`} width={40}/>
               <Tooltip content={<CfTooltip />} cursor={{ stroke:'#ECEEF3', strokeWidth:1 }}/>
               <Area type="monotone" dataKey="ingresos" stroke="#3B5BDB" strokeWidth={2} fill="url(#gI)" dot={false} activeDot={{ r:4, fill:'#3B5BDB', stroke:'#fff', strokeWidth:2 }}/>
-              <Area type="monotone" dataKey="gastos" stroke="#C8A97A" strokeWidth={1.5} fill="url(#gG)" dot={false} activeDot={{ r:4, fill:'#C8A97A', stroke:'#fff', strokeWidth:2 }}/>
+              <Area type="monotone" dataKey="gastos" stroke="#EF4444" strokeWidth={1.5} fill="url(#gG)" dot={false} activeDot={{ r:4, fill:'#EF4444', stroke:'#fff', strokeWidth:2 }}/>
             </AreaChart>
           </ResponsiveContainer>
         </div>
@@ -113,8 +112,8 @@ export default function Dashboard() {
           <div style={{ fontSize:9, fontWeight:600, color:'#999', textTransform:'uppercase', letterSpacing:'0.12em', marginBottom:6 }}>Salud financiera</div>
 
           {/* Gauge barras verticales */}
-          <div style={{ margin:'8px 0 14px' }}>
-            <div style={{ marginBottom:10 }}>
+          <div style={{ margin:'8px 0 20px' }}>
+            <div style={{ marginBottom:16 }}>
               <span style={{ fontSize:30, fontWeight:400, color:'#1a1a1a', letterSpacing:'-0.02em', lineHeight:1, fontFamily:'Inter, sans-serif' }}>68%</span>
             </div>
             <div style={{ display:'flex', alignItems:'flex-end', gap:3, height:40 }}>
@@ -129,12 +128,12 @@ export default function Dashboard() {
               })}
             </div>
           </div>
-          <div style={{ height:'0.5px', background:'#E8E8EC', margin:'12px 0' }} />
+          <div style={{ height:'0.5px', background:'#E8E8EC', margin:'18px 0' }} />
           <div style={{ display:'flex', flexDirection:'column', gap:10 }}>
             {[
               { label:'Liquidez', pct:82, color:'#3B5BDB', bars:28 },
               { label:'Cobros', pct:61, color:'#7B93FF', bars:28 },
-              { label:'Deuda', pct:58, color:'#C8A97A', bars:28 },
+              { label:'Deuda', pct:58, color:'#EF4444', bars:28 },
             ].map(m => {
               const filled = Math.round(m.pct / 100 * m.bars)
               return (
@@ -206,7 +205,7 @@ export default function Dashboard() {
             <div style={{ fontSize:13, color:'#555', lineHeight:1.6, marginBottom:18 }}>
               Obtén un análisis instantáneo de tus números — qué funciona, qué no, y qué hacer a continuación.
             </div>
-            <button style={{ width:'100%', padding:12, border:'none', borderRadius:10, background:'#1a1a1a', color:'#fff', fontSize:13, fontWeight:600, cursor:'pointer', fontFamily:'Inter,sans-serif' }}>
+            <button style={{ width:'100%', padding:12, border:'none', borderRadius:10, background:'#4361EE', color:'#fff', fontSize:13, fontWeight:600, cursor:'pointer', fontFamily:'Inter,sans-serif' }}>
               Generar insight
             </button>
           </div>

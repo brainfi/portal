@@ -1,23 +1,24 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+@import url('https://unpkg.com/@tabler/icons-webfont@latest/tabler-icons.min.css');
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500&family=Inter:wght@400;500;600&display=swap');
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 :root {
-  --bg:       #F5F6FA;
+  --bg:       #F4F5F7;
   --white:    #FFFFFF;
-  --border:   #ECEEF3;
-  --text:     #1A1D2E;
-  --text2:    #8A94A6;
-  --text3:    #B0B7C3;
-  --blue:     #4361EE;
+  --border:   #E8E8EC;
+  --text:     #1a1a1a;
+  --text2:    #555555;
+  --text3:    #aaaaaa;
+  --blue:     #3B5BDB;
   --blue-lt:  #EEF1FD;
   --green:    #2DC653;
-  --green-lt: #EAFAF0;
+  --green-lt: #F0F9F4;
   --red:      #EF233C;
-  --red-lt:   #FEECEF;
+  --red-lt:   #FEF0F0;
   --amber:    #F4A100;
   --amber-lt: #FFF8E6;
-  --cyan:     #00BCD4;
+  --sand:     #C8A97A;
 }
 
 body {
