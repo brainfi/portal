@@ -2,12 +2,18 @@ import Layout from '@/components/Layout'
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
 
 const cashflowData = [
-  { mes:'Dic', ingresos:115, gastos:72 },
-  { mes:'Ene', ingresos:110, gastos:78, neto:32 },
-  { mes:'Feb', ingresos:125, gastos:80, neto:45 },
-  { mes:'Mar', ingresos:158, gastos:85, neto:73 },
-  { mes:'Abr', ingresos:140, gastos:75, neto:65 },
-  { mes:'May', ingresos:68,  gastos:35, neto:33 },
+  { mes:'Ene', ingresos:72,  gastos:38, neto:34 },
+  { mes:'Feb', ingresos:78,  gastos:40, neto:38 },
+  { mes:'Mar', ingresos:82,  gastos:41, neto:41 },
+  { mes:'Abr', ingresos:94,  gastos:44, neto:50 },
+  { mes:'May', ingresos:88,  gastos:42, neto:46 },
+  { mes:'Jun', ingresos:96,  gastos:44, neto:52 },
+  { mes:'Jul', ingresos:90,  gastos:43, neto:47 },
+  { mes:'Ago', ingresos:98,  gastos:45, neto:53 },
+  { mes:'Sep', ingresos:92,  gastos:44, neto:48 },
+  { mes:'Oct', ingresos:102, gastos:46, neto:56 },
+  { mes:'Nov', ingresos:106, gastos:47, neto:59 },
+  { mes:'Dic', ingresos:110, gastos:48, neto:62 },
 ]
 
 
