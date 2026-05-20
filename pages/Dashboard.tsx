@@ -78,8 +78,6 @@ export default function Dashboard() {
         <div style={{ ...card, padding:'24px' }}>
           <div style={{ fontSize:9, fontWeight:600, color:'#999', textTransform:'uppercase', letterSpacing:'0.12em', marginBottom:6 }}>Cash Flow</div>
           <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:16 }}>
-            <div style={{ fontFamily:'Inter, sans-serif', fontSize:20, fontWeight:400, color:'#1a1a1a' }}>Ingresos vs gastos · últimos 6 meses</div>
-            <div style={{ display:'flex', gap:14 }}>
               {[{ c:'#3B5BDB', l:'Ingresos' }, { c:'#C8A97A', l:'Gastos' }].map(l => (
                 <div key={l.l} style={{ display:'flex', alignItems:'center', gap:5, fontSize:12, color:'#666' }}>
                   <div style={{ width:8, height:8, borderRadius:'50%', background:l.c }} />{l.l}
@@ -111,20 +109,29 @@ export default function Dashboard() {
 
         <div style={{ ...card, padding:'24px', display:'flex', flexDirection:'column' }}>
           <div style={{ fontSize:9, fontWeight:600, color:'#999', textTransform:'uppercase', letterSpacing:'0.12em', marginBottom:6 }}>Salud financiera</div>
-          <div style={{ fontFamily:'Inter, sans-serif', fontSize:20, fontWeight:600, color:'#1a1a1a', marginBottom:4 }}>Salud financiera</div>
-          <div style={{ fontSize:11, color:'#aaa', marginBottom:16 }}>Basado en liquidez, deuda y cobros</div>
-          {/* Gauge bar */}
+
+          {/* Gauge barras verticales */}
           <div style={{ margin:'8px 0 16px' }}>
-            <div style={{ display:'flex', justifyContent:'space-between', alignItems:'baseline', marginBottom:8 }}>
-              <span style={{ fontSize:36, fontWeight:700, color:'#1a1a1a', letterSpacing:'-0.03em' }}>68%</span>
-              <span style={{ fontSize:11, color:'#aaa' }}>salud financiera</span>
+            <div style={{ display:'flex', justifyContent:'space-between', alignItems:'baseline', marginBottom:14 }}>
+              <span style={{ fontSize:42, fontWeight:700, color:'#1a1a1a', letterSpacing:'-0.03em', lineHeight:1 }}>68%</span>
             </div>
-            <div style={{ position:'relative', height:16, background:'#EEF1FD', borderRadius:99, overflow:'hidden' }}>
-              <div style={{ position:'absolute', left:0, top:0, height:'100%', width:'68%', borderRadius:99,
-                background:'linear-gradient(90deg,#BFDBFE,#93C5FD,#3B82F6,#1D4ED8)' }} />
-            </div>
-            <div style={{ display:'flex', justifyContent:'space-between', marginTop:5, fontSize:10, color:'#bbb' }}>
-              <span>0%</span><span>50%</span><span>100%</span>
+            <div style={{ display:'flex', alignItems:'flex-end', gap:3, height:52 }}>
+              {Array.from({ length: 28 }).map((_, i) => {
+                const filled = i < 19
+                const maxH = 52
+                const minH = 28
+                const h = filled ? minH + ((maxH - minH) * i / 18) : minH
+                return (
+                  <div key={i} style={{
+                    flex: 1,
+                    height: filled ? h : 28,
+                    borderRadius: 3,
+                    background: filled
+                      ? `hsl(${220 - i * 2}, ${60 + i}%, ${78 - i * 1.5}%)`
+                      : '#EEF1FD',
+                  }} />
+                )
+              })}
             </div>
           </div>
           <div style={{ height:'0.5px', background:'#E8E8EC', margin:'14px 0' }} />
@@ -158,8 +165,7 @@ export default function Dashboard() {
         <div style={{ ...card, padding:'22px 24px' }}>
           <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:16 }}>
             <div>
-              <div style={{ fontSize:9, fontWeight:600, color:'#999', textTransform:'uppercase', letterSpacing:'0.12em', marginBottom:6 }}>Actividad</div>
-              <div style={{ fontFamily:'Inter, sans-serif', fontSize:20, fontWeight:600, color:'#1a1a1a' }}>Próximos pagos</div>
+              <div style={{ fontSize:9, fontWeight:600, color:'#999', textTransform:'uppercase', letterSpacing:'0.12em', marginBottom:6 }}>Próximos pagos</div>
             </div>
             <span style={{ fontSize:12, color:'#3B5BDB', fontWeight:500, cursor:'pointer' }}>Ver todas →</span>
           </div>
