@@ -3,21 +3,21 @@
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 :root {
-  --bg:        #F5F6FA;
-  --white:     #FFFFFF;
-  --card:      #FFFFFF;
-  --border:    #ECEEF3;
-  --text:      #1A1D2E;
-  --text2:     #8A94A6;
-  --text3:     #B0B7C3;
-  --blue:      #4361EE;
-  --blue-lt:   #EEF1FD;
-  --green:     #2DC653;
-  --green-lt:  #EAFAF0;
-  --red:       #EF233C;
-  --red-lt:    #FEECEF;
-  --amber:     #F4A100;
-  --amber-lt:  #FFF8E6;
+  --bg:       #F5F6FA;
+  --white:    #FFFFFF;
+  --border:   #ECEEF3;
+  --text:     #1A1D2E;
+  --text2:    #8A94A6;
+  --text3:    #B0B7C3;
+  --blue:     #4361EE;
+  --blue-lt:  #EEF1FD;
+  --green:    #2DC653;
+  --green-lt: #EAFAF0;
+  --red:      #EF233C;
+  --red-lt:   #FEECEF;
+  --amber:    #F4A100;
+  --amber-lt: #FFF8E6;
+  --cyan:     #00BCD4;
 }
 
 body {
