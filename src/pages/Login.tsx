@@ -24,7 +24,6 @@ export default function Login() {
       <div style={{ flex:1, background:'#4361EE', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', position:'relative', overflow:'hidden' }}>
         <div style={{ position:'absolute', top:-100, left:-100, width:400, height:400, borderRadius:'50%', background:'rgba(255,255,255,0.05)' }} />
         <div style={{ position:'absolute', bottom:-80, right:-80, width:320, height:320, borderRadius:'50%', background:'rgba(255,255,255,0.05)' }} />
-        <div style={{ position:'absolute', top:'40%', right:-60, width:200, height:200, borderRadius:'50%', background:'rgba(255,255,255,0.04)' }} />
         <div style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:20, zIndex:1 }}>
           <div style={{ width:72, height:72, background:'rgba(255,255,255,0.15)', borderRadius:18, border:'1px solid rgba(255,255,255,0.25)', display:'flex', alignItems:'center', justifyContent:'center' }}>
             <svg width="38" height="38" viewBox="0 0 16 16" fill="none">
