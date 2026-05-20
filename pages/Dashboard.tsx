@@ -125,10 +125,7 @@ export default function Dashboard() {
               const filled = Math.round(m.pct / 100 * m.bars)
               return (
                 <div key={m.label} style={{ display:'flex', justifyContent:'space-between', alignItems:'center' }}>
-                  <div style={{ display:'flex', alignItems:'center', gap:6 }}>
-                    <div style={{ width:7, height:7, borderRadius:'50%', background:m.color }} />
-                    <span style={{ fontSize:11, color:'#888' }}>{m.label}</span>
-                  </div>
+                  <span style={{ fontSize:11, color:'#888' }}>{m.label}</span>
                   <div style={{ display:'flex', alignItems:'center', gap:8 }}>
                     <div style={{ display:'flex', gap:2 }}>
                       {Array.from({ length: m.bars }).map((_, i) => (
