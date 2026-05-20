@@ -113,23 +113,19 @@ export default function Dashboard() {
           <div style={{ fontSize:9, fontWeight:600, color:'#999', textTransform:'uppercase', letterSpacing:'0.12em', marginBottom:6 }}>Salud financiera</div>
           <div style={{ fontFamily:'Inter, sans-serif', fontSize:20, fontWeight:600, color:'#1a1a1a', marginBottom:4 }}>Salud financiera</div>
           <div style={{ fontSize:11, color:'#aaa', marginBottom:16 }}>Basado en liquidez, deuda y cobros</div>
-          <div style={{ display:'flex', justifyContent:'center' }}>
-            <svg width="180" height="120" viewBox="0 0 180 120">
-              <defs>
-                <linearGradient id="gaugeG" x1="0" y1="0" x2="1" y2="0">
-                  <stop offset="0%" stopColor="#3B5BDB"/>
-                  <stop offset="100%" stopColor="#7B93FF"/>
-                </linearGradient>
-              </defs>
-              <path d="M 10 105 A 80 80 0 0 1 170 105" fill="none" stroke="#F0F0F2" strokeWidth="14" strokeLinecap="round"/>
-              <path d="M 18 105 A 72 72 0 0 1 162 105" fill="none" stroke="#F0F0F2" strokeWidth="10" strokeLinecap="round"/>
-              <path d="M 25 105 A 65 65 0 0 1 155 105" fill="none" stroke="#F0F0F2" strokeWidth="8" strokeLinecap="round"/>
-              <path d="M 10 105 A 80 80 0 0 1 153 36" fill="none" stroke="url(#gaugeG)" strokeWidth="14" strokeLinecap="round"/>
-              <path d="M 18 105 A 72 72 0 0 1 145 42" fill="none" stroke="#3B5BDB" strokeWidth="10" strokeLinecap="round" opacity="0.45"/>
-              <path d="M 25 105 A 65 65 0 0 1 138 48" fill="none" stroke="#3B5BDB" strokeWidth="8" strokeLinecap="round" opacity="0.2"/>
-              <text x="90" y="95" textAnchor="middle" fontSize="30" fontWeight="700" fill="#1a1a1a" fontFamily="Inter">68%</text>
-              <text x="90" y="112" textAnchor="middle" fontSize="10" fill="#aaa" fontFamily="Inter">salud financiera</text>
-            </svg>
+          {/* Gauge bar */}
+          <div style={{ margin:'8px 0 16px' }}>
+            <div style={{ display:'flex', justifyContent:'space-between', alignItems:'baseline', marginBottom:8 }}>
+              <span style={{ fontSize:36, fontWeight:700, color:'#1a1a1a', letterSpacing:'-0.03em' }}>68%</span>
+              <span style={{ fontSize:11, color:'#aaa' }}>salud financiera</span>
+            </div>
+            <div style={{ position:'relative', height:16, background:'#EEF1FD', borderRadius:99, overflow:'hidden' }}>
+              <div style={{ position:'absolute', left:0, top:0, height:'100%', width:'68%', borderRadius:99,
+                background:'linear-gradient(90deg,#BFDBFE,#93C5FD,#3B82F6,#1D4ED8)' }} />
+            </div>
+            <div style={{ display:'flex', justifyContent:'space-between', marginTop:5, fontSize:10, color:'#bbb' }}>
+              <span>0%</span><span>50%</span><span>100%</span>
+            </div>
           </div>
           <div style={{ height:'0.5px', background:'#E8E8EC', margin:'14px 0' }} />
           <div style={{ display:'flex', flexDirection:'column', gap:10 }}>
