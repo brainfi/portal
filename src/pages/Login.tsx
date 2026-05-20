@@ -21,15 +21,10 @@ export default function Login() {
 
   return (
     <div style={{ display:'flex', height:'100vh', overflow:'hidden', fontFamily:'Inter, sans-serif' }}>
-
-      {/* ── IZQUIERDA — azul con logo ── */}
       <div style={{ flex:1, background:'#4361EE', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', position:'relative', overflow:'hidden' }}>
-        {/* Círculos decorativos sutiles */}
         <div style={{ position:'absolute', top:-100, left:-100, width:400, height:400, borderRadius:'50%', background:'rgba(255,255,255,0.05)' }} />
         <div style={{ position:'absolute', bottom:-80, right:-80, width:320, height:320, borderRadius:'50%', background:'rgba(255,255,255,0.05)' }} />
         <div style={{ position:'absolute', top:'40%', right:-60, width:200, height:200, borderRadius:'50%', background:'rgba(255,255,255,0.04)' }} />
-
-        {/* Logo centrado */}
         <div style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:20, zIndex:1 }}>
           <div style={{ width:72, height:72, background:'rgba(255,255,255,0.15)', borderRadius:18, border:'1px solid rgba(255,255,255,0.25)', display:'flex', alignItems:'center', justifyContent:'center' }}>
             <svg width="38" height="38" viewBox="0 0 16 16" fill="none">
@@ -39,75 +34,44 @@ export default function Login() {
           </div>
           <div style={{ textAlign:'center' }}>
             <div style={{ fontSize:32, fontWeight:700, color:'#fff', letterSpacing:'-0.5px', marginBottom:8 }}>brainfi</div>
-            <div style={{ fontSize:14, color:'rgba(255,255,255,0.6)', lineHeight:1.6, maxWidth:260 }}>
-              Inteligencia financiera<br/>para PYMEs españolas
-            </div>
+            <div style={{ fontSize:14, color:'rgba(255,255,255,0.6)', lineHeight:1.6, maxWidth:260 }}>Inteligencia financiera<br/>para PYMEs españolas</div>
           </div>
         </div>
-
-        {/* Tagline abajo */}
-        <div style={{ position:'absolute', bottom:40, fontSize:11, color:'rgba(255,255,255,0.35)', letterSpacing:'0.05em' }}>
-          app.brainfi.io
-        </div>
+        <div style={{ position:'absolute', bottom:40, fontSize:11, color:'rgba(255,255,255,0.35)', letterSpacing:'0.05em' }}>app.brainfi.io</div>
       </div>
-
-      {/* ── DERECHA — blanco con formulario ── */}
       <div style={{ width:480, background:'#fff', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', padding:'48px 56px', flexShrink:0 }}>
         <div style={{ width:'100%', maxWidth:340 }}>
-
-          {/* Header */}
           <div style={{ marginBottom:32 }}>
             <h1 style={{ fontSize:22, fontWeight:700, color:'#1a1a1a', marginBottom:6, letterSpacing:'-0.02em' }}>Acceder al portal</h1>
             <p style={{ fontSize:13, color:'#aaa' }}>Introduce tus credenciales para continuar</p>
           </div>
-
-          {/* Form */}
           <form onSubmit={handleSubmit} style={{ display:'flex', flexDirection:'column', gap:16 }}>
             <div>
               <label style={{ display:'block', fontSize:12, fontWeight:500, color:'#555', marginBottom:6 }}>Email</label>
-              <input
-                type="email" value={email} onChange={e => setEmail(e.target.value)}
-                placeholder="tu@empresa.com" required
+              <input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="tu@empresa.com" required
                 style={{ width:'100%', padding:'11px 13px', fontSize:13, border:'1px solid #E8E8EC', borderRadius:9, outline:'none', background:'#fff', color:'#1a1a1a', fontFamily:'Inter, sans-serif' }}
                 onFocus={e => e.target.style.borderColor = '#4361EE'}
-                onBlur={e => e.target.style.borderColor = '#E8E8EC'}
-              />
+                onBlur={e => e.target.style.borderColor = '#E8E8EC'} />
             </div>
             <div>
               <label style={{ display:'block', fontSize:12, fontWeight:500, color:'#555', marginBottom:6 }}>Contraseña</label>
-              <input
-                type="password" value={password} onChange={e => setPassword(e.target.value)}
-                placeholder="••••••••" required
+              <input type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="••••••••" required
                 style={{ width:'100%', padding:'11px 13px', fontSize:13, border:'1px solid #E8E8EC', borderRadius:9, outline:'none', background:'#fff', color:'#1a1a1a', fontFamily:'Inter, sans-serif' }}
                 onFocus={e => e.target.style.borderColor = '#4361EE'}
-                onBlur={e => e.target.style.borderColor = '#E8E8EC'}
-              />
+                onBlur={e => e.target.style.borderColor = '#E8E8EC'} />
             </div>
-
             {error && (
-              <div style={{ background:'#FEF2F2', border:'1px solid #FECACA', borderRadius:8, padding:'10px 12px', fontSize:12, color:'#DC2626' }}>
-                {error}
-              </div>
+              <div style={{ background:'#FEF2F2', border:'1px solid #FECACA', borderRadius:8, padding:'10px 12px', fontSize:12, color:'#DC2626' }}>{error}</div>
             )}
-
-            <button type="submit" disabled={loading} style={{
-              padding:'12px', fontSize:13, fontWeight:600, color:'#fff',
-              background: loading ? '#aaa' : '#4361EE',
-              border:'none', borderRadius:10,
-              cursor: loading ? 'not-allowed' : 'pointer',
-              marginTop:4, fontFamily:'Inter, sans-serif',
-            }}>
+            <button type="submit" disabled={loading} style={{ padding:'12px', fontSize:13, fontWeight:600, color:'#fff', background: loading ? '#aaa' : '#4361EE', border:'none', borderRadius:10, cursor: loading ? 'not-allowed' : 'pointer', marginTop:4, fontFamily:'Inter, sans-serif' }}>
               {loading ? 'Accediendo...' : 'Acceder →'}
             </button>
           </form>
-
           <p style={{ textAlign:'center', fontSize:12, color:'#aaa', marginTop:28 }}>
-            ¿Necesitas acceso?{' '}
-            <a href="mailto:hola@brainfi.io" style={{ color:'#4361EE', fontWeight:500 }}>hola@brainfi.io</a>
+            ¿Necesitas acceso?{' '}<a href="mailto:hola@brainfi.io" style={{ color:'#4361EE', fontWeight:500 }}>hola@brainfi.io</a>
           </p>
         </div>
       </div>
-
     </div>
   )
 }
