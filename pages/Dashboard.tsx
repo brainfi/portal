@@ -111,9 +111,9 @@ export default function Dashboard() {
       `}</style>
 
       {/* ── HERO 4 cols ── */}
-      <div className="dash-hero" style={{ display:'grid', gridTemplateColumns:'1fr 1fr 1fr 1fr', gap:10, flexShrink:0 }}>
+      <div className="dash-hero" style={{ display:'grid', gridTemplateColumns:'1fr 1fr 1fr 1fr', gap:16, flexShrink:0 }}>
         <div style={cardCyan}>
-          <div style={{ fontSize:10, color:'rgba(255,255,255,0.35)', marginBottom:5, display:'flex', alignItems:'center', gap:5 }}>
+          <div style={{ fontSize:13, fontWeight:500, color:'#fff', marginBottom:8 }}>
             Tu dinero real hoy
           </div>
           <div style={{ fontSize:26, fontWeight:500, color:'#fff', letterSpacing:'-0.03em', marginBottom:6 }}>5.620 €</div>
@@ -140,20 +140,7 @@ export default function Dashboard() {
       </div>
 
       {/* ── CASHFLOW ── */}
-      <div className="dash-cf" style={{ display:'flex', gap:10, alignItems:'stretch' }}>
-        <div className="dash-cf-left" style={{ width:LEFT_W, flexShrink:0, display:'flex', flexDirection:'column', gap:10, alignSelf:'stretch' }}>
-          {[
-            { dot:'#00E5C4', label:'Ingresos', val:'94.200 €', delta:'↑ 45,0% vs ant.', up:true, bg:'rgba(0,229,196,0.06)', border:'rgba(0,229,196,0.12)' },
-            { dot:'rgba(255,255,255,0.2)', label:'Gastos', val:'43.800 €', delta:'↑ 12,5% vs ant.', up:false, bg:'rgba(255,255,255,0.03)', border:'rgba(255,255,255,0.07)' },
-          ].map((s, i) => (
-            <div key={i} style={{ flex:1, padding:'12px 14px', background:s.bg, border:`1px solid ${s.border}`, borderRadius:10, display:'flex', flexDirection:'column', justifyContent:'center' }}>
-              <div style={{ fontSize:9, color:'rgba(255,255,255,0.3)', marginBottom:6, display:'flex', alignItems:'center', gap:5 }}>{s.label}</div>
-              <div style={{ fontSize:16, fontWeight:500, color:'#fff' }}>{s.val}</div>
-              <div style={{ fontSize:10, color: s.up ? '#00E5C4' : '#FF6B6B', marginTop:3 }}>{s.delta}</div>
-            </div>
-          ))}
-        </div>
-        <div style={{ ...card, flex:1, minWidth:0 }}>
+      <div style={{ ...card }}>
           <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:14 }}>
             <span style={{ fontSize:13, fontWeight:500, color:'#fff', display:'flex', alignItems:'center', gap:6 }}>
               Cash Flow
@@ -177,7 +164,7 @@ export default function Dashboard() {
               <YAxis tick={{ fontSize:8, fill:'rgba(255,255,255,0.2)' }} axisLine={false} tickLine={false} tickFormatter={v => `€${v/1000}k`} width={36} />
               <Tooltip content={<CashflowTooltip />} cursor={{ fill:'rgba(255,255,255,0.02)' }} />
               <Bar dataKey="entradas" radius={[3,3,0,0]} maxBarSize={20}>
-                {cashflowData.map((_,i) => <Cell key={i} fill={i===3 ? '#00E5C4' : 'rgba(0,229,196,0.5)'} />)}
+                {cashflowData.map((_,i) => <Cell key={i} fill={i===3 ? '#7FEFA1' : 'rgba(127,239,161,0.5)'} />)}
               </Bar>
               <Bar dataKey="gastos" radius={[3,3,0,0]} maxBarSize={10}>
                 {cashflowData.map((_,i) => <Cell key={i} fill={i===3 ? 'rgba(255,123,92,0.5)' : 'rgba(255,123,92,0.3)'} />)}
@@ -185,17 +172,16 @@ export default function Dashboard() {
               <Line type="monotone" dataKey="neto" stroke="#00D4E8" strokeWidth={1.5} dot={false} strokeDasharray="5 3" />
             </ComposedChart>
           </ResponsiveContainer>
-        </div>
       </div>
 
       {/* ── COBROS ── */}
       <div style={{ ...card, display:'flex', gap:20, alignItems:'start' }}>
         <div style={{ width:LEFT_W, flexShrink:0 }}>
-          <div style={{ fontSize:13, fontWeight:500, color:'#fff', marginBottom:5, display:'flex', alignItems:'center', gap:6 }}>
+          <div style={{ fontSize:13, fontWeight:500, color:'#fff', marginBottom:8 }}>
             Cobros pendientes
           </div>
           <div style={{ fontSize:22, fontWeight:500, color:'#fff', letterSpacing:'-0.02em', marginBottom:14 }}>{formatCurrency(totalCobros)}</div>
-          <div style={{ display:'flex', flexDirection:'column', gap:12 }}>
+          <div style={{ display:'flex', flexDirection:'column', gap:16 }}>
             {cobros.map((c, i) => (
               <div key={i}>
                 <div style={{ display:'flex', justifyContent:'space-between', marginBottom:5 }}>
@@ -235,11 +221,11 @@ export default function Dashboard() {
       {/* ── PAGOS ── */}
       <div style={{ ...card, display:'flex', gap:20, alignItems:'start' }}>
         <div style={{ width:LEFT_W, flexShrink:0 }}>
-          <div style={{ fontSize:13, fontWeight:500, color:'#fff', marginBottom:5, display:'flex', alignItems:'center', gap:6 }}>
+          <div style={{ fontSize:13, fontWeight:500, color:'#fff', marginBottom:8 }}>
             Pagos pendientes
           </div>
           <div style={{ fontSize:22, fontWeight:500, color:'#fff', letterSpacing:'-0.02em', marginBottom:14 }}>{formatCurrency(totalPagos)}</div>
-          <div style={{ display:'flex', flexDirection:'column', gap:12 }}>
+          <div style={{ display:'flex', flexDirection:'column', gap:16 }}>
             {donutData.map((d, i) => (
               <div key={i}>
                 <div style={{ display:'flex', justifyContent:'space-between', marginBottom:5 }}>
