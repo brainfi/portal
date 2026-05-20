@@ -78,31 +78,21 @@ export default function Dashboard() {
       <div className="row2" style={{ display:'grid', gridTemplateColumns:'2fr 1fr', gap:14 }}>
         <div style={{ ...card, padding:'24px' }}>
           <div style={{ fontSize:9, fontWeight:600, color:'#999', textTransform:'uppercase', letterSpacing:'0.12em', marginBottom:12 }}>Cash Flow</div>
-          <div style={{ display:'flex', gap:14, marginBottom:14 }}>
-            {[{ c:'#3B5BDB', l:'Ingresos' }, { c:'#EF4444', l:'Gastos' }].map(l => (
-              <div key={l.l} style={{ display:'flex', alignItems:'center', gap:5, fontSize:12, color:'#666' }}>
-                <div style={{ width:8, height:8, borderRadius:'50%', background:l.c }} />{l.l}
-              </div>
             ))}
           </div>
           <ResponsiveContainer width="100%" height={200}>
             <AreaChart data={cashflowData} margin={{ top:4, right:4, left:0, bottom:0 }}>
               <defs>
-                <linearGradient id="gI" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#3B5BDB" stopOpacity={0.12}/>
-                  <stop offset="100%" stopColor="#3B5BDB" stopOpacity={0}/>
-                </linearGradient>
-                <linearGradient id="gG" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#EF4444" stopOpacity={0.1}/>
-                  <stop offset="100%" stopColor="#EF4444" stopOpacity={0}/>
+                <linearGradient id="gNeto" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="#BAE6FD" stopOpacity={0.6}/>
+                  <stop offset="100%" stopColor="#BAE6FD" stopOpacity={0.05}/>
                 </linearGradient>
               </defs>
-              <CartesianGrid strokeDasharray="0" stroke="#F0F0F2" vertical={false}/>
+              <CartesianGrid strokeDasharray="3 3" stroke="#F0F0F2" vertical={false}/>
               <XAxis dataKey="mes" tick={{ fontSize:11, fill:'#aaa' }} axisLine={false} tickLine={false}/>
               <YAxis tick={{ fontSize:11, fill:'#aaa' }} axisLine={false} tickLine={false} tickFormatter={v => `€${v}k`} width={40}/>
-              <Tooltip content={<CfTooltip />} cursor={{ stroke:'#ECEEF3', strokeWidth:1 }}/>
-              <Area type="monotone" dataKey="ingresos" stroke="#3B5BDB" strokeWidth={2} fill="url(#gI)" dot={false} activeDot={{ r:4, fill:'#3B5BDB', stroke:'#fff', strokeWidth:2 }}/>
-              <Area type="monotone" dataKey="gastos" stroke="#EF4444" strokeWidth={1.5} fill="url(#gG)" dot={false} activeDot={{ r:4, fill:'#EF4444', stroke:'#fff', strokeWidth:2 }}/>
+              <Tooltip content={<CfTooltip />} cursor={{ stroke:'#BAE6FD', strokeWidth:1, strokeDasharray:'3 3' }}/>
+              <Area type="monotone" dataKey="neto" stroke="#7DD3FC" strokeWidth={2} fill="url(#gNeto)" dot={false} activeDot={{ r:5, fill:'#0EA5E9', stroke:'#fff', strokeWidth:2 }}/>
             </AreaChart>
           </ResponsiveContainer>
         </div>
