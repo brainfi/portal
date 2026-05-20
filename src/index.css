@@ -1,29 +1,29 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Nunito:wght@800&display=swap');
+
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 :root {
-  --bg: #F4F5F7;
-  --white: #FFFFFF;
-  --ink: #111827;
-  --ink2: #6B7280;
-  --ink3: #9CA3AF;
-  --border: #EAECF0;
-  --border2: #F3F4F6;
-  --cyan: #00BCD4;
-  --navy: #0D2E6E;
-  --green: #16A34A;
-  --green-lt: #DCFCE7;
-  --red: #DC2626;
-  --red-lt: #FEF2F2;
-  --amber: #D97706;
-  --amber-lt: #FFFBEB;
+  --bg:        #0E1129;
+  --bg2:       #131830;
+  --card:      #161D38;
+  --card2:     #1A2240;
+  --border:    rgba(255,255,255,0.07);
+  --border2:   rgba(100,140,255,0.15);
+  --text:      #E8EAF6;
+  --text2:     rgba(255,255,255,0.45);
+  --text3:     rgba(255,255,255,0.25);
+  --cyan:      #00D4E8;
+  --green:     #4ADE80;
+  --red:       #FF6B6B;
+  --amber:     #FBBF24;
+  --accent:    #6C8BFF;
+  --navy:      #0E1129;
 }
 
-@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600&family=Nunito:wght@800&display=swap');
-
 body {
-  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-family: 'Inter', sans-serif;
   background: var(--bg);
-  color: var(--ink);
+  color: var(--text);
   font-size: 13px;
   -webkit-font-smoothing: antialiased;
 }
