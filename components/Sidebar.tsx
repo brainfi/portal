@@ -22,18 +22,6 @@ const navGroups = [
 
 interface SidebarProps { onClose?: () => void }
 
-const S = {
-  sidebar: { width:210, background:'#06081E', borderRight:'1px solid rgba(255,255,255,0.07)', display:'flex', flexDirection:'column' as const, height:'100vh' },
-  logo: { padding:'20px 18px 16px', borderBottom:'1px solid rgba(255,255,255,0.07)', display:'flex', alignItems:'center', justifyContent:'space-between' },
-  logoInner: { display:'flex', alignItems:'center', gap:9 },
-  mark: { width:28, height:28, background:'#7B8CFF', borderRadius:7, display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 as const },
-  name: { fontSize:17, fontWeight:600, color:'#fff', letterSpacing:'-0.4px', fontFamily:'Inter, sans-serif' },
-  nav: { flex:1, padding:'14px 10px', overflowY:'auto' as const },
-  section: { fontSize:9, color:'rgba(255,255,255,0.3)', textTransform:'uppercase' as const, letterSpacing:'0.1em', padding:'0 8px', margin:'14px 0 5px', fontWeight:500 },
-  bottom: { padding:12, borderTop:'1px solid rgba(255,255,255,0.07)', display:'flex', alignItems:'center', gap:8 },
-  av: { width:28, height:28, borderRadius:'50%', background:'linear-gradient(135deg,#00E5C4,#5B6EF5)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:10, fontWeight:600, color:'#fff', flexShrink:0 as const },
-}
-
 export default function Sidebar({ onClose }: SidebarProps) {
   const navigate = useNavigate()
   const location = useLocation()
@@ -49,40 +37,37 @@ export default function Sidebar({ onClose }: SidebarProps) {
   }
 
   return (
-    <aside style={S.sidebar}>
-      <div style={S.logo}>
-        <div style={S.logoInner}>
-          <div style={S.mark}>
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-              <path d="M3 2h5a3 3 0 010 6H3V2z" fill="white"/>
-              <path d="M3 8h6a3 3 0 010 6H3V8z" fill="rgba(255,255,255,0.5)"/>
-            </svg>
+    <aside style={{ width:200, background:'#fff', borderRight:'1px solid #ECEEF3', display:'flex', flexDirection:'column', height:'100vh' }}>
+      <div style={{ padding:'20px 18px 16px', borderBottom:'1px solid #ECEEF3', display:'flex', alignItems:'center', justifyContent:'space-between' }}>
+        <div style={{ display:'flex', alignItems:'center', gap:9 }}>
+          <div style={{ width:28, height:28, background:'#4361EE', borderRadius:7, display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 2h5a3 3 0 010 6H3V2z" fill="white"/><path d="M3 8h6a3 3 0 010 6H3V8z" fill="rgba(255,255,255,0.6)"/></svg>
           </div>
-          <span style={S.name}>brainfi</span>
+          <span style={{ fontSize:17, fontWeight:700, color:'#1A1D2E', letterSpacing:'-0.4px' }}>brainfi</span>
         </div>
         {onClose && (
-          <button onClick={onClose} style={{ border:'none', background:'transparent', cursor:'pointer', color:'rgba(255,255,255,0.3)', display:'flex', alignItems:'center' }}>
+          <button onClick={onClose} style={{ border:'none', background:'transparent', cursor:'pointer', color:'#B0B7C3', display:'flex', alignItems:'center' }}>
             <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M3 3l10 10M13 3L3 13"/></svg>
           </button>
         )}
       </div>
 
-      <nav style={S.nav}>
+      <nav style={{ flex:1, padding:'14px 10px', overflowY:'auto' }}>
         {navGroups.map(group => (
           <div key={group.section}>
-            <div style={S.section}>{group.section}</div>
+            <div style={{ fontSize:9, color:'#B0B7C3', textTransform:'uppercase', letterSpacing:'0.1em', padding:'0 8px', margin:'14px 0 5px', fontWeight:500 }}>{group.section}</div>
             {group.items.map(item => {
               const isActive = location.pathname === item.path && !item.disabled
               return (
                 <button key={item.label} onClick={() => handleNav(item.path, item.disabled)} style={{
                   display:'flex', alignItems:'center', gap:9, padding:'8px 10px', fontSize:12,
                   width:'100%', border:'none', borderRadius:8, marginBottom:2, textAlign:'left',
-                  background: isActive ? 'rgba(108,139,255,0.15)' : 'transparent',
-                  color: isActive ? '#fff' : item.disabled ? 'rgba(255,255,255,0.2)' : 'rgba(255,255,255,0.45)',
+                  background: isActive ? '#EEF1FD' : 'transparent',
+                  color: isActive ? '#4361EE' : item.disabled ? '#C8CDD6' : '#8A94A6',
                   fontWeight: isActive ? 500 : 400,
                   cursor: item.disabled ? 'not-allowed' : 'pointer',
                 }}>
-                  <span style={{ color: isActive ? '#7B8CFF' : 'rgba(255,255,255,0.25)', display:'flex', flexShrink:0 }}>{item.icon}</span>
+                  <span style={{ display:'flex', flexShrink:0 }}>{item.icon}</span>
                   {item.label}
                 </button>
               )
@@ -90,17 +75,17 @@ export default function Sidebar({ onClose }: SidebarProps) {
           </div>
         ))}
         <div style={{ marginTop:8 }}>
-          <button onClick={() => signOut()} style={{ display:'flex', alignItems:'center', gap:9, padding:'8px 10px', fontSize:12, width:'100%', border:'none', borderRadius:8, textAlign:'left', background:'transparent', color:'rgba(255,100,100,0.6)', cursor:'pointer' }}>
+          <button onClick={() => signOut()} style={{ display:'flex', alignItems:'center', gap:9, padding:'8px 10px', fontSize:12, width:'100%', border:'none', borderRadius:8, textAlign:'left', background:'transparent', color:'#EF233C', cursor:'pointer' }}>
             <LogoutIcon />Cerrar sesión
           </button>
         </div>
       </nav>
 
-      <div style={S.bottom}>
-        <div style={S.av}>{initials}</div>
+      <div style={{ padding:12, borderTop:'1px solid #ECEEF3', display:'flex', alignItems:'center', gap:8 }}>
+        <div style={{ width:28, height:28, borderRadius:'50%', background:'linear-gradient(135deg,#4361EE,#7B93FF)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:10, fontWeight:600, color:'#fff', flexShrink:0 }}>{initials}</div>
         <div>
-          <div style={{ fontSize:11, fontWeight:500, color:'#fff' }}>{displayName}</div>
-          <div style={{ fontSize:9, color:'rgba(255,255,255,0.3)' }}>Admin · Mi empresa</div>
+          <div style={{ fontSize:11, fontWeight:600, color:'#1A1D2E' }}>{displayName}</div>
+          <div style={{ fontSize:9, color:'#B0B7C3' }}>Admin · Mi empresa</div>
         </div>
       </div>
     </aside>
