@@ -43,11 +43,10 @@ export default function Layout({ children, title = 'Resumen' }: LayoutProps) {
             </button>
             <div style={{ fontSize:10, fontWeight:600, color:'#999', textTransform:'uppercase', letterSpacing:'0.12em' }}>Workspace · Mi empresa</div>
           </div>
-          <div style={{ fontFamily:'Inter, sans-serif', fontSize:32, fontWeight:400, color:'#1a1a1a', marginBottom:6 }}>{greeting}, {displayName} 👋</div>
-          <div style={{ display:'flex', alignItems:'center', gap:16, marginBottom:20 }}>
-            <span style={{ fontSize:13, color:'#888' }}>{new Date().toLocaleDateString('es-ES', { weekday:'long', day:'numeric', month:'long', year:'numeric' }).replace(/^\w/, c => c.toUpperCase())}</span>
-            <span style={{ display:'flex', alignItems:'center', gap:5, fontSize:12, color:'#2DC653', fontWeight:500 }}>
-              <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><circle cx="5" cy="5" r="4" fill="#2DC653" opacity="0.2"/><circle cx="5" cy="5" r="2.5" fill="#2DC653"/></svg>
+          <div style={{ display:'flex', alignItems:'center', gap:16, marginBottom:12 }}>
+            <span style={{ fontSize:11, fontWeight:600, color:'#888', textTransform:'uppercase', letterSpacing:'0.06em' }}>{new Date().toLocaleDateString('es-ES', { weekday:'long', day:'numeric', month:'long', year:'numeric' }).replace(/^\w/, c => c.toUpperCase())}</span>
+            <span style={{ display:'flex', alignItems:'center', gap:5, fontSize:11, color:'#2DC653', fontWeight:600, textTransform:'uppercase', letterSpacing:'0.06em' }}>
+              <svg width="8" height="8" viewBox="0 0 10 10" fill="none"><circle cx="5" cy="5" r="4" fill="#2DC653" opacity="0.2"/><circle cx="5" cy="5" r="2.5" fill="#2DC653"/></svg>
               Última sincronización: {new Date().toLocaleTimeString('es-ES', { hour:'2-digit', minute:'2-digit' })}
             </span>
           </div>
