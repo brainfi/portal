@@ -4,18 +4,20 @@ import Login from '@/pages/Login'
 import Dashboard from '@/pages/Dashboard'
 import Ajustes from '@/pages/Ajustes'
 import Impuestos from '@/pages/Impuestos'
+import Integraciones from '@/pages/Integraciones'
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth()
   if (loading) return (
     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh', background: '#F8F9FB' }}>
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12 }}>
-        <div style={{ width: 36, height: 36, background: '#4361EE', borderRadius: 9, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-  <svg width="18" height="18" viewBox="0 0 16 16" fill="none">
-    <path d="M3 2h5a3 3 0 010 6H3V2z" fill="white"/>
-    <path d="M3 8h6a3 3 0 010 6H3V8z" fill="rgba(255,255,255,0.6)"/>
-  </svg>
-</div>
+        <div style={{ width: 36, height: 36, background: 'linear-gradient(135deg,#00BCD4,#0D2E6E)', borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <span style={{ fontFamily: 'Nunito, sans-serif', fontWeight: 800, fontSize: 20, color: 'white' }}>b</span>
+        </div>
+        <span style={{ fontSize: 12, color: '#9CA3AF' }}>Cargando...</span>
+      </div>
+    </div>
+  )
   if (!user) return <Navigate to="/login" replace />
   return <>{children}</>
 }
@@ -28,6 +30,7 @@ function AppRoutes() {
       <Route path="/" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
       <Route path="/impuestos" element={<ProtectedRoute><Impuestos /></ProtectedRoute>} />
       <Route path="/ajustes" element={<ProtectedRoute><Ajustes /></ProtectedRoute>} />
+      <Route path="/integraciones" element={<ProtectedRoute><Integraciones /></ProtectedRoute>} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   )

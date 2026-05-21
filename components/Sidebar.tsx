@@ -10,7 +10,7 @@ const navGroups = [
   ]},
   { section:'Admin', items:[
     { label:'Ajustes', path:'/ajustes', icon:<SettingsIcon/>, disabled:false },
-    { label:'Integraciones', path:'/integraciones', icon:<PlugIcon/>, disabled:true },
+    { label:'Integraciones', path:'/integraciones', icon:<PlugIcon/>, disabled:false },
   ]}
 ]
 
