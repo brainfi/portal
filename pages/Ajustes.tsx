@@ -59,7 +59,7 @@ export default function Ajustes() {
             />
             <button
               onClick={handleSave}
-              style={{ padding: '9px 18px', fontSize: 13, fontWeight: 600, color: '#fff', background: saved ? '#16A34A' : 'linear-gradient(135deg,#00BCD4,#0D2E6E)', border: 'none', borderRadius: 8 }}
+              style={{ display:'flex', alignItems:'center', gap:6, padding: '9px 16px', fontSize: 13, fontWeight: 500, color: '#fff', background: saved ? '#2DC653' : '#4361EE', border: 'none', borderRadius: 8, cursor:'pointer' }}
             >
               {saved ? '✓ Guardado' : 'Guardar'}
             </button>
