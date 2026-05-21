@@ -108,11 +108,11 @@ export default function Impuestos() {
             {historico.filter(h => h.estado === 'Presentado').length} de {historico.length} presentadas
           </div>
         </div>
-        <div className="imp-tbl-hdr" style={{ display:'grid', gridTemplateColumns:'80px 1fr 100px 100px 110px 90px', ...hdr }}>
+        <div className="imp-tbl-hdr" style={{ display:'grid', gridTemplateColumns:'80px 1fr 100px 80px 120px 90px', ...hdr }}>
           <span>Periodo</span><span>Modelo</span><span className="imp-hide">Tipo</span><span style={{ textAlign:'right' }}>Importe</span><span>Estado</span><span className="imp-hide" style={{ textAlign:'center' }}>Archivo</span>
         </div>
         {historico.map((h,i) => (
-          <div key={i} className="imp-tbl-row" style={{ display:'grid', gridTemplateColumns:'80px 1fr 100px 100px 110px 90px', alignItems:'center', padding:'11px 0', borderBottom: i < historico.length-1 ? '1px solid #F4F5F7' : 'none' }}>
+          <div key={i} className="imp-tbl-row" style={{ display:'grid', gridTemplateColumns:'80px 1fr 100px 80px 120px 90px', alignItems:'center', padding:'11px 0', borderBottom: i < historico.length-1 ? '1px solid #F4F5F7' : 'none' }}>
             <span style={{ fontSize:11, fontWeight:600, color:'#888' }}>{h.periodo}</span>
             <div><div style={{ fontSize:12, fontWeight:500, color:'#1a1a1a' }}>Mod. {h.modelo} · {h.nombre}</div><div style={{ fontSize:10, color:'#B0B7C3' }}>{h.fecha}</div></div>
             <span className="imp-hide" style={{ fontSize:11, color:'#888' }}>AEAT</span>
