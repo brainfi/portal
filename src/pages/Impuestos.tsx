@@ -54,17 +54,7 @@ export default function Impuestos() {
         @media (max-width: 768px) { .imp-hide { display: none !important; } }
       `}</style>
 
-      <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:4 }}>
-        <div>
-          <div style={{ fontSize:18, fontWeight:700, color:'#1a1a1a', letterSpacing:'-0.02em' }}>Trimestre actual — {trimestre}</div>
-          <div style={{ fontSize:12, color:'#888', marginTop:2 }}>Vencimiento: {fechaLimite} · <span style={{ color: diasRestantes < 30 ? '#EF4444' : '#F4A100', fontWeight:600 }}>{diasRestantes} días</span></div>
-        </div>
-        <div style={{ textAlign:'right' }}>
-          <div style={{ fontSize:11, color:'#888', marginBottom:2 }}>Total estimado</div>
-          <div style={{ fontSize:22, fontWeight:700, color:'#1a1a1a', letterSpacing:'-0.02em' }}>{fmt(totalEstimado)}</div>
-          <div style={{ fontSize:11, color:'#4361EE', fontWeight:500 }}>Provisionado: {fmt(totalProvisionado)}</div>
-        </div>
-      </div>
+
 
       <div className="imp-grid" style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:14 }}>
         {modelos.map(m => {
