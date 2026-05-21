@@ -9,8 +9,7 @@ export default function Layout({ children, title = 'Resumen' }: LayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const name = user?.email?.split('@')[0] ?? 'Usuario'
   const displayName = name.charAt(0).toUpperCase() + name.slice(1)
-  const hour = new Date().getHours()
-  const greeting = hour < 12 ? 'Buenos días' : hour < 20 ? 'Buenas tardes' : 'Buenas noches'
+  const initials = displayName.slice(0,2).toUpperCase()
 
   return (
     <div style={{ display:'flex', height:'100vh', overflow:'hidden', background:'#F4F5F7' }}>
