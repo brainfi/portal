@@ -55,10 +55,9 @@ export default function Layout({ children, title = 'Resumen' }: LayoutProps) {
               <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="#888" strokeWidth="1.5"><path d="M8 2a5 5 0 015 5v2l1 2H2l1-2V7a5 5 0 015-5zM6 13a2 2 0 004 0"/></svg>
               <div style={{ position:'absolute', top:5, right:5, width:6, height:6, borderRadius:'50%', background:'#EF4444', border:'1.5px solid #fff' }}/>
             </div>
-            {/* Estado sync */}
-            <div style={{ display:'flex', alignItems:'center', gap:5, fontSize:11, color:'#EF4444', fontWeight:500, background:'#FEF2F2', border:'1px solid #FECACA', borderRadius:8, padding:'5px 10px', cursor:'default' }}>
-              <div style={{ width:6, height:6, borderRadius:'50%', background:'#EF4444', flexShrink:0 }}/>
-              Sin sync
+            {/* Notificaciones 2 */}
+            <div style={{ position:'relative', width:34, height:34, borderRadius:8, display:'flex', alignItems:'center', justifyContent:'center', cursor:'pointer' }}>
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="#888" strokeWidth="1.5"><circle cx="8" cy="8" r="6"/><path d="M8 5v3"/><circle cx="8" cy="11" r=".5" fill="#888"/></svg>
             </div>
             {/* Avatar */}
             <div style={{ display:'flex', alignItems:'center', gap:8, padding:'5px 10px', border:'1px solid #E8E8EC', borderRadius:8, background:'#fff' }}>
