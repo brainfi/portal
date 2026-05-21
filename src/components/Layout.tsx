@@ -70,17 +70,7 @@ export default function Layout({ children, title = 'Resumen' }: LayoutProps) {
             </div>
           </div>
         </div>
-        <div style={{ display:'none' }}>
-            <div style={{ display:'flex', alignItems:'center', gap:8, background:'#fff', border:'1px solid #E8E8EC', borderRadius:8, padding:'8px 14px', fontSize:12, color:'#999', width:200 }}>
-              <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="#bbb" strokeWidth="1.5"><circle cx="7" cy="7" r="5"/><path d="M11 11l3 3"/></svg>
-              Buscar...
-            </div>
-            <button style={{ display:'flex', alignItems:'center', gap:6, background:'#4361EE', color:'#fff', border:'none', borderRadius:8, padding:'9px 16px', fontSize:13, fontWeight:500, cursor:'pointer' }}>
-              <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2"><path d="M8 2v12M2 8h12"/></svg>
-              Nuevo
-            </button>
-          </div>
-        </div>
+
         <main style={{ flex:1, overflow:'auto', padding:'0 28px 28px', background:'#F4F5F7', display:'flex', flexDirection:'column', gap:14 }}>
           {children}
         </main>
