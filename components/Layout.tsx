@@ -49,24 +49,15 @@ export default function Layout({ children, title = 'Resumen' }: LayoutProps) {
               Última sincronización: {new Date().toLocaleTimeString('es-ES', { hour:'2-digit', minute:'2-digit' })}
             </span>
           </div>
-          <div className="tb-actions" style={{ display:'flex', flexDirection:'column', alignItems:'flex-end', gap:6, position:'absolute', top:'50%', transform:'translateY(-50%)', right:28 }}>
-            <div style={{ display:'flex', alignItems:'center', gap:8 }}>
-              <div style={{ display:'flex', alignItems:'center', gap:8, background:'#fff', border:'1px solid #E8E8EC', borderRadius:8, padding:'8px 14px', fontSize:12, color:'#999', width:200 }}>
-                <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="#bbb" strokeWidth="1.5"><circle cx="7" cy="7" r="5"/><path d="M11 11l3 3"/></svg>
-                Buscar...
-              </div>
-              <button style={{ display:'flex', alignItems:'center', gap:6, background:'#4361EE', color:'#fff', border:'none', borderRadius:8, padding:'9px 16px', fontSize:13, fontWeight:500, cursor:'pointer' }}>
-                <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2"><path d="M8 2v12M2 8h12"/></svg>
-                Nuevo
-              </button>
+          <div className="tb-actions" style={{ display:'flex', alignItems:'center', gap:10, position:'absolute', top:'50%', transform:'translateY(-50%)', right:28 }}>
+            <div style={{ display:'flex', alignItems:'center', gap:8, background:'#fff', border:'1px solid #E8E8EC', borderRadius:8, padding:'8px 14px', fontSize:12, color:'#999', width:200 }}>
+              <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="#bbb" strokeWidth="1.5"><circle cx="7" cy="7" r="5"/><path d="M11 11l3 3"/></svg>
+              Buscar...
             </div>
-            <div style={{ display:'flex', alignItems:'center', gap:8 }}>
-              <span style={{ fontSize:10, fontWeight:600, color:'#bbb', textTransform:'uppercase', letterSpacing:'0.08em' }}>{new Date().toLocaleDateString('es-ES', { weekday:'long', day:'numeric', month:'long', year:'numeric' }).replace(/^\w/, c => c.toUpperCase())}</span>
-              <span style={{ display:'flex', alignItems:'center', gap:4, fontSize:10, color:'#2DC653', fontWeight:600, textTransform:'uppercase', letterSpacing:'0.08em' }}>
-                <svg width="7" height="7" viewBox="0 0 10 10" fill="none"><circle cx="5" cy="5" r="4" fill="#2DC653" opacity="0.2"/><circle cx="5" cy="5" r="2.5" fill="#2DC653"/></svg>
-                Última sincronización: {new Date().toLocaleTimeString('es-ES', { hour:'2-digit', minute:'2-digit' })}
-              </span>
-            </div>
+            <button style={{ display:'flex', alignItems:'center', gap:6, background:'#4361EE', color:'#fff', border:'none', borderRadius:8, padding:'9px 16px', fontSize:13, fontWeight:500, cursor:'pointer' }}>
+              <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2"><path d="M8 2v12M2 8h12"/></svg>
+              Nuevo
+            </button>
           </div>
         </div>
         <main style={{ flex:1, overflow:'auto', padding:'0 28px 28px', background:'#F4F5F7', display:'flex', flexDirection:'column', gap:14 }}>
