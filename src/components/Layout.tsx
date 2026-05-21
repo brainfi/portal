@@ -36,37 +36,39 @@ export default function Layout({ children, title = 'Resumen' }: LayoutProps) {
       </div>
 
       <div style={{ flex:1, display:'flex', flexDirection:'column', overflow:'hidden', minWidth:0 }}>
-        <div style={{ padding:'20px 28px', background:'#F4F5F7', flexShrink:0, position:'relative', minHeight:80, display:'flex', alignItems:'center', justifyContent:'space-between' }}>
-          {/* IZQUIERDA */}
-          <div style={{ display:'flex', alignItems:'center', gap:12 }}>
-            <button className="hamburger" onClick={() => setSidebarOpen(!sidebarOpen)} style={{ display:'none', alignItems:'center', justifyContent:'center', width:32, height:32, border:'1px solid #E8E8EC', borderRadius:7, background:'#fff', cursor:'pointer' }}>
+        <div style={{ height:56, padding:'0 28px', background:'#fff', borderBottom:'1px solid #E8E8EC', flexShrink:0, display:'flex', alignItems:'center', justifyContent:'space-between', gap:16 }}>
+          {/* IZQUIERDA — Logo brainfi */}
+          <div style={{ display:'flex', alignItems:'center', gap:9, flexShrink:0 }}>
+            <button className="hamburger" onClick={() => setSidebarOpen(!sidebarOpen)} style={{ display:'none', alignItems:'center', justifyContent:'center', width:32, height:32, border:'1px solid #E8E8EC', borderRadius:7, background:'#fff', cursor:'pointer', marginRight:4 }}>
               <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="#888" strokeWidth="1.5"><path d="M2 4h12M2 8h12M2 12h12"/></svg>
             </button>
-            <div>
-              <div style={{ fontSize:11, fontWeight:600, color:'#999', textTransform:'uppercase', letterSpacing:'0.08em', marginBottom:8 }}>Workspace · Mi empresa</div>
-              <div style={{ width:120, height:36, background:'#ECEEF3', borderRadius:8, display:'flex', alignItems:'center', justifyContent:'center', cursor:'pointer', border:'1px dashed #D1D5DB' }}>
-                <span style={{ fontSize:10, color:'#B0B7C3' }}>+ Subir logo</span>
-              </div>
+            <div style={{ width:28, height:28, background:'#4361EE', borderRadius:7, display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
+              <svg width="15" height="15" viewBox="0 0 16 16" fill="none"><path d="M3 2h5a3 3 0 010 6H3V2z" fill="white"/><path d="M3 8h6a3 3 0 010 6H3V8z" fill="rgba(255,255,255,0.6)"/></svg>
             </div>
+            <span style={{ fontSize:16, fontWeight:700, color:'#1a1a1a', letterSpacing:'-0.4px' }}>brainfi</span>
           </div>
-          {/* DERECHA */}
-          <div className="tb-actions" style={{ display:'flex', flexDirection:'column', alignItems:'flex-end', gap:8 }}>
-            <div style={{ display:'flex', alignItems:'center', gap:8 }}>
-              <div style={{ display:'flex', alignItems:'center', gap:8, background:'#fff', border:'1px solid #E8E8EC', borderRadius:8, padding:'8px 14px', fontSize:12, color:'#999', width:200 }}>
-                <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="#bbb" strokeWidth="1.5"><circle cx="7" cy="7" r="5"/><path d="M11 11l3 3"/></svg>
-                Buscar...
-              </div>
-              <button style={{ display:'flex', alignItems:'center', gap:6, background:'#4361EE', color:'#fff', border:'none', borderRadius:8, padding:'9px 16px', fontSize:13, fontWeight:500, cursor:'pointer' }}>
-                <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2"><path d="M8 2v12M2 8h12"/></svg>
-                Nuevo
-              </button>
+          {/* CENTRO — Búsqueda */}
+          <div style={{ flex:1, maxWidth:380, display:'flex', alignItems:'center', gap:8, background:'#F4F5F7', border:'1px solid #E8E8EC', borderRadius:8, padding:'8px 14px', fontSize:13, color:'#B0B7C3' }}>
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="#bbb" strokeWidth="1.5"><circle cx="7" cy="7" r="5"/><path d="M11 11l3 3"/></svg>
+            Buscar...
+          </div>
+          {/* DERECHA — Acciones + avatar */}
+          <div style={{ display:'flex', alignItems:'center', gap:10, flexShrink:0 }}>
+            {/* Campana */}
+            <div style={{ position:'relative', width:34, height:34, borderRadius:8, border:'1px solid #E8E8EC', background:'#fff', display:'flex', alignItems:'center', justifyContent:'center', cursor:'pointer' }}>
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="#888" strokeWidth="1.5"><path d="M8 2a5 5 0 015 5v2l1 2H2l1-2V7a5 5 0 015-5zM6 13a2 2 0 004 0"/></svg>
+              <div style={{ position:'absolute', top:5, right:5, width:6, height:6, borderRadius:'50%', background:'#EF4444', border:'1.5px solid #fff' }}/>
             </div>
-            <div style={{ display:'flex', flexDirection:'column', alignItems:'flex-end', gap:2 }}>
-              <span style={{ fontSize:10, fontWeight:600, color:'#B0B7C3', textTransform:'uppercase', letterSpacing:'0.08em' }}>{new Date().toLocaleDateString('es-ES', { weekday:'long', day:'numeric', month:'long', year:'numeric' }).replace(/^\w/, c => c.toUpperCase())}</span>
-              <span style={{ display:'flex', alignItems:'center', gap:4, fontSize:10, color:'#EF4444', fontWeight:600, textTransform:'uppercase', letterSpacing:'0.06em' }}>
-                <svg width="7" height="7" viewBox="0 0 10 10" fill="none"><circle cx="5" cy="5" r="4" fill="#EF4444" opacity="0.2"/><circle cx="5" cy="5" r="2.5" fill="#EF4444"/></svg>
-                No sincronizado · Se muestran datos de prueba
-              </span>
+            {/* Estado sync */}
+            <div style={{ display:'flex', alignItems:'center', gap:5, fontSize:11, color:'#EF4444', fontWeight:500, background:'#FEF2F2', border:'1px solid #FECACA', borderRadius:8, padding:'5px 10px', cursor:'default' }}>
+              <div style={{ width:6, height:6, borderRadius:'50%', background:'#EF4444', flexShrink:0 }}/>
+              Sin sync
+            </div>
+            {/* Avatar */}
+            <div style={{ display:'flex', alignItems:'center', gap:8, padding:'5px 10px', border:'1px solid #E8E8EC', borderRadius:8, cursor:'pointer', background:'#fff' }}>
+              <div style={{ width:26, height:26, borderRadius:6, background:'#4361EE', display:'flex', alignItems:'center', justifyContent:'center', fontSize:10, fontWeight:700, color:'#fff', flexShrink:0 }}>{initials}</div>
+              <span style={{ fontSize:13, fontWeight:500, color:'#1a1a1a' }}>{displayName}</span>
+              <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="#888" strokeWidth="1.5"><path d="M4 6l4 4 4-4"/></svg>
             </div>
           </div>
         </div>
