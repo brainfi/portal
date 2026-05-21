@@ -52,14 +52,11 @@ export default function Ajustes() {
             <div><div style={lbl}>Nombre</div><div style={sub}>Tu nombre en el portal</div></div>
             <input className="aj-input" type="text" value={nombre} onChange={e => setNombre(e.target.value)} placeholder="Tu nombre" style={inputStyle}/>
           </div>
-          <div className="aj-row" style={row}>
+          <div className="aj-row" style={rowLast}>
             <div><div style={lbl}>Email</div><div style={sub}>Email de acceso · no editable</div></div>
             <input className="aj-input" type="email" value={user?.email ?? ''} disabled style={{ ...inputStyle, color:'#B0B7C3', cursor:'not-allowed' }}/>
           </div>
-          <div className="aj-row" style={rowLast}>
-            <div><div style={lbl}>Contraseña</div><div style={sub}>Cambia tu contraseña de acceso</div></div>
-            <button style={{ display:'inline-flex', alignItems:'center', gap:6, padding:'8px 16px', fontSize:13, fontWeight:500, borderRadius:8, border:'1px solid #E8E8EC', background:'#F4F5F7', color:'#555', cursor:'pointer', fontFamily:'Inter, sans-serif' }}>Cambiar contraseña</button>
-          </div>
+
           <div style={{ paddingTop:14, display:'flex', justifyContent:'flex-end' }}>
             <button onClick={handleSave} style={{ display:'inline-flex', alignItems:'center', gap:6, padding:'8px 16px', fontSize:13, fontWeight:500, borderRadius:8, border:'none', background: saved ? '#2DC653' : '#4361EE', color:'#fff', cursor:'pointer', fontFamily:'Inter, sans-serif' }}>
               {saved ? '✓ Guardado' : 'Guardar cambios'}
@@ -113,6 +110,10 @@ export default function Ajustes() {
         {/* ZONA PELIGRO */}
         <div style={sectionTitle}>Zona de peligro</div>
         <div style={{ ...card, marginBottom:0 }}>
+          <div style={row}>
+            <div><div style={lbl}>Contraseña</div><div style={sub}>Cambia tu contraseña de acceso</div></div>
+            <button style={{ display:'inline-flex', alignItems:'center', gap:6, padding:'8px 16px', fontSize:13, fontWeight:500, borderRadius:8, border:'1px solid #E8E8EC', background:'#F4F5F7', color:'#555', cursor:'pointer', fontFamily:'Inter, sans-serif' }}>Cambiar contraseña</button>
+          </div>
           <div style={row}>
             <div><div style={{ ...lbl, color:'#EF4444' }}>Cerrar sesión en todos los dispositivos</div><div style={sub}>Revoca todos los tokens activos</div></div>
             <button onClick={() => signOut()} style={{ display:'inline-flex', alignItems:'center', gap:6, padding:'8px 16px', fontSize:13, fontWeight:500, borderRadius:8, border:'1px solid #FECACA', background:'#FEF2F2', color:'#EF4444', cursor:'pointer', fontFamily:'Inter, sans-serif' }}>Cerrar todas las sesiones</button>
