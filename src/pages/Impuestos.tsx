@@ -5,9 +5,9 @@ const fechaLimite = '20 jul 2026'
 const diasRestantes = 68
 
 const modelos = [
-  { codigo:'303', nombre:'IVA Trimestral', descripcion:'Liquidación trimestral del IVA', estimado:3900, provisionado:2720, base:'Ventas sujetas a IVA del trimestre', tipo:'21%' },
-  { codigo:'111', nombre:'IRPF Retenciones', descripcion:'Retenciones e ingresos a cuenta', estimado:4200, provisionado:3100, base:'Nóminas y honorarios profesionales', tipo:'15%' },
-  { codigo:'115', nombre:'Ret. Alquileres', descripcion:'Retenciones sobre arrendamientos', estimado:630, provisionado:630, base:'Alquiler oficina · 2.100€/mes', tipo:'19%' },
+  { codigo:'303', nombre:'IVA Trimestral', descripcion:'Liquidación trimestral del IVA', estimado:3900, provisionado:2720, base:'Ventas sujetas a IVA del trimestre', tipo:'21%', fechaLimite:'20 jul 2026', diasRestantes:68 },
+  { codigo:'111', nombre:'IRPF Retenciones', descripcion:'Retenciones e ingresos a cuenta', estimado:4200, provisionado:3100, base:'Nóminas y honorarios profesionales', tipo:'15%', fechaLimite:'20 jul 2026', diasRestantes:68 },
+  { codigo:'115', nombre:'Ret. Alquileres', descripcion:'Retenciones sobre arrendamientos', estimado:630, provisionado:630, base:'Alquiler oficina · 2.100€/mes', tipo:'19%', fechaLimite:'20 jul 2026', diasRestantes:68 },
 ]
 
 const historico = [
@@ -82,7 +82,12 @@ export default function Impuestos() {
                   : <span style={{ fontSize:11, color:'#2DC653', fontWeight:500 }}>✓ Completo</span>
                 }
               </div>
-              <div style={{ marginTop:12, paddingTop:10, borderTop:'1px solid #F4F5F7', fontSize:10, color:'#B0B7C3' }}>Base: {m.base}</div>
+              <div style={{ marginTop:12, paddingTop:10, borderTop:'1px solid #F4F5F7', display:'flex', justifyContent:'space-between', alignItems:'center' }}>
+                <span style={{ fontSize:10, color:'#B0B7C3' }}>Base: {m.base}</span>
+                <span style={{ fontSize:11, fontWeight:600, color: m.diasRestantes < 30 ? '#EF4444' : '#F4A100', background: m.diasRestantes < 30 ? '#FEF2F2' : '#FFF8E6', padding:'2px 8px', borderRadius:99 }}>
+                  {m.fechaLimite} · {m.diasRestantes}d
+                </span>
+              </div>
             </div>
           )
         })}
@@ -122,10 +127,7 @@ export default function Impuestos() {
         </div>
       </div>
 
-      <div style={{ background:'#EEF1FD', border:'1px solid #D6DCFA', borderRadius:12, padding:'14px 18px', display:'flex', alignItems:'center', gap:12, fontSize:12, color:'#4361EE' }}>
-        <svg width="18" height="18" viewBox="0 0 16 16" fill="none" stroke="#4361EE" strokeWidth="1.5"><circle cx="8" cy="8" r="6"/><path d="M8 5v3"/><circle cx="8" cy="11" r=".5" fill="#4361EE"/></svg>
-        <div><strong>Datos de ejemplo.</strong> Conecta tu ERP en <a href="/ajustes" style={{ color:'#4361EE', fontWeight:600 }}>Ajustes → Integraciones</a> para ver los importes reales calculados automáticamente.</div>
-      </div>
+
 
     </Layout>
   )
