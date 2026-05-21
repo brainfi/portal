@@ -40,7 +40,12 @@ export default function Layout({ children, title = 'Resumen' }: LayoutProps) {
             <button className="hamburger" onClick={() => setSidebarOpen(!sidebarOpen)} style={{ display:'none', alignItems:'center', justifyContent:'center', width:32, height:32, border:'1px solid #E8E8EC', borderRadius:7, background:'#fff', cursor:'pointer' }}>
               <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="#888" strokeWidth="1.5"><path d="M2 4h12M2 8h12M2 12h12"/></svg>
             </button>
-            <span style={{ fontSize:15, fontWeight:600, color:'#1a1a1a' }}>{title}</span>
+            <span style={{ fontSize:10, fontWeight:600, color:'#B0B7C3', textTransform:'uppercase', letterSpacing:'0.12em' }}>
+              {['Resumen','Dashboard'].includes(title) ? 'General' :
+               ['Cashflow','Análisis','Impuestos'].includes(title) ? 'General' :
+               ['Ajustes','Integraciones'].includes(title) ? 'Admin' : 'General'}
+              {' / '}{title.toUpperCase()}
+            </span>
           </div>
           <div style={{ display:'flex', alignItems:'center', gap:10, flexShrink:0 }}>
             <div style={{ display:'flex', alignItems:'center', gap:8, background:'#fff', border:'1px solid #E8E8EC', borderRadius:8, padding:'8px 14px', fontSize:13, color:'#B0B7C3', width:220 }}>
