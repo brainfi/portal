@@ -36,20 +36,41 @@ export default function Layout({ children, title = 'Resumen' }: LayoutProps) {
       </div>
 
       <div style={{ flex:1, display:'flex', flexDirection:'column', overflow:'hidden', minWidth:0 }}>
-        <div style={{ padding:'36px 28px', background:'#F4F5F7', flexShrink:0, minHeight:100, position:'relative' }}>
-          <div style={{ display:'flex', alignItems:'center', gap:12, marginBottom:4 }}>
+        <div style={{ padding:'20px 28px', background:'#F4F5F7', flexShrink:0, position:'relative', minHeight:80, display:'flex', alignItems:'center', justifyContent:'space-between' }}>
+          {/* IZQUIERDA */}
+          <div style={{ display:'flex', alignItems:'center', gap:12 }}>
             <button className="hamburger" onClick={() => setSidebarOpen(!sidebarOpen)} style={{ display:'none', alignItems:'center', justifyContent:'center', width:32, height:32, border:'1px solid #E8E8EC', borderRadius:7, background:'#fff', cursor:'pointer' }}>
               <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="#888" strokeWidth="1.5"><path d="M2 4h12M2 8h12M2 12h12"/></svg>
             </button>
-            <span style={{ fontSize:11, fontWeight:600, color:'#999', textTransform:'uppercase', letterSpacing:'0.08em' }}>Workspace · Mi empresa</span>
-            <span style={{ color:'#ddd' }}>·</span>
-            <span style={{ fontSize:11, fontWeight:600, color:'#888', textTransform:'uppercase', letterSpacing:'0.08em' }}>{new Date().toLocaleDateString('es-ES', { weekday:'long', day:'numeric', month:'long', year:'numeric' }).replace(/^\w/, c => c.toUpperCase())}</span>
-            <span style={{ display:'flex', alignItems:'center', gap:5, fontSize:11, color:'#2DC653', fontWeight:600, textTransform:'uppercase', letterSpacing:'0.08em' }}>
-              <svg width="8" height="8" viewBox="0 0 10 10" fill="none"><circle cx="5" cy="5" r="4" fill="#2DC653" opacity="0.2"/><circle cx="5" cy="5" r="2.5" fill="#2DC653"/></svg>
-              Última sincronización: {new Date().toLocaleTimeString('es-ES', { hour:'2-digit', minute:'2-digit' })}
-            </span>
+            <div>
+              <div style={{ fontSize:11, fontWeight:600, color:'#999', textTransform:'uppercase', letterSpacing:'0.08em', marginBottom:8 }}>Workspace · Mi empresa</div>
+              <div style={{ width:120, height:36, background:'#ECEEF3', borderRadius:8, display:'flex', alignItems:'center', justifyContent:'center', cursor:'pointer', border:'1px dashed #D1D5DB' }}>
+                <span style={{ fontSize:10, color:'#B0B7C3' }}>+ Subir logo</span>
+              </div>
+            </div>
           </div>
-          <div className="tb-actions" style={{ display:'flex', alignItems:'center', gap:10, position:'absolute', top:'50%', transform:'translateY(-50%)', right:28 }}>
+          {/* DERECHA */}
+          <div className="tb-actions" style={{ display:'flex', flexDirection:'column', alignItems:'flex-end', gap:8 }}>
+            <div style={{ display:'flex', alignItems:'center', gap:8 }}>
+              <div style={{ display:'flex', alignItems:'center', gap:8, background:'#fff', border:'1px solid #E8E8EC', borderRadius:8, padding:'8px 14px', fontSize:12, color:'#999', width:200 }}>
+                <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="#bbb" strokeWidth="1.5"><circle cx="7" cy="7" r="5"/><path d="M11 11l3 3"/></svg>
+                Buscar...
+              </div>
+              <button style={{ display:'flex', alignItems:'center', gap:6, background:'#4361EE', color:'#fff', border:'none', borderRadius:8, padding:'9px 16px', fontSize:13, fontWeight:500, cursor:'pointer' }}>
+                <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2"><path d="M8 2v12M2 8h12"/></svg>
+                Nuevo
+              </button>
+            </div>
+            <div style={{ display:'flex', flexDirection:'column', alignItems:'flex-end', gap:2 }}>
+              <span style={{ fontSize:10, fontWeight:600, color:'#B0B7C3', textTransform:'uppercase', letterSpacing:'0.08em' }}>{new Date().toLocaleDateString('es-ES', { weekday:'long', day:'numeric', month:'long', year:'numeric' }).replace(/^\w/, c => c.toUpperCase())}</span>
+              <span style={{ display:'flex', alignItems:'center', gap:4, fontSize:10, color:'#EF4444', fontWeight:600, textTransform:'uppercase', letterSpacing:'0.06em' }}>
+                <svg width="7" height="7" viewBox="0 0 10 10" fill="none"><circle cx="5" cy="5" r="4" fill="#EF4444" opacity="0.2"/><circle cx="5" cy="5" r="2.5" fill="#EF4444"/></svg>
+                No sincronizado · Se muestran datos de prueba
+              </span>
+            </div>
+          </div>
+        </div>
+        <div style={{ display:'none' }}>
             <div style={{ display:'flex', alignItems:'center', gap:8, background:'#fff', border:'1px solid #E8E8EC', borderRadius:8, padding:'8px 14px', fontSize:12, color:'#999', width:200 }}>
               <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="#bbb" strokeWidth="1.5"><circle cx="7" cy="7" r="5"/><path d="M11 11l3 3"/></svg>
               Buscar...
