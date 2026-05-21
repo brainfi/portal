@@ -15,8 +15,7 @@ export default function Ajustes() {
   return (
     <Layout title="Ajustes">
       <div style={{ maxWidth: 640 }}>
-        <h1 style={{ fontSize: 18, fontWeight: 700, color: '#111827', marginBottom: 4 }}>Ajustes</h1>
-        <p style={{ fontSize: 13, color: '#6B7280', marginBottom: 24 }}>Configura tu cuenta y las integraciones del portal</p>
+
 
         {/* Cuenta */}
         <div style={{ background: '#fff', border: '1px solid #E5E7EB', borderRadius: 12, padding: 24, marginBottom: 16 }}>
