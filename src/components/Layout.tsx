@@ -35,16 +35,13 @@ export default function Layout({ children, title = 'Resumen' }: LayoutProps) {
       </div>
 
       <div style={{ flex:1, display:'flex', flexDirection:'column', overflow:'hidden', minWidth:0 }}>
-        <div style={{ height:56, padding:'0 28px', background:'#fff', borderBottom:'1px solid #E8E8EC', flexShrink:0, display:'flex', alignItems:'center', justifyContent:'space-between', gap:16 }}>
+        <div style={{ height:68, padding:'0 28px', background:'#fff', borderBottom:'1px solid #E8E8EC', flexShrink:0, display:'flex', alignItems:'center', justifyContent:'space-between', gap:16 }}>
           {/* IZQUIERDA — Logo brainfi */}
           <div style={{ display:'flex', alignItems:'center', gap:9, flexShrink:0 }}>
             <button className="hamburger" onClick={() => setSidebarOpen(!sidebarOpen)} style={{ display:'none', alignItems:'center', justifyContent:'center', width:32, height:32, border:'1px solid #E8E8EC', borderRadius:7, background:'#fff', cursor:'pointer', marginRight:4 }}>
               <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="#888" strokeWidth="1.5"><path d="M2 4h12M2 8h12M2 12h12"/></svg>
             </button>
-            <div style={{ width:28, height:28, background:'#4361EE', borderRadius:7, display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
-              <svg width="15" height="15" viewBox="0 0 16 16" fill="none"><path d="M3 2h5a3 3 0 010 6H3V2z" fill="white"/><path d="M3 8h6a3 3 0 010 6H3V8z" fill="rgba(255,255,255,0.6)"/></svg>
-            </div>
-            <span style={{ fontSize:16, fontWeight:700, color:'#1a1a1a', letterSpacing:'-0.4px' }}>brainfi</span>
+
           </div>
           {/* CENTRO — Búsqueda */}
           <div style={{ flex:1, maxWidth:380, display:'flex', alignItems:'center', gap:8, background:'#F4F5F7', border:'1px solid #E8E8EC', borderRadius:8, padding:'8px 14px', fontSize:13, color:'#B0B7C3' }}>

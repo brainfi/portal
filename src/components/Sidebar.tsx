@@ -81,18 +81,7 @@ export default function Sidebar({ onClose }: SidebarProps) {
         </div>
       </nav>
 
-      {/* USUARIO — nueva propuesta */}
-      <div style={{ padding:'12px 10px', borderTop:'1px solid #E8E8EC' }}>
-        <div style={{ display:'flex', alignItems:'center', gap:10, padding:'10px 10px', background:'#F4F5F7', borderRadius:10 }}>
-          <div style={{ width:32, height:32, borderRadius:8, background:'#4361EE', display:'flex', alignItems:'center', justifyContent:'center', fontSize:12, fontWeight:700, color:'#fff', flexShrink:0, letterSpacing:'-0.5px' }}>
-            {initials}
-          </div>
-          <div style={{ minWidth:0 }}>
-            <div style={{ fontSize:12, fontWeight:600, color:'#1a1a1a', whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis' }}>{displayName}</div>
-            <div style={{ fontSize:10, color:'#aaa', whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis' }}>{email}</div>
-          </div>
-        </div>
-      </div>
+
 
     </aside>
   )
