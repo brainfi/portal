@@ -51,7 +51,12 @@ export default function Impuestos() {
     <Layout title="Impuestos">
       <style>{`
         @media (max-width: 900px) { .imp-grid { grid-template-columns: 1fr !important; } }
-        @media (max-width: 768px) { .imp-hide { display: none !important; } }
+        @media (max-width: 768px) {
+          .imp-hide { display: none !important; }
+          .imp-grid { grid-template-columns: 1fr !important; }
+          .imp-tbl-hdr { grid-template-columns: 70px 1fr 80px 100px !important; }
+          .imp-tbl-row { grid-template-columns: 70px 1fr 80px 100px !important; }
+        }
       `}</style>
 
 
@@ -103,17 +108,17 @@ export default function Impuestos() {
             {historico.filter(h => h.estado === 'Presentado').length} de {historico.length} presentadas
           </div>
         </div>
-        <div style={{ display:'grid', gridTemplateColumns:'80px 1fr 100px 100px 110px 90px', ...hdr }}>
-          <span>Periodo</span><span>Modelo</span><span className="imp-hide">Tipo</span><span style={{ textAlign:'right' }}>Importe</span><span>Estado</span><span style={{ textAlign:'center' }}>Archivo</span>
+        <div className="imp-tbl-hdr" style={{ display:'grid', gridTemplateColumns:'80px 1fr 100px 100px 110px 90px', ...hdr }}>
+          <span>Periodo</span><span>Modelo</span><span className="imp-hide">Tipo</span><span style={{ textAlign:'right' }}>Importe</span><span>Estado</span><span className="imp-hide" style={{ textAlign:'center' }}>Archivo</span>
         </div>
         {historico.map((h,i) => (
-          <div key={i} style={{ display:'grid', gridTemplateColumns:'80px 1fr 100px 100px 110px 90px', alignItems:'center', padding:'11px 0', borderBottom: i < historico.length-1 ? '1px solid #F4F5F7' : 'none' }}>
+          <div key={i} className="imp-tbl-row" style={{ display:'grid', alignItems:'center', padding:'11px 0', borderBottom: i < historico.length-1 ? '1px solid #F4F5F7' : 'none' }}>
             <span style={{ fontSize:11, fontWeight:600, color:'#888' }}>{h.periodo}</span>
             <div><div style={{ fontSize:12, fontWeight:500, color:'#1a1a1a' }}>Mod. {h.modelo} · {h.nombre}</div><div style={{ fontSize:10, color:'#B0B7C3' }}>{h.fecha}</div></div>
             <span className="imp-hide" style={{ fontSize:11, color:'#888' }}>AEAT</span>
             <span style={{ fontSize:12, fontWeight:600, color:'#1a1a1a', textAlign:'right' }}>{fmt(h.importe)}</span>
             <span><Badge estado={h.estado} /></span>
-            <div style={{ textAlign:'center' }}>
+            <div className="imp-hide" style={{ textAlign:'center' }}>
               <button disabled title="Disponible cuando conectes tu ERP" style={{ display:'inline-flex', alignItems:'center', gap:4, fontSize:11, fontWeight:500, color:'#B0B7C3', background:'#F4F5F7', border:'1px solid #E8E8EC', borderRadius:6, padding:'4px 10px', cursor:'not-allowed' }}>
                 <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M8 2v8M5 7l3 3 3-3"/><path d="M3 13h10"/></svg>
                 PDF
