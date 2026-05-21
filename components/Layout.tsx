@@ -50,6 +50,7 @@ export default function Layout({ children, title = 'Resumen' }: LayoutProps) {
               Última sincronización: {new Date().toLocaleTimeString('es-ES', { hour:'2-digit', minute:'2-digit' })}
             </span>
           </div>
+          <div style={{ height:0 }}></div>
           <div className="tb-actions" style={{ display:'flex', alignItems:'center', gap:10, position:'absolute', top:20, right:28 }}>
             <div style={{ display:'flex', alignItems:'center', gap:8, background:'#fff', border:'1px solid #E8E8EC', borderRadius:8, padding:'8px 14px', fontSize:12, color:'#999', width:200 }}>
               <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="#bbb" strokeWidth="1.5"><circle cx="7" cy="7" r="5"/><path d="M11 11l3 3"/></svg>
