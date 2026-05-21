@@ -35,7 +35,7 @@ export default function Layout({ children, title = 'Resumen' }: LayoutProps) {
       </div>
 
       <div style={{ flex:1, display:'flex', flexDirection:'column', overflow:'hidden', minWidth:0 }}>
-        <div style={{ height:68, padding:'0 28px', background:'#fff', borderBottom:'1px solid #E8E8EC', flexShrink:0, display:'flex', alignItems:'center', justifyContent:'space-between', gap:16 }}>
+        <div style={{ padding:'20px 28px', background:'#F4F5F7', flexShrink:0, display:'flex', alignItems:'center', justifyContent:'space-between', gap:16 }}>
           {/* IZQUIERDA — Logo brainfi */}
           <div style={{ display:'flex', alignItems:'center', gap:9, flexShrink:0 }}>
             <button className="hamburger" onClick={() => setSidebarOpen(!sidebarOpen)} style={{ display:'none', alignItems:'center', justifyContent:'center', width:32, height:32, border:'1px solid #E8E8EC', borderRadius:7, background:'#fff', cursor:'pointer', marginRight:4 }}>
@@ -44,14 +44,14 @@ export default function Layout({ children, title = 'Resumen' }: LayoutProps) {
 
           </div>
           {/* CENTRO — Búsqueda */}
-          <div style={{ flex:1, maxWidth:380, display:'flex', alignItems:'center', gap:8, background:'#F4F5F7', border:'1px solid #E8E8EC', borderRadius:8, padding:'8px 14px', fontSize:13, color:'#B0B7C3' }}>
+          <div style={{ flex:1, maxWidth:380, display:'flex', alignItems:'center', gap:8, background:'#fff', border:'1px solid #E8E8EC', borderRadius:8, padding:'8px 14px', fontSize:13, color:'#B0B7C3' }}>
             <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="#bbb" strokeWidth="1.5"><circle cx="7" cy="7" r="5"/><path d="M11 11l3 3"/></svg>
             Buscar...
           </div>
           {/* DERECHA — Acciones + avatar */}
           <div style={{ display:'flex', alignItems:'center', gap:10, flexShrink:0 }}>
             {/* Campana */}
-            <div style={{ position:'relative', width:34, height:34, borderRadius:8, border:'1px solid #E8E8EC', background:'#fff', display:'flex', alignItems:'center', justifyContent:'center', cursor:'pointer' }}>
+            <div style={{ position:'relative', width:34, height:34, borderRadius:8, display:'flex', alignItems:'center', justifyContent:'center', cursor:'pointer' }}>
               <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="#888" strokeWidth="1.5"><path d="M8 2a5 5 0 015 5v2l1 2H2l1-2V7a5 5 0 015-5zM6 13a2 2 0 004 0"/></svg>
               <div style={{ position:'absolute', top:5, right:5, width:6, height:6, borderRadius:'50%', background:'#EF4444', border:'1.5px solid #fff' }}/>
             </div>
@@ -61,10 +61,9 @@ export default function Layout({ children, title = 'Resumen' }: LayoutProps) {
               Sin sync
             </div>
             {/* Avatar */}
-            <div style={{ display:'flex', alignItems:'center', gap:8, padding:'5px 10px', border:'1px solid #E8E8EC', borderRadius:8, cursor:'pointer', background:'#fff' }}>
+            <div style={{ display:'flex', alignItems:'center', gap:8, padding:'5px 10px', border:'1px solid #E8E8EC', borderRadius:8, background:'#fff' }}>
               <div style={{ width:26, height:26, borderRadius:6, background:'#4361EE', display:'flex', alignItems:'center', justifyContent:'center', fontSize:10, fontWeight:700, color:'#fff', flexShrink:0 }}>{initials}</div>
               <span style={{ fontSize:13, fontWeight:500, color:'#1a1a1a' }}>{displayName}</span>
-              <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="#888" strokeWidth="1.5"><path d="M4 6l4 4 4-4"/></svg>
             </div>
           </div>
         </div>
