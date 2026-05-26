@@ -4,7 +4,6 @@ import Login from '@/pages/Login'
 import Dashboard from '@/pages/Dashboard'
 import Ajustes from '@/pages/Ajustes'
 import Impuestos from '@/pages/Impuestos'
-import Cashflow from '@/pages/Cashflow'
 import Integraciones from '@/pages/Integraciones'
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
@@ -30,7 +29,6 @@ function AppRoutes() {
       <Route path="/login" element={user ? <Navigate to="/" replace /> : <Login />} />
       <Route path="/" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
       <Route path="/impuestos" element={<ProtectedRoute><Impuestos /></ProtectedRoute>} />
-      <Route path="/cashflow" element={<ProtectedRoute><Cashflow /></ProtectedRoute>} />
       <Route path="/ajustes" element={<ProtectedRoute><Ajustes /></ProtectedRoute>} />
       <Route path="/integraciones" element={<ProtectedRoute><Integraciones /></ProtectedRoute>} />
       <Route path="*" element={<Navigate to="/" replace />} />
