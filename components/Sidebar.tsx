@@ -5,7 +5,7 @@ const navGroups = [
   { section:'General', items:[
     { label:'Resumen', path:'/', icon:<GridIcon/>, disabled:false },
     { label:'Cashflow', path:'/cashflow', icon:<CashflowIcon/>, disabled:false },
-    { label:'Análisis', path:'/presupuesto', icon:<ChartIcon/>, disabled:false },
+    { label:'Presupuesto', path:'/presupuesto', icon:<ChartIcon/>, disabled:false },
     { label:'Impuestos', path:'/impuestos', icon:<TaxIcon/>, disabled:false },
   ]},
   { section:'Admin', items:[

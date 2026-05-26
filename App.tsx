@@ -32,7 +32,7 @@ function AppRoutes() {
       <Route path="/" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
       <Route path="/impuestos" element={<ProtectedRoute><Impuestos /></ProtectedRoute>} />
       <Route path="/cashflow" element={<ProtectedRoute><Cashflow /></ProtectedRoute>} />
-      <Route path="/analisis" element={<ProtectedRoute><Presupuesto /></ProtectedRoute>} />
+      <Route path="/presupuesto" element={<ProtectedRoute><Presupuesto /></ProtectedRoute>} />
       <Route path="/ajustes" element={<ProtectedRoute><Ajustes /></ProtectedRoute>} />
       <Route path="/integraciones" element={<ProtectedRoute><Integraciones /></ProtectedRoute>} />
       <Route path="*" element={<Navigate to="/" replace />} />
