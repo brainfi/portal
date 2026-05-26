@@ -2,37 +2,41 @@ import Layout from '@/components/Layout'
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
 
 const cashflowData = [
-  { mes:'Ene', ingresos:72,  gastos:38, neto:34 },
-  { mes:'Feb', ingresos:78,  gastos:40, neto:38 },
-  { mes:'Mar', ingresos:82,  gastos:41, neto:41 },
-  { mes:'Abr', ingresos:94,  gastos:44, neto:50 },
-  { mes:'May', ingresos:88,  gastos:42, neto:46 },
-  { mes:'Jun', ingresos:96,  gastos:44, neto:52 },
-  { mes:'Jul', ingresos:90,  gastos:43, neto:47 },
-  { mes:'Ago', ingresos:98,  gastos:45, neto:53 },
-  { mes:'Sep', ingresos:92,  gastos:44, neto:48 },
-  { mes:'Oct', ingresos:102, gastos:46, neto:56 },
-  { mes:'Nov', ingresos:106, gastos:47, neto:59 },
-  { mes:'Dic', ingresos:110, gastos:48, neto:62 },
+  { mes:'Dic', ingresos:115, gastos:72 },
+  { mes:'Ene', ingresos:110, gastos:78 },
+  { mes:'Feb', ingresos:125, gastos:80 },
+  { mes:'Mar', ingresos:158, gastos:85 },
+  { mes:'Abr', ingresos:140, gastos:75 },
+  { mes:'May', ingresos:68,  gastos:35 },
 ]
-
-
 
 const kpis = [
   { lbl:'Dinero real hoy', val:'5.620 €', delta:'↗ 12,4%', up:true, sub:'vs mes anterior', iconBg:'#EEF1FD', iconColor:'#3B5BDB', icon:'ti-coin' },
   { lbl:'Resistencia sin vender', val:'47 días', delta:'↘ 1,05%', up:false, sub:'vs mes anterior', iconBg:'#FEF0F0', iconColor:'#EF233C', icon:'ti-shield' },
   { lbl:'Reserva para impuestos', val:'2.720 €', delta:'↗ 35,2%', up:true, sub:'IVA Q2 · 68 días', iconBg:'#FFF8E6', iconColor:'#F4A100', icon:'ti-receipt-tax' },
-  { lbl:'Deuda financiera', val:'60.500 €', delta:'↗ 3,8%', up:false, sub:'vs mes anterior', iconBg:'#F0F9F4', iconColor:'#2DC653', icon:'ti-building-bank' },
+  { lbl:'Deuda', val:'60.500 €', delta:'↗ 3,8%', up:false, sub:'vs mes anterior', iconBg:'#F0F9F4', iconColor:'#2DC653', icon:'ti-building-bank' },
 ]
 
 const txns = [
-  { name:'Nóminas · Mayo', sub:'8 empleados · 30 may 2026', amount:'-18.400,00 €' },
-  { name:'Alquiler oficina', sub:'Contrato anual · 1 may 2026', amount:'-2.100,00 €' },
-  { name:'IVA Q2 · Mod. 303', sub:'AEAT · 20 jul 2026', amount:'-3.900,00 €' },
-  { name:'IRPF · Mod. 111', sub:'AEAT · 20 jul 2026', amount:'-4.200,00 €' },
-  { name:'Adobe Creative Cloud', sub:'5 licencias · 5 may 2026', amount:'-290,00 €' },
-  { name:'HubSpot CRM', sub:'Plan Pro · 10 may 2026', amount:'-450,00 €' },
+  { name:'Nóminas · Mayo', sub:'8 empleados · 30 may 2026', amount:'-18.400,00 €', positive:false },
+  { name:'Alquiler oficina', sub:'Contrato anual · 1 may 2026', amount:'-2.100,00 €', positive:false },
+  { name:'IVA Q2 · Mod. 303', sub:'AEAT · 20 jul 2026', amount:'-3.900,00 €', positive:false },
+  { name:'IRPF · Mod. 111', sub:'AEAT · 20 jul 2026', amount:'-4.200,00 €', positive:false },
+  { name:'Adobe Creative Cloud', sub:'5 licencias · 5 may 2026', amount:'-290,00 €', positive:false },
+  { name:'HubSpot CRM', sub:'Plan Pro · 10 may 2026', amount:'-450,00 €', positive:false },
 ]
+
+// Calcular días hasta el próximo informe (primer lunes del mes siguiente)
+function diasHastaInforme(): number {
+  const hoy = new Date()
+  const primerDiaMesSig = new Date(hoy.getFullYear(), hoy.getMonth() + 1, 1)
+  // Buscar el primer lunes
+  const diaSemana = primerDiaMesSig.getDay() // 0=dom, 1=lun
+  const diasHastaLunes = diaSemana === 1 ? 0 : (8 - diaSemana) % 7
+  primerDiaMesSig.setDate(primerDiaMesSig.getDate() + diasHastaLunes)
+  const diff = Math.ceil((primerDiaMesSig.getTime() - hoy.getTime()) / (1000 * 60 * 60 * 24))
+  return diff
+}
 
 const card: React.CSSProperties = { background:'#fff', borderRadius:16, border:'1px solid #E8E8EC' }
 
@@ -41,31 +45,19 @@ function CfTooltip({ active, payload, label }: any) {
   return (
     <div style={{ background:'#fff', border:'1px solid #E8E8EC', borderRadius:10, padding:'10px 14px', fontSize:12 }}>
       <div style={{ fontWeight:600, color:'#1a1a1a', marginBottom:8 }}>{label}</div>
-      {payload.map((p: any) => {
-        const found = p.payload
-        return (
-          <div key="cf" style={{ display:'flex', flexDirection:'column', gap:4 }}>
-            <div style={{ display:'flex', alignItems:'center', gap:6 }}>
-              <div style={{ width:7, height:7, borderRadius:2, background:'#3B5BDB' }} />
-              <span style={{ color:'#666' }}>Ingresos: €{found.ingresos}k</span>
-            </div>
-            <div style={{ display:'flex', alignItems:'center', gap:6 }}>
-              <div style={{ width:7, height:7, borderRadius:2, background:'#EF4444' }} />
-              <span style={{ color:'#666' }}>Gastos: €{found.gastos}k</span>
-            </div>
-            <div style={{ display:'flex', alignItems:'center', gap:6 }}>
-              <div style={{ width:7, height:7, borderRadius:2, background:'#7DD3FC' }} />
-              <span style={{ color:'#666' }}>Cashflow: €{found.neto}k</span>
-            </div>
-          </div>
-        )
-      })}
+      {payload.map((p: any) => (
+        <div key={p.dataKey} style={{ display:'flex', alignItems:'center', gap:6, marginBottom:4 }}>
+          <div style={{ width:7, height:7, borderRadius:2, background:p.stroke }} />
+          <span style={{ color:'#666' }}>{p.dataKey === 'ingresos' ? 'Ingresos' : 'Gastos'}: €{p.value}k</span>
+        </div>
+      ))}
     </div>
   )
 }
 
 export default function Dashboard() {
-  // Tabler icons loaded via index.html or index.css — verified below
+  const dias = diasHastaInforme()
+
   return (
     <Layout title="Resumen">
       <style>{`
@@ -93,7 +85,7 @@ export default function Dashboard() {
         ))}
       </div>
 
-      {/* Cashflow + Donut */}
+      {/* Cashflow + Salud */}
       <div className="row2" style={{ display:'grid', gridTemplateColumns:'2fr 1fr', gap:14 }}>
         <div style={{ ...card, padding:'24px' }}>
           <div style={{ fontSize:9, fontWeight:600, color:'#999', textTransform:'uppercase', letterSpacing:'0.12em', marginBottom:12 }}>Cash Flow</div>
@@ -109,29 +101,21 @@ export default function Dashboard() {
               <XAxis dataKey="mes" tick={{ fontSize:11, fill:'#aaa' }} axisLine={false} tickLine={false}/>
               <YAxis tick={{ fontSize:11, fill:'#aaa' }} axisLine={false} tickLine={false} tickFormatter={v => `€${v}k`} width={40}/>
               <Tooltip content={<CfTooltip />} cursor={{ stroke:'#BAE6FD', strokeWidth:1, strokeDasharray:'3 3' }}/>
-              <Area type="monotone" dataKey="neto" stroke="#7DD3FC" strokeWidth={2} fill="url(#gNeto)" dot={false} activeDot={{ r:5, fill:'#0EA5E9', stroke:'#fff', strokeWidth:2 }}/>
+              <Area type="monotone" dataKey="ingresos" stroke="#7DD3FC" strokeWidth={2} fill="url(#gNeto)" dot={false} activeDot={{ r:5, fill:'#0EA5E9', stroke:'#fff', strokeWidth:2 }}/>
             </AreaChart>
           </ResponsiveContainer>
         </div>
 
         <div style={{ ...card, padding:'24px', display:'flex', flexDirection:'column' }}>
           <div style={{ fontSize:9, fontWeight:600, color:'#999', textTransform:'uppercase', letterSpacing:'0.12em', marginBottom:6 }}>Salud financiera</div>
-
-          {/* Gauge barras verticales */}
           <div style={{ margin:'8px 0 20px' }}>
             <div style={{ marginBottom:16 }}>
               <span style={{ fontSize:30, fontWeight:400, color:'#1a1a1a', letterSpacing:'-0.02em', lineHeight:1, fontFamily:'Inter, sans-serif' }}>68%</span>
             </div>
             <div style={{ display:'flex', alignItems:'flex-end', gap:3, height:40 }}>
-              {Array.from({ length: 28 }).map((_, i) => {
-                const filled = i < 19
-                return (
-                  <div key={i} style={{
-                    flex: 1, height: 40, borderRadius: 3,
-                    background: filled ? '#60A5FA' : '#EEF1FD',
-                  }} />
-                )
-              })}
+              {Array.from({ length: 28 }).map((_, i) => (
+                <div key={i} style={{ flex:1, height:40, borderRadius:3, background: i < 19 ? '#60A5FA' : '#EEF1FD' }} />
+              ))}
             </div>
           </div>
           <div style={{ height:'0.5px', background:'#E8E8EC', margin:'18px 0' }} />
@@ -144,7 +128,10 @@ export default function Dashboard() {
               const filled = Math.round(m.pct / 100 * m.bars)
               return (
                 <div key={m.label} style={{ display:'flex', justifyContent:'space-between', alignItems:'center' }}>
-                  <span style={{ fontSize:11, color:'#888' }}>{m.label}</span>
+                  <div style={{ display:'flex', alignItems:'center', gap:6 }}>
+                    <div style={{ width:7, height:7, borderRadius:'50%', background:m.color }} />
+                    <span style={{ fontSize:11, color:'#888' }}>{m.label}</span>
+                  </div>
                   <div style={{ display:'flex', alignItems:'center', gap:8 }}>
                     <div style={{ display:'flex', gap:2 }}>
                       {Array.from({ length: m.bars }).map((_, i) => (
@@ -163,18 +150,16 @@ export default function Dashboard() {
       {/* Transacciones + Paneles */}
       <div className="row2" style={{ display:'grid', gridTemplateColumns:'2fr 1fr', gap:14 }}>
 
-        {/* Transacciones */}
+        {/* Próximos pagos */}
         <div style={{ ...card, padding:'22px 24px' }}>
           <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:16 }}>
-            <div>
-              <div style={{ fontSize:9, fontWeight:600, color:'#999', textTransform:'uppercase', letterSpacing:'0.12em', marginBottom:6 }}>Próximos pagos</div>
-            </div>
+            <div style={{ fontSize:9, fontWeight:600, color:'#999', textTransform:'uppercase', letterSpacing:'0.12em' }}>Próximos pagos</div>
             <span style={{ fontSize:12, color:'#3B5BDB', fontWeight:500, cursor:'pointer' }}>Ver todas →</span>
           </div>
           {txns.map((t, i) => (
             <div key={i} style={{ display:'flex', alignItems:'center', gap:14, padding:'13px 0', borderBottom: i < txns.length-1 ? '1px solid #F4F5F7' : 'none' }}>
-              <div style={{ width:36, height:36, borderRadius:10, background:'#FEF2F2', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
-                <i className="ti ti-arrow-down-right" aria-hidden="true" style={{ fontSize:16, color:'#EF4444' }} />
+              <div style={{ width:36, height:36, borderRadius:10, background:'#FFF3E0', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
+                <i className="ti ti-arrow-down-right" aria-hidden="true" style={{ fontSize:16, color:'#F4A100' }} />
               </div>
               <div style={{ flex:1 }}>
                 <div style={{ fontSize:13, fontWeight:500, color:'#1a1a1a', marginBottom:2 }}>{t.name}</div>
@@ -187,13 +172,14 @@ export default function Dashboard() {
 
         {/* Paneles derecha */}
         <div style={{ display:'flex', flexDirection:'column', gap:14 }}>
-          {/* Outstanding */}
+
+          {/* Pendiente de cobro */}
           <div style={{ ...card, padding:'22px 24px' }}>
             <div style={{ fontSize:9, fontWeight:600, color:'#999', textTransform:'uppercase', letterSpacing:'0.12em', display:'flex', alignItems:'center', gap:6, marginBottom:10 }}>
               <i className="ti ti-file-invoice" aria-hidden="true" style={{ fontSize:13 }} />Pendiente de cobro
             </div>
             <div style={{ fontFamily:'Inter, sans-serif', fontSize:36, fontWeight:400, color:'#1a1a1a', margin:'6px 0', letterSpacing:'-0.02em' }}>61.381 €</div>
-            <div style={{ display:'flex', alignItems:'center', gap:7, marginBottom:16 }}>
+            <div style={{ display:'flex', alignItems:'center', gap:6, marginBottom:16 }}>
               <span style={{ fontSize:11, fontWeight:600, color:'#b01a2b', background:'#fdd', padding:'2px 7px', borderRadius:99 }}>↘ 5,3%</span>
               <span style={{ fontSize:11, color:'#aaa' }}>vs mes anterior</span>
             </div>
@@ -202,19 +188,27 @@ export default function Dashboard() {
             </button>
           </div>
 
-          {/* AI CFO */}
+          {/* Informe brainfi */}
           <div style={{ background:'#EEF1FD', borderRadius:16, border:'1px solid #D6DCFA', padding:'22px 24px' }}>
             <div style={{ fontSize:9, fontWeight:600, color:'#3B5BDB', textTransform:'uppercase', letterSpacing:'0.12em', display:'flex', alignItems:'center', gap:5, marginBottom:12 }}>
-              <i className="ti ti-sparkles" aria-hidden="true" style={{ fontSize:13 }} />IA · brainfi
+              <i className="ti ti-chart-bar" aria-hidden="true" style={{ fontSize:13 }} />Informe brainfi
             </div>
-            <div style={{ fontFamily:'Inter, sans-serif', fontSize:20, fontWeight:400, color:'#1a1a1a', marginBottom:8 }}>Pregunta a tu CFO IA</div>
-            <div style={{ fontSize:13, color:'#555', lineHeight:1.6, marginBottom:18 }}>
-              Obtén un análisis instantáneo de tus números — qué funciona, qué no, y qué hacer a continuación.
+            <div style={{ fontFamily:'Inter, sans-serif', fontSize:18, fontWeight:600, color:'#1a1a1a', marginBottom:10, lineHeight:1.3 }}>
+              Próximo informe<br/>en <span style={{ color:'#4361EE' }}>{dias} días</span>
             </div>
-            <button style={{ width:'100%', padding:12, border:'none', borderRadius:10, background:'#4361EE', color:'#fff', fontSize:13, fontWeight:600, cursor:'pointer', fontFamily:'Inter,sans-serif' }}>
-              Generar insight
-            </button>
+            <div style={{ fontSize:13, color:'#555', lineHeight:1.65, marginBottom:18 }}>
+              Faltan <strong>{dias} días</strong> para el envío automático de tu informe financiero personalizado brainfi. Si tienes alguna duda hasta entonces, escríbenos y agendamos una llamada lo antes posible.
+            </div>
+            <a
+              href="https://cal.com/brainfi"
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{ display:'block', width:'100%', padding:12, border:'none', borderRadius:10, background:'#4361EE', color:'#fff', fontSize:13, fontWeight:600, cursor:'pointer', fontFamily:'Inter,sans-serif', textAlign:'center', textDecoration:'none' }}
+            >
+              Agendar llamada
+            </a>
           </div>
+
         </div>
       </div>
 

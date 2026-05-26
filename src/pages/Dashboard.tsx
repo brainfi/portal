@@ -10,8 +10,6 @@ const cashflowData = [
   { mes:'May', ingresos:68,  gastos:35 },
 ]
 
-
-
 const kpis = [
   { lbl:'Dinero real hoy', val:'5.620 €', delta:'↗ 12,4%', up:true, sub:'vs mes anterior', iconBg:'#EEF1FD', iconColor:'#3B5BDB', icon:'ti-coin' },
   { lbl:'Resistencia sin vender', val:'47 días', delta:'↘ 1,05%', up:false, sub:'vs mes anterior', iconBg:'#FEF0F0', iconColor:'#EF233C', icon:'ti-shield' },
@@ -20,13 +18,25 @@ const kpis = [
 ]
 
 const txns = [
-  { name:'Gasto en suministros', sub:'Suministros · 20 may 2026', amount:'-144,46 €', positive:false },
-  { name:'Consultoría — Acme Foundry', sub:'Consultoría · 19 may 2026', amount:'+4.657,19 €', positive:true },
-  { name:'Gasto de viaje', sub:'Viajes · 19 may 2026', amount:'-520,62 €', positive:false },
-  { name:'Gasto en software', sub:'Software · 18 may 2026', amount:'-287,25 €', positive:false },
-  { name:'Licencias — Acme Foundry', sub:'Licencias · 16 may 2026', amount:'+4.158,81 €', positive:true },
-  { name:'Ventas — Northwind Studios', sub:'Ventas · 16 may 2026', amount:'+4.779,39 €', positive:true },
+  { name:'Nóminas · Mayo', sub:'8 empleados · 30 may 2026', amount:'-18.400,00 €', positive:false },
+  { name:'Alquiler oficina', sub:'Contrato anual · 1 may 2026', amount:'-2.100,00 €', positive:false },
+  { name:'IVA Q2 · Mod. 303', sub:'AEAT · 20 jul 2026', amount:'-3.900,00 €', positive:false },
+  { name:'IRPF · Mod. 111', sub:'AEAT · 20 jul 2026', amount:'-4.200,00 €', positive:false },
+  { name:'Adobe Creative Cloud', sub:'5 licencias · 5 may 2026', amount:'-290,00 €', positive:false },
+  { name:'HubSpot CRM', sub:'Plan Pro · 10 may 2026', amount:'-450,00 €', positive:false },
 ]
+
+// Calcular días hasta el próximo informe (primer lunes del mes siguiente)
+function diasHastaInforme(): number {
+  const hoy = new Date()
+  const primerDiaMesSig = new Date(hoy.getFullYear(), hoy.getMonth() + 1, 1)
+  // Buscar el primer lunes
+  const diaSemana = primerDiaMesSig.getDay() // 0=dom, 1=lun
+  const diasHastaLunes = diaSemana === 1 ? 0 : (8 - diaSemana) % 7
+  primerDiaMesSig.setDate(primerDiaMesSig.getDate() + diasHastaLunes)
+  const diff = Math.ceil((primerDiaMesSig.getTime() - hoy.getTime()) / (1000 * 60 * 60 * 24))
+  return diff
+}
 
 const card: React.CSSProperties = { background:'#fff', borderRadius:16, border:'1px solid #E8E8EC' }
 
@@ -46,7 +56,8 @@ function CfTooltip({ active, payload, label }: any) {
 }
 
 export default function Dashboard() {
-  // Tabler icons loaded via index.html or index.css — verified below
+  const dias = diasHastaInforme()
+
   return (
     <Layout title="Resumen">
       <style>{`
@@ -74,7 +85,7 @@ export default function Dashboard() {
         ))}
       </div>
 
-      {/* Cashflow + Donut */}
+      {/* Cashflow + Salud */}
       <div className="row2" style={{ display:'grid', gridTemplateColumns:'2fr 1fr', gap:14 }}>
         <div style={{ ...card, padding:'24px' }}>
           <div style={{ fontSize:9, fontWeight:600, color:'#999', textTransform:'uppercase', letterSpacing:'0.12em', marginBottom:12 }}>Cash Flow</div>
@@ -97,22 +108,14 @@ export default function Dashboard() {
 
         <div style={{ ...card, padding:'24px', display:'flex', flexDirection:'column' }}>
           <div style={{ fontSize:9, fontWeight:600, color:'#999', textTransform:'uppercase', letterSpacing:'0.12em', marginBottom:6 }}>Salud financiera</div>
-
-          {/* Gauge barras verticales */}
           <div style={{ margin:'8px 0 20px' }}>
             <div style={{ marginBottom:16 }}>
               <span style={{ fontSize:30, fontWeight:400, color:'#1a1a1a', letterSpacing:'-0.02em', lineHeight:1, fontFamily:'Inter, sans-serif' }}>68%</span>
             </div>
             <div style={{ display:'flex', alignItems:'flex-end', gap:3, height:40 }}>
-              {Array.from({ length: 28 }).map((_, i) => {
-                const filled = i < 19
-                return (
-                  <div key={i} style={{
-                    flex: 1, height: 40, borderRadius: 3,
-                    background: filled ? '#60A5FA' : '#EEF1FD',
-                  }} />
-                )
-              })}
+              {Array.from({ length: 28 }).map((_, i) => (
+                <div key={i} style={{ flex:1, height:40, borderRadius:3, background: i < 19 ? '#60A5FA' : '#EEF1FD' }} />
+              ))}
             </div>
           </div>
           <div style={{ height:'0.5px', background:'#E8E8EC', margin:'18px 0' }} />
@@ -147,55 +150,65 @@ export default function Dashboard() {
       {/* Transacciones + Paneles */}
       <div className="row2" style={{ display:'grid', gridTemplateColumns:'2fr 1fr', gap:14 }}>
 
-        {/* Transacciones */}
+        {/* Próximos pagos */}
         <div style={{ ...card, padding:'22px 24px' }}>
           <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:16 }}>
-            <div>
-              <div style={{ fontSize:9, fontWeight:600, color:'#999', textTransform:'uppercase', letterSpacing:'0.12em', marginBottom:6 }}>Próximos pagos</div>
-            </div>
+            <div style={{ fontSize:9, fontWeight:600, color:'#999', textTransform:'uppercase', letterSpacing:'0.12em' }}>Próximos pagos</div>
             <span style={{ fontSize:12, color:'#3B5BDB', fontWeight:500, cursor:'pointer' }}>Ver todas →</span>
           </div>
           {txns.map((t, i) => (
             <div key={i} style={{ display:'flex', alignItems:'center', gap:14, padding:'13px 0', borderBottom: i < txns.length-1 ? '1px solid #F4F5F7' : 'none' }}>
-              <div style={{ width:36, height:36, borderRadius:10, background: t.positive ? '#EEF1FD' : '#FFF3E0', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
-                <i className={`ti ${t.positive ? 'ti-arrow-up-right' : 'ti-arrow-down-right'}`} aria-hidden="true" style={{ fontSize:16, color: t.positive ? '#3B5BDB' : '#F4A100' }} />
+              <div style={{ width:36, height:36, borderRadius:10, background:'#FFF3E0', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
+                <i className="ti ti-arrow-down-right" aria-hidden="true" style={{ fontSize:16, color:'#F4A100' }} />
               </div>
               <div style={{ flex:1 }}>
                 <div style={{ fontSize:13, fontWeight:500, color:'#1a1a1a', marginBottom:2 }}>{t.name}</div>
                 <div style={{ fontSize:11, color:'#aaa' }}>{t.sub}</div>
               </div>
-              <div style={{ fontSize:14, fontWeight:500, color: t.positive ? '#3B5BDB' : '#1a1a1a' }}>{t.amount}</div>
+              <div style={{ fontSize:14, fontWeight:500, color:'#EF4444' }}>{t.amount}</div>
             </div>
           ))}
         </div>
 
         {/* Paneles derecha */}
         <div style={{ display:'flex', flexDirection:'column', gap:14 }}>
-          {/* Outstanding */}
+
+          {/* Pendiente de cobro */}
           <div style={{ ...card, padding:'22px 24px' }}>
             <div style={{ fontSize:9, fontWeight:600, color:'#999', textTransform:'uppercase', letterSpacing:'0.12em', display:'flex', alignItems:'center', gap:6, marginBottom:10 }}>
               <i className="ti ti-file-invoice" aria-hidden="true" style={{ fontSize:13 }} />Pendiente de cobro
             </div>
             <div style={{ fontFamily:'Inter, sans-serif', fontSize:36, fontWeight:400, color:'#1a1a1a', margin:'6px 0', letterSpacing:'-0.02em' }}>61.381 €</div>
-            <div style={{ fontSize:12, color:'#aaa', marginBottom:16 }}>en facturas enviadas + vencidas</div>
+            <div style={{ display:'flex', alignItems:'center', gap:6, marginBottom:16 }}>
+              <span style={{ fontSize:11, fontWeight:600, color:'#b01a2b', background:'#fdd', padding:'2px 7px', borderRadius:99 }}>↘ 5,3%</span>
+              <span style={{ fontSize:11, color:'#aaa' }}>vs mes anterior</span>
+            </div>
             <button style={{ width:'100%', padding:11, border:'1px solid #E8E8EC', borderRadius:10, background:'#fff', fontSize:13, color:'#1a1a1a', fontWeight:500, cursor:'pointer', fontFamily:'Inter,sans-serif' }}>
               Revisar facturas
             </button>
           </div>
 
-          {/* AI CFO */}
+          {/* Informe brainfi */}
           <div style={{ background:'#EEF1FD', borderRadius:16, border:'1px solid #D6DCFA', padding:'22px 24px' }}>
             <div style={{ fontSize:9, fontWeight:600, color:'#3B5BDB', textTransform:'uppercase', letterSpacing:'0.12em', display:'flex', alignItems:'center', gap:5, marginBottom:12 }}>
-              <i className="ti ti-sparkles" aria-hidden="true" style={{ fontSize:13 }} />IA · brainfi
+              <i className="ti ti-chart-bar" aria-hidden="true" style={{ fontSize:13 }} />Informe brainfi
             </div>
-            <div style={{ fontFamily:'Inter, sans-serif', fontSize:20, fontWeight:400, color:'#1a1a1a', marginBottom:8 }}>Pregunta a tu CFO IA</div>
-            <div style={{ fontSize:13, color:'#555', lineHeight:1.6, marginBottom:18 }}>
-              Obtén un análisis instantáneo de tus números — qué funciona, qué no, y qué hacer a continuación.
+            <div style={{ fontFamily:'Inter, sans-serif', fontSize:18, fontWeight:600, color:'#1a1a1a', marginBottom:10, lineHeight:1.3 }}>
+              Próximo informe<br/>en <span style={{ color:'#4361EE' }}>{dias} días</span>
             </div>
-            <button style={{ width:'100%', padding:12, border:'none', borderRadius:10, background:'#4361EE', color:'#fff', fontSize:13, fontWeight:600, cursor:'pointer', fontFamily:'Inter,sans-serif' }}>
-              Generar insight
-            </button>
+            <div style={{ fontSize:13, color:'#555', lineHeight:1.65, marginBottom:18 }}>
+              Faltan <strong>{dias} días</strong> para el envío automático de tu informe financiero personalizado brainfi. Si tienes alguna duda hasta entonces, escríbenos y agendamos una llamada lo antes posible.
+            </div>
+            <a
+              href="https://cal.com/brainfi"
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{ display:'block', width:'100%', padding:12, border:'none', borderRadius:10, background:'#4361EE', color:'#fff', fontSize:13, fontWeight:600, cursor:'pointer', fontFamily:'Inter,sans-serif', textAlign:'center', textDecoration:'none' }}
+            >
+              Agendar llamada
+            </a>
           </div>
+
         </div>
       </div>
 
