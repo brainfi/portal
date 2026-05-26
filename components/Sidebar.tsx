@@ -4,8 +4,8 @@ import { useAuth } from '@/contexts/AuthContext'
 const navGroups = [
   { section:'General', items:[
     { label:'Resumen', path:'/', icon:<GridIcon/>, disabled:false },
-    { label:'Cashflow', path:'/cashflow', icon:<CashflowIcon/>, disabled:true },
-    { label:'Análisis', path:'/analisis', icon:<ChartIcon/>, disabled:true },
+    { label:'Cashflow', path:'/cashflow', icon:<CashflowIcon/>, disabled:false },
+    { label:'Análisis', path:'/analisis', icon:<ChartIcon/>, disabled:false },
     { label:'Impuestos', path:'/impuestos', icon:<TaxIcon/>, disabled:false },
   ]},
   { section:'Admin', items:[
