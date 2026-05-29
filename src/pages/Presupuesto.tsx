@@ -598,7 +598,6 @@ export default function Presupuesto() {
           ))}
         </div>
       </div>
-      </div>
 
       {/* ── Gráfico de líneas: plan vs real ── */}
       <div style={card}>
