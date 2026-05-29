@@ -414,7 +414,7 @@ export default function Presupuesto() {
       )}
 
 {/* ── Hero card azul ── */}
-      <div style={{ background: '#4361EE', borderRadius: 16, padding: '20px 24px', position: 'relative', overflow: 'hidden', marginTop: 14 }}>
+      <div style={{ background: '#4361EE', borderRadius: 16, padding: '20px 24px', position: 'relative' }}>
         <div style={{ position: 'absolute', top: -50, right: -50, width: 200, height: 200, borderRadius: '50%', background: 'rgba(255,255,255,0.06)', pointerEvents: 'none' }} />
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap' }}>
           <div>
