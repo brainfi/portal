@@ -6,6 +6,7 @@ import Ajustes from '@/pages/Ajustes'
 import Impuestos from '@/pages/Impuestos'
 import Cashflow from '@/pages/Cashflow'
 import Presupuesto from '@/pages/Presupuesto'
+import PresupuestoConfig from '@/pages/PresupuestoConfig'
 import Integraciones from '@/pages/Integraciones'
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
@@ -33,6 +34,7 @@ function AppRoutes() {
       <Route path="/impuestos" element={<ProtectedRoute><Impuestos /></ProtectedRoute>} />
       <Route path="/cashflow" element={<ProtectedRoute><Cashflow /></ProtectedRoute>} />
       <Route path="/presupuesto" element={<ProtectedRoute><Presupuesto /></ProtectedRoute>} />
+      <Route path="/presupuesto/configurar" element={<ProtectedRoute><PresupuestoConfig /></ProtectedRoute>} />
       <Route path="/ajustes" element={<ProtectedRoute><Ajustes /></ProtectedRoute>} />
       <Route path="/integraciones" element={<ProtectedRoute><Integraciones /></ProtectedRoute>} />
       <Route path="*" element={<Navigate to="/" replace />} />
