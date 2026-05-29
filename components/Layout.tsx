@@ -35,7 +35,7 @@ export default function Layout({ children, title = 'Resumen' }: LayoutProps) {
       </div>
 
       <div style={{ flex:1, display:'flex', flexDirection:'column', overflow:'hidden', minWidth:0 }}>
-        <div style={{ padding:'16px 28px', background:'#F4F5F7', flexShrink:0, display:'flex', alignItems:'center', justifyContent:'space-between', gap:16 }}>
+        <div style={{ padding:'14px 28px 28px', background:'#F4F5F7', flexShrink:0, display:'flex', alignItems:'center', justifyContent:'space-between', gap:16 }}>
           <div style={{ display:'flex', alignItems:'center', gap:12, flexShrink:0 }}>
             <button className="hamburger" onClick={() => setSidebarOpen(!sidebarOpen)} style={{ display:'none', alignItems:'center', justifyContent:'center', width:32, height:32, border:'1px solid #E8E8EC', borderRadius:7, background:'#fff', cursor:'pointer' }}>
               <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="#888" strokeWidth="1.5"><path d="M2 4h12M2 8h12M2 12h12"/></svg>
