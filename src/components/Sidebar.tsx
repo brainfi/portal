@@ -3,15 +3,14 @@ import { useAuth } from '@/contexts/AuthContext'
 
 const navGroups = [
   { section:'General', items:[
-    { label:'Resumen', path:'/', icon:<GridIcon/>, disabled:false },
-    { label:'Cashflow', path:'/cashflow', icon:<CashflowIcon/>, disabled:false },
-    { label:'Presupuesto', path:'/presupuesto', icon:<ChartIcon/>, disabled:false },
-    { label: 'Configurar', path: '/presupuesto/configurar', icon: <SettingsIcon/>, disabled: false },
-    { label:'Impuestos', path:'/impuestos', icon:<TaxIcon/>, disabled:false },
+    { label:'Resumen',     path:'/',                       icon:<GridIcon/>,    disabled:false },
+    { label:'Cobros',      path:'/cobros',                 icon:<CobrosIcon/>,  disabled:true  },
+    { label:'Pagos',       path:'/pagos',                  icon:<PagosIcon/>,   disabled:true  },
+    { label:'Presupuesto', path:'/presupuesto',            icon:<TableIcon/>,   disabled:false },
+    { label:'Configurar',  path:'/presupuesto/configurar', icon:<ConfigIcon/>,  disabled:false },
   ]},
   { section:'Admin', items:[
     { label:'Ajustes', path:'/ajustes', icon:<SettingsIcon/>, disabled:false },
-    { label:'Integraciones', path:'/integraciones', icon:<PlugIcon/>, disabled:false },
   ]}
 ]
 
@@ -95,3 +94,7 @@ function TaxIcon() { return <svg width="14" height="14" viewBox="0 0 16 16" fill
 function SettingsIcon() { return <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="8" cy="8" r="2.5"/><path d="M8 1v2M8 13v2M1 8h2M13 8h2"/></svg> }
 function PlugIcon() { return <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><rect x="1" y="4" width="14" height="9" rx="1.5"/><circle cx="8" cy="8.5" r="1.5"/></svg> }
 function LogoutIcon() { return <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M6 2H3a1 1 0 00-1 1v10a1 1 0 001 1h3M10 11l3-3-3-3M13 8H6"/></svg> }
+function CobrosIcon() { return <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M2 4h12M2 8h8"/><circle cx="12" cy="11" r="3"/><path d="M11 11l.7.7L13.5 10"/></svg> }
+function PagosIcon()  { return <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><rect x="1" y="3" width="14" height="10" rx="1.5"/><line x1="1" y1="7" x2="15" y2="7"/><line x1="4" y1="11" x2="7" y2="11"/></svg> }
+function TableIcon()  { return <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><rect x="1" y="1" width="14" height="14" rx="1.5"/><line x1="1" y1="5" x2="15" y2="5"/><line x1="1" y1="9" x2="15" y2="9"/><line x1="5" y1="5" x2="5" y2="15"/></svg> }
+function ConfigIcon() { return <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="8" cy="8" r="2"/><path d="M8 1v2M8 13v2M1 8h2M13 8h2M3.1 3.1l1.4 1.4M11.5 11.5l1.4 1.4M3.1 12.9l1.4-1.4M11.5 4.5l1.4-1.4"/></svg> }
