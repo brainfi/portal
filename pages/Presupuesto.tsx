@@ -163,6 +163,7 @@ export default function Presupuesto() {
   const [nuevaTipo, setNuevaTipo] = useState<TipoPartida>('gasto')
   const [nuevaImporte, setNuevaImporte] = useState('')
   const [saved, setSaved] = useState(false)
+  const [dropdownOpen, setDropdownOpen] = useState(false)
 
   const periodoActivo = PERIODOS.find(p => p.key === periodo)!
   const meses = periodoActivo.meses
@@ -268,7 +269,6 @@ export default function Presupuesto() {
           padding: '12px 0 8px',
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <div style={{ width: 8, height: 8, borderRadius: '50%', background: colorAcc }} />
             <span style={{ fontSize: 13, fontWeight: 700, color: '#1a1a1a' }}>
               {tipo === 'ingreso' ? 'Ingresos' : 'Gastos'}
             </span>
@@ -396,119 +396,145 @@ export default function Presupuesto() {
         }
         @media (max-width: 600px) {
           .pres-hero-grid { grid-template-columns: 1fr !important; }
-          .pres-periodo-wrap { flex-wrap: wrap; }
         }
       `}</style>
+      {/* Cerrar dropdown al clic fuera */}
+      {dropdownOpen && (
+        <div onClick={() => setDropdownOpen(false)} style={{ position: 'fixed', inset: 0, zIndex: 40 }} />
+      )}
 
-      {/* ── Hero banner ── */}
-      <div style={{ ...card, borderLeft: '3px solid #4361EE', borderRadius: '0 14px 14px 0', padding: '18px 22px' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 16 }}>
-          <div>
-            <div style={{ fontSize: 9, fontWeight: 700, color: '#4361EE', textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: 4, display: 'flex', alignItems: 'center', gap: 5 }}>
-              <i className="ti ti-target" style={{ fontSize: 11 }} aria-hidden="true" />
-              Presupuesto 2026
-            </div>
-            <div style={{ fontSize: 20, fontWeight: 700, color: '#1a1a1a', letterSpacing: '-0.4px', marginBottom: 4 }}>
-              Plan anual vs ejecución
-            </div>
-            <div style={{ fontSize: 12, color: '#888' }}>
-              {Math.round((MES_ACTUAL + 1) / 12 * 100)}% del año transcurrido · base para todas las desviaciones
-            </div>
-          </div>
-          <button
-            onClick={() => setModalNueva(true)}
-            style={{
-              display: 'inline-flex', alignItems: 'center', gap: 6,
-              padding: '9px 16px', fontSize: 13, fontWeight: 600,
-              border: 'none', borderRadius: 9, background: '#4361EE',
-              color: '#fff', cursor: 'pointer', fontFamily: 'Inter,sans-serif',
-            }}
-          >
-            <i className="ti ti-plus" style={{ fontSize: 14 }} aria-hidden="true" />
-            Nueva línea
-          </button>
-        </div>
-
-        <div style={{ height: '1px', background: '#F0F0F4', margin: '16px 0' }} />
-
-        {/* KPIs inline */}
-        <div className="pres-hero-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 16 }}>
-          {[
-            { lbl: 'Ingreso plan / real', plan: ingresosPlan, real: ingresosReal, tipo: 'ingreso' as TipoPartida },
-            { lbl: 'Gasto plan / real',   plan: gastosPlan,   real: gastosReal,   tipo: 'gasto'   as TipoPartida },
-            { lbl: 'Utilidad neta YTD',   plan: utilPlan,     real: utilReal,     tipo: 'ingreso' as TipoPartida },
-            { lbl: 'Alertas', plan: 0, real: 0, esAlertas: true },
-          ].map((k, i) => (
-            <div key={i}>
-              <div style={{ fontSize: 9, fontWeight: 600, color: '#B0B7C3', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 6 }}>
+      {/* ── KPIs — misma estructura que Dashboard ── */}
+      <div className="pres-hero-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 12 }}>
+        {[
+          { lbl: 'Ingreso plan / real', val: fmtK(ingresosPlan), real: ingresosReal, plan: ingresosPlan, tipo: 'ingreso' as TipoPartida, iconBg: '#F0F9F4', iconColor: '#2DC653', icon: 'ti-arrow-up-right' },
+          { lbl: 'Gasto plan / real',   val: fmtK(gastosPlan),   real: gastosReal,   plan: gastosPlan,   tipo: 'gasto'   as TipoPartida, iconBg: '#FEF2F2', iconColor: '#EF4444', icon: 'ti-arrow-down-right' },
+          { lbl: 'Utilidad neta YTD',   val: fmtK(utilPlan),     real: utilReal,     plan: utilPlan,     tipo: 'ingreso' as TipoPartida, iconBg: '#FFF8E6', iconColor: '#F4A100', icon: 'ti-chart-line' },
+          { lbl: 'Alertas del periodo', val: null, esAlertas: true, iconBg: sobrePlan > 0 ? '#FEF2F2' : '#F4F5F7', iconColor: sobrePlan > 0 ? '#EF4444' : '#B0B7C3', icon: 'ti-bell' },
+        ].map((k, i) => (
+          <div key={i} style={{ ...card, padding: '18px 20px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 }}>
+              <div style={{ fontSize: 9, fontWeight: 600, color: '#B0B7C3', textTransform: 'uppercase', letterSpacing: '0.12em' }}>
                 {k.lbl}
               </div>
-              {(k as any).esAlertas ? (
-                <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 4 }}>
-                  <span style={{ fontSize: 11, fontWeight: 600, padding: '4px 10px', borderRadius: 6, background: sobrePlan > 0 ? '#FEF2F2' : '#F4F5F7', color: sobrePlan > 0 ? '#b91c1c' : '#888' }}>
-                    {sobrePlan} Sobre
+              <div style={{ width: 30, height: 30, borderRadius: 8, background: k.iconBg, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <i className={`ti ${k.icon}`} style={{ fontSize: 15, color: k.iconColor }} aria-hidden="true" />
+              </div>
+            </div>
+            {(k as any).esAlertas ? (
+              <>
+                <div style={{ fontSize: 24, fontWeight: 400, color: '#1a1a1a', letterSpacing: '-0.5px', marginBottom: 8 }}>
+                  {sobrePlan + bajoPlan} alertas
+                </div>
+                <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                  <span style={{ fontSize: 11, fontWeight: 600, padding: '2px 8px', borderRadius: 99, background: sobrePlan > 0 ? '#FEF2F2' : '#F4F5F7', color: sobrePlan > 0 ? '#b91c1c' : '#888' }}>
+                    {sobrePlan} sobre
                   </span>
-                  <span style={{ fontSize: 11, fontWeight: 600, padding: '4px 10px', borderRadius: 6, background: bajoPlan > 0 ? '#FFF8E6' : '#F4F5F7', color: bajoPlan > 0 ? '#92400E' : '#888' }}>
-                    {bajoPlan} Debajo
+                  <span style={{ fontSize: 11, fontWeight: 600, padding: '2px 8px', borderRadius: 99, background: bajoPlan > 0 ? '#FFF8E6' : '#F4F5F7', color: bajoPlan > 0 ? '#92400E' : '#888' }}>
+                    {bajoPlan} debajo
                   </span>
                 </div>
-              ) : (
-                <>
-                  <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, flexWrap: 'wrap' }}>
-                    <span style={{ fontSize: 18, fontWeight: 700, color: '#1a1a1a', letterSpacing: '-0.4px' }}>
-                      {fmtK(k.plan)}
-                    </span>
-                    {k.real > 0 && (
-                      <span style={{ fontSize: 14, fontWeight: 600, color: '#888' }}>
-                        {fmtK(k.real)}
-                      </span>
-                    )}
-                  </div>
-                  {k.real > 0 && (
-                    <div style={{ marginTop: 4 }}>
-                      <DeltaBadge real={k.real} plan={k.plan} tipo={k.tipo!} />
-                    </div>
-                  )}
-                </>
-              )}
-            </div>
-          ))}
-        </div>
+              </>
+            ) : (
+              <>
+                <div style={{ fontSize: 24, fontWeight: 400, color: '#1a1a1a', letterSpacing: '-0.5px', marginBottom: 8 }}>
+                  {k.val}
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                  {(k.real ?? 0) > 0 && <DeltaBadge real={k.real!} plan={k.plan!} tipo={k.tipo!} />}
+                  {(k.real ?? 0) > 0 && <span style={{ fontSize: 11, color: '#B0B7C3' }}>real {fmtK(k.real!)}</span>}
+                </div>
+              </>
+            )}
+          </div>
+        ))}
       </div>
 
-      {/* ── Filtro de periodo ── */}
+      {/* ── Toolbar: dropdown periodo + acciones ── */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 10 }}>
-        <div className="pres-periodo-wrap" style={{ display: 'flex', alignItems: 'center', gap: 4, background: '#fff', border: '1px solid #E8E8EC', borderRadius: 10, padding: '4px 5px' }}>
-          {PERIODOS.map(p => {
-            const active = periodo === p.key
-            const tieneReal = p.meses.some(m => MESES_CON_REAL.includes(m))
-            return (
-              <button
-                key={p.key}
-                onClick={() => setPeriodo(p.key)}
-                style={{
-                  border: 'none', cursor: 'pointer', fontFamily: 'Inter,sans-serif',
-                  fontSize: 12, padding: '6px 12px', borderRadius: 7,
-                  background: active ? '#4361EE' : 'transparent',
-                  color: active ? '#fff' : '#888',
-                  fontWeight: active ? 600 : 400,
-                  position: 'relative',
-                  transition: 'background .12s, color .12s',
-                }}
-                onMouseEnter={e => { if (!active) (e.currentTarget as HTMLButtonElement).style.background = '#EEF1FD'; if (!active) (e.currentTarget as HTMLButtonElement).style.color = '#4361EE' }}
-                onMouseLeave={e => { if (!active) (e.currentTarget as HTMLButtonElement).style.background = 'transparent'; if (!active) (e.currentTarget as HTMLButtonElement).style.color = '#888' }}
-              >
-                {p.label}
-                {tieneReal && (
-                  <span style={{
-                    position: 'absolute', bottom: 3, left: '50%', transform: 'translateX(-50%)',
-                    width: 3, height: 3, borderRadius: '50%',
-                    background: active ? 'rgba(255,255,255,.6)' : '#4361EE',
-                  }} />
-                )}
-              </button>
-            )
-          })}
+
+        {/* Dropdown estilo GA */}
+        <div style={{ position: 'relative' }}>
+          <button
+            onClick={() => setDropdownOpen(o => !o)}
+            style={{
+              display: 'inline-flex', alignItems: 'center', gap: 8,
+              padding: '8px 14px', fontSize: 13, fontWeight: 500,
+              border: '1px solid #E8E8EC', borderRadius: 9,
+              background: '#fff', color: '#1a1a1a',
+              cursor: 'pointer', fontFamily: 'Inter,sans-serif',
+              minWidth: 160,
+            }}
+          >
+            <i className="ti ti-calendar" style={{ fontSize: 14, color: '#4361EE' }} aria-hidden="true" />
+            <span style={{ flex: 1, textAlign: 'left' }}>{periodoActivo.label}</span>
+            <i className={`ti ti-chevron-${dropdownOpen ? 'up' : 'down'}`} style={{ fontSize: 13, color: '#B0B7C3' }} aria-hidden="true" />
+          </button>
+
+          {dropdownOpen && (
+            <div style={{
+              position: 'absolute', top: 'calc(100% + 6px)', left: 0, zIndex: 50,
+              background: '#fff', border: '1px solid #E8E8EC', borderRadius: 10,
+              padding: '6px', minWidth: 200,
+              boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
+            }}>
+              {/* Grupo: Meses */}
+              <div style={{ fontSize: 9, fontWeight: 700, color: '#B0B7C3', textTransform: 'uppercase', letterSpacing: '0.1em', padding: '4px 10px 6px' }}>
+                Mes
+              </div>
+              {PERIODOS.filter(p => p.key === 'mes').map(p => (
+                <button key={p.key} onClick={() => { setPeriodo(p.key); setDropdownOpen(false) }}
+                  style={{
+                    display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                    width: '100%', padding: '8px 10px', fontSize: 13, border: 'none',
+                    borderRadius: 7, background: periodo === p.key ? '#EEF1FD' : 'transparent',
+                    color: periodo === p.key ? '#4361EE' : '#1a1a1a', fontWeight: periodo === p.key ? 600 : 400,
+                    cursor: 'pointer', fontFamily: 'Inter,sans-serif', textAlign: 'left',
+                  }}
+                >
+                  {p.label}
+                  {periodo === p.key && <i className="ti ti-check" style={{ fontSize: 13 }} aria-hidden="true" />}
+                </button>
+              ))}
+              <div style={{ height: '1px', background: '#F4F5F7', margin: '4px 0' }} />
+              {/* Grupo: Trimestres */}
+              <div style={{ fontSize: 9, fontWeight: 700, color: '#B0B7C3', textTransform: 'uppercase', letterSpacing: '0.1em', padding: '4px 10px 6px' }}>
+                Trimestre
+              </div>
+              {PERIODOS.filter(p => ['q1','q2','q3','q4'].includes(p.key)).map(p => (
+                <button key={p.key} onClick={() => { setPeriodo(p.key); setDropdownOpen(false) }}
+                  style={{
+                    display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                    width: '100%', padding: '8px 10px', fontSize: 13, border: 'none',
+                    borderRadius: 7, background: periodo === p.key ? '#EEF1FD' : 'transparent',
+                    color: periodo === p.key ? '#4361EE' : '#1a1a1a', fontWeight: periodo === p.key ? 600 : 400,
+                    cursor: 'pointer', fontFamily: 'Inter,sans-serif', textAlign: 'left',
+                  }}
+                >
+                  {p.label}
+                  {periodo === p.key && <i className="ti ti-check" style={{ fontSize: 13 }} aria-hidden="true" />}
+                </button>
+              ))}
+              <div style={{ height: '1px', background: '#F4F5F7', margin: '4px 0' }} />
+              {/* Grupo: Acumulados */}
+              <div style={{ fontSize: 9, fontWeight: 700, color: '#B0B7C3', textTransform: 'uppercase', letterSpacing: '0.1em', padding: '4px 10px 6px' }}>
+                Acumulado
+              </div>
+              {PERIODOS.filter(p => ['ytd','anual'].includes(p.key)).map(p => (
+                <button key={p.key} onClick={() => { setPeriodo(p.key); setDropdownOpen(false) }}
+                  style={{
+                    display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                    width: '100%', padding: '8px 10px', fontSize: 13, border: 'none',
+                    borderRadius: 7, background: periodo === p.key ? '#EEF1FD' : 'transparent',
+                    color: periodo === p.key ? '#4361EE' : '#1a1a1a', fontWeight: periodo === p.key ? 600 : 400,
+                    cursor: 'pointer', fontFamily: 'Inter,sans-serif', textAlign: 'left',
+                  }}
+                >
+                  {p.label}
+                  {periodo === p.key && <i className="ti ti-check" style={{ fontSize: 13 }} aria-hidden="true" />}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
 
         <div style={{ display: 'flex', gap: 8 }}>
@@ -526,6 +552,19 @@ export default function Presupuesto() {
               {saved ? '✓ Guardado' : 'Guardar cambios'}
             </button>
           )}
+          <button
+            onClick={() => setModalNueva(true)}
+            style={{
+              display: 'inline-flex', alignItems: 'center', gap: 6,
+              padding: '8px 14px', fontSize: 12, fontWeight: 500,
+              border: '1px solid #E8E8EC', borderRadius: 8,
+              background: '#fff', color: '#1a1a1a',
+              cursor: 'pointer', fontFamily: 'Inter,sans-serif',
+            }}
+          >
+            <i className="ti ti-plus" style={{ fontSize: 13 }} aria-hidden="true" />
+            Nueva línea
+          </button>
         </div>
       </div>
 
