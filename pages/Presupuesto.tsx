@@ -563,8 +563,6 @@ export default function Presupuesto() {
               Nueva línea
             </button>
           </div>
-        </div>
-
         {/* KPIs dentro del hero — fila inferior */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 0, marginTop: 20, paddingTop: 18, borderTop: '1px solid rgba(255,255,255,0.15)' }}>
           {[
