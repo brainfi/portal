@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react'
 import Layout from '@/components/Layout'
 import {
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell, Legend,
+  AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
 } from 'recharts'
 
 // ─── Tipos ───────────────────────────────────────────────────────────────────
@@ -142,9 +142,9 @@ const CustomTooltip = ({ active, payload, label }: any) => {
   return (
     <div style={{ background: '#fff', border: '1px solid #E8E8EC', borderRadius: 10, padding: '10px 14px', fontSize: 12 }}>
       <div style={{ fontWeight: 600, color: '#1a1a1a', marginBottom: 6 }}>{label}</div>
-      {payload.map((p: any) => (
+      {payload.map((p: any) => p.value != null && (
         <div key={p.name} style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 3 }}>
-          <div style={{ width: 8, height: 8, borderRadius: 2, background: p.fill }} />
+          <div style={{ width: 8, height: 8, borderRadius: 2, background: p.stroke }} />
           <span style={{ color: '#666' }}>{p.name}: {fmtK(p.value)}</span>
         </div>
       ))}
@@ -196,15 +196,25 @@ export default function Presupuesto() {
     return d !== null && (p.tipo === 'ingreso' ? d < -5 : false)
   }).length
 
-  // ── Datos para el gráfico ──
-  const chartData = useMemo(() =>
-    partidas.map(p => ({
-      name: p.categoria.length > 12 ? p.categoria.slice(0,11) + '…' : p.categoria,
-      'Esperado': sumPeriodo(p.planMensual, meses),
-      'Real': mesaConReal ? sumPeriodo(p.real, mesesConReal) || undefined : undefined,
-      tipo: p.tipo,
-    })),
-  [partidas, meses, mesesConReal, mesaConReal])
+  // ── Datos para el gráfico de líneas: neto plan vs real por mes ──
+  const MESES_LABELS = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic']
+  const chartData = useMemo(() => {
+    // Mostramos los meses del periodo activo; si es 'anual' o 'ytd' mostramos mes a mes
+    const mesesGrafico = periodo === 'anual'
+      ? [0,1,2,3,4,5,6,7,8,9,10,11]
+      : periodo === 'ytd'
+      ? [0,1,2,3,4]
+      : meses
+    return mesesGrafico.map(m => {
+      const planMes  = partidas.reduce((a, p) => a + p.planMensual[m], 0)
+      const realMes  = MESES_CON_REAL.includes(m) ? partidas.reduce((a, p) => a + p.real[m], 0) : null
+      return {
+        mes: MESES_LABELS[m],
+        Plan: planMes,
+        Real: realMes,
+      }
+    })
+  }, [partidas, periodo, meses])
 
   // ── Edición plan anual inline ──
   function handleEditPlanAnual(id: number, valor: string) {
@@ -405,33 +415,39 @@ export default function Presupuesto() {
 
       {/* ── Hero card azul ── */}
       <div style={{ background: '#4361EE', borderRadius: 16, padding: '22px 26px', position: 'relative', overflow: 'hidden' }}>
-        {/* Círculos decorativos de fondo */}
         <div style={{ position: 'absolute', top: -60, right: -60, width: 220, height: 220, borderRadius: '50%', background: 'rgba(255,255,255,0.06)', pointerEvents: 'none' }} />
         <div style={{ position: 'absolute', bottom: -40, right: 120, width: 140, height: 140, borderRadius: '50%', background: 'rgba(255,255,255,0.04)', pointerEvents: 'none' }} />
 
         {/* Fila superior: título + botones */}
-        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 22, gap: 12, flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20, gap: 12, flexWrap: 'wrap' }}>
           <div>
-            <div style={{ fontSize: 9, fontWeight: 700, color: 'rgba(255,255,255,0.55)', textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: 4 }}>
+            <div style={{ fontSize: 9, fontWeight: 700, color: 'rgba(255,255,255,0.55)', textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: 3 }}>
               Presupuesto 2026
             </div>
-            <div style={{ fontSize: 20, fontWeight: 700, color: '#fff', letterSpacing: '-0.4px' }}>
+            <div style={{ fontSize: 18, fontWeight: 700, color: '#fff', letterSpacing: '-0.3px' }}>
               Plan anual vs ejecución
             </div>
           </div>
           <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+            {editandoPlan !== null && (
+              <button onClick={handleSave} style={{
+                display: 'inline-flex', alignItems: 'center', gap: 6,
+                padding: '8px 13px', fontSize: 12, fontWeight: 600, border: 'none', borderRadius: 9,
+                background: saved ? '#2DC653' : 'rgba(255,255,255,0.2)', color: '#fff',
+                cursor: 'pointer', fontFamily: 'Inter,sans-serif',
+              }}>
+                {saved ? '✓ Guardado' : 'Guardar cambios'}
+              </button>
+            )}
             {/* Dropdown periodo */}
             <div style={{ position: 'relative' }}>
-              <button
-                onClick={() => setDropdownOpen(o => !o)}
-                style={{
-                  display: 'inline-flex', alignItems: 'center', gap: 7,
-                  padding: '8px 13px', fontSize: 12, fontWeight: 500,
-                  border: '1px solid rgba(255,255,255,0.25)', borderRadius: 9,
-                  background: 'rgba(255,255,255,0.15)', color: '#fff',
-                  cursor: 'pointer', fontFamily: 'Inter,sans-serif', minWidth: 140,
-                }}
-              >
+              <button onClick={() => setDropdownOpen(o => !o)} style={{
+                display: 'inline-flex', alignItems: 'center', gap: 7,
+                padding: '8px 13px', fontSize: 12, fontWeight: 500,
+                border: '1px solid rgba(255,255,255,0.25)', borderRadius: 9,
+                background: 'rgba(255,255,255,0.15)', color: '#fff',
+                cursor: 'pointer', fontFamily: 'Inter,sans-serif', minWidth: 130,
+              }}>
                 <i className="ti ti-calendar" style={{ fontSize: 13 }} aria-hidden="true" />
                 <span style={{ flex: 1, textAlign: 'left' }}>{periodoActivo.label}</span>
                 <i className={`ti ti-chevron-${dropdownOpen ? 'up' : 'down'}`} style={{ fontSize: 12, opacity: 0.7 }} aria-hidden="true" />
@@ -440,32 +456,25 @@ export default function Presupuesto() {
                 <div style={{
                   position: 'absolute', top: 'calc(100% + 8px)', right: 0, zIndex: 50,
                   background: '#fff', border: '1px solid #E8E8EC', borderRadius: 10,
-                  padding: '6px', minWidth: 200,
-                  boxShadow: '0 8px 24px rgba(0,0,0,0.12)',
+                  padding: '6px', minWidth: 200, boxShadow: '0 8px 24px rgba(0,0,0,0.12)',
                 }}>
                   {[
-                    { grupo: 'Mes',        keys: ['mes'] },
-                    { grupo: 'Trimestre',  keys: ['q1','q2','q3','q4'] },
-                    { grupo: 'Acumulado',  keys: ['ytd','anual'] },
+                    { grupo: 'Mes',       keys: ['mes'] },
+                    { grupo: 'Trimestre', keys: ['q1','q2','q3','q4'] },
+                    { grupo: 'Acumulado', keys: ['ytd','anual'] },
                   ].map((g, gi) => (
                     <div key={g.grupo}>
                       {gi > 0 && <div style={{ height: '1px', background: '#F4F5F7', margin: '4px 0' }} />}
-                      <div style={{ fontSize: 9, fontWeight: 700, color: '#B0B7C3', textTransform: 'uppercase', letterSpacing: '0.1em', padding: '4px 10px 6px' }}>
-                        {g.grupo}
-                      </div>
+                      <div style={{ fontSize: 9, fontWeight: 700, color: '#B0B7C3', textTransform: 'uppercase', letterSpacing: '0.1em', padding: '4px 10px 6px' }}>{g.grupo}</div>
                       {PERIODOS.filter(p => g.keys.includes(p.key)).map(p => (
-                        <button key={p.key}
-                          onClick={() => { setPeriodo(p.key); setDropdownOpen(false) }}
-                          style={{
-                            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                            width: '100%', padding: '8px 10px', fontSize: 13, border: 'none',
-                            borderRadius: 7, cursor: 'pointer', fontFamily: 'Inter,sans-serif',
-                            textAlign: 'left',
-                            background: periodo === p.key ? '#EEF1FD' : 'transparent',
-                            color: periodo === p.key ? '#4361EE' : '#1a1a1a',
-                            fontWeight: periodo === p.key ? 600 : 400,
-                          }}
-                        >
+                        <button key={p.key} onClick={() => { setPeriodo(p.key); setDropdownOpen(false) }} style={{
+                          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                          width: '100%', padding: '8px 10px', fontSize: 13, border: 'none',
+                          borderRadius: 7, cursor: 'pointer', fontFamily: 'Inter,sans-serif', textAlign: 'left',
+                          background: periodo === p.key ? '#EEF1FD' : 'transparent',
+                          color: periodo === p.key ? '#4361EE' : '#1a1a1a',
+                          fontWeight: periodo === p.key ? 600 : 400,
+                        }}>
                           {p.label}
                           {periodo === p.key && <i className="ti ti-check" style={{ fontSize: 13 }} aria-hidden="true" />}
                         </button>
@@ -475,74 +484,52 @@ export default function Presupuesto() {
                 </div>
               )}
             </div>
-            {/* Nueva línea */}
-            <button
-              onClick={() => setModalNueva(true)}
-              style={{
-                display: 'inline-flex', alignItems: 'center', gap: 6,
-                padding: '8px 14px', fontSize: 12, fontWeight: 600,
-                border: 'none', borderRadius: 9,
-                background: '#fff', color: '#4361EE',
-                cursor: 'pointer', fontFamily: 'Inter,sans-serif',
-              }}
-            >
+            <button onClick={() => setModalNueva(true)} style={{
+              display: 'inline-flex', alignItems: 'center', gap: 6,
+              padding: '8px 14px', fontSize: 12, fontWeight: 600,
+              border: 'none', borderRadius: 9, background: '#fff', color: '#4361EE',
+              cursor: 'pointer', fontFamily: 'Inter,sans-serif',
+            }}>
               <i className="ti ti-plus" style={{ fontSize: 13 }} aria-hidden="true" />
               Nueva línea
             </button>
-            {/* Guardar cambios (condicional) */}
-            {editandoPlan !== null && (
-              <button onClick={handleSave} style={{
-                display: 'inline-flex', alignItems: 'center', gap: 6,
-                padding: '8px 14px', fontSize: 12, fontWeight: 600, border: 'none', borderRadius: 9,
-                background: saved ? '#2DC653' : 'rgba(255,255,255,0.2)', color: '#fff',
-                cursor: 'pointer', fontFamily: 'Inter,sans-serif',
-              }}>
-                {saved ? '✓ Guardado' : 'Guardar cambios'}
-              </button>
-            )}
           </div>
         </div>
 
-        {/* KPIs dentro del hero */}
-        <div className="pres-hero-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 12 }}>
+        {/* KPIs en fila horizontal separados por divisores */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 0 }}>
           {[
-            { lbl: 'Ingresos · plan / real', plan: ingresosPlan, real: ingresosReal, tipo: 'ingreso' as TipoPartida },
-            { lbl: 'Gastos · plan / real',   plan: gastosPlan,   real: gastosReal,   tipo: 'gasto'   as TipoPartida },
-            { lbl: 'Utilidad neta',          plan: utilPlan,     real: utilReal,     tipo: 'ingreso' as TipoPartida },
+            { lbl: 'Ingresos · plan', plan: ingresosPlan, real: ingresosReal, tipo: 'ingreso' as TipoPartida },
+            { lbl: 'Gastos · plan',   plan: gastosPlan,   real: gastosReal,   tipo: 'gasto'   as TipoPartida },
+            { lbl: 'Utilidad neta',   plan: utilPlan,     real: utilReal,     tipo: 'ingreso' as TipoPartida },
             { lbl: 'Alertas activas', esAlertas: true },
           ].map((k, i) => (
             <div key={i} style={{
-              background: 'rgba(255,255,255,0.12)', borderRadius: 12,
-              border: '1px solid rgba(255,255,255,0.18)', padding: '14px 16px',
+              padding: '0 20px',
+              borderLeft: i > 0 ? '1px solid rgba(255,255,255,0.18)' : 'none',
             }}>
-              <div style={{ fontSize: 9, fontWeight: 600, color: 'rgba(255,255,255,0.6)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 8 }}>
+              <div style={{ fontSize: 9, fontWeight: 600, color: 'rgba(255,255,255,0.55)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 6 }}>
                 {k.lbl}
               </div>
               {(k as any).esAlertas ? (
                 <>
-                  <div style={{ fontSize: 22, fontWeight: 400, color: '#fff', letterSpacing: '-0.4px', marginBottom: 6 }}>
-                    {sobrePlan + bajoPlan} alertas
+                  <div style={{ fontSize: 24, fontWeight: 400, color: '#fff', letterSpacing: '-0.5px', marginBottom: 6 }}>
+                    {sobrePlan + bajoPlan}
                   </div>
-                  <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap' }}>
-                    <span style={{ fontSize: 10, fontWeight: 600, padding: '2px 7px', borderRadius: 99, background: sobrePlan > 0 ? 'rgba(239,68,68,0.25)' : 'rgba(255,255,255,0.15)', color: sobrePlan > 0 ? '#fca5a5' : 'rgba(255,255,255,0.6)' }}>
+                  <div style={{ display: 'flex', gap: 5 }}>
+                    <span style={{ fontSize: 10, fontWeight: 600, padding: '2px 7px', borderRadius: 99, background: sobrePlan > 0 ? 'rgba(239,68,68,0.3)' : 'rgba(255,255,255,0.15)', color: sobrePlan > 0 ? '#fca5a5' : 'rgba(255,255,255,0.6)' }}>
                       {sobrePlan} sobre
                     </span>
-                    <span style={{ fontSize: 10, fontWeight: 600, padding: '2px 7px', borderRadius: 99, background: bajoPlan > 0 ? 'rgba(244,161,0,0.25)' : 'rgba(255,255,255,0.15)', color: bajoPlan > 0 ? '#fcd34d' : 'rgba(255,255,255,0.6)' }}>
+                    <span style={{ fontSize: 10, fontWeight: 600, padding: '2px 7px', borderRadius: 99, background: bajoPlan > 0 ? 'rgba(244,161,0,0.3)' : 'rgba(255,255,255,0.15)', color: bajoPlan > 0 ? '#fcd34d' : 'rgba(255,255,255,0.6)' }}>
                       {bajoPlan} debajo
                     </span>
                   </div>
                 </>
               ) : (
                 <>
-                  <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, flexWrap: 'wrap', marginBottom: 6 }}>
-                    <span style={{ fontSize: 22, fontWeight: 400, color: '#fff', letterSpacing: '-0.4px' }}>
-                      {fmtK(k.plan!)}
-                    </span>
-                    {(k.real ?? 0) > 0 && (
-                      <span style={{ fontSize: 14, fontWeight: 500, color: 'rgba(255,255,255,0.65)' }}>
-                        {fmtK(k.real!)}
-                      </span>
-                    )}
+                  <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginBottom: 5 }}>
+                    <span style={{ fontSize: 24, fontWeight: 400, color: '#fff', letterSpacing: '-0.5px' }}>{fmtK(k.plan!)}</span>
+                    {(k.real ?? 0) > 0 && <span style={{ fontSize: 13, color: 'rgba(255,255,255,0.6)' }}>{fmtK(k.real!)}</span>}
                   </div>
                   {(k.real ?? 0) > 0 && (() => {
                     const d = calcDelta(k.real!, k.plan!)
@@ -550,15 +537,7 @@ export default function Presupuesto() {
                     const isGood = k.tipo === 'ingreso' ? d >= 0 : d <= 0
                     const neutral = Math.abs(d) < 3
                     const sign = d > 0 ? '+' : ''
-                    return (
-                      <span style={{
-                        fontSize: 10, fontWeight: 600, padding: '2px 7px', borderRadius: 99,
-                        background: neutral ? 'rgba(255,255,255,0.2)' : isGood ? 'rgba(45,198,83,0.25)' : 'rgba(239,68,68,0.25)',
-                        color: neutral ? 'rgba(255,255,255,0.8)' : isGood ? '#86efac' : '#fca5a5',
-                      }}>
-                        {sign}{d.toFixed(1)}%
-                      </span>
-                    )
+                    return <span style={{ fontSize: 10, fontWeight: 600, padding: '2px 7px', borderRadius: 99, background: neutral ? 'rgba(255,255,255,0.2)' : isGood ? 'rgba(45,198,83,0.25)' : 'rgba(239,68,68,0.25)', color: neutral ? 'rgba(255,255,255,0.8)' : isGood ? '#86efac' : '#fca5a5' }}>{sign}{d.toFixed(1)}%</span>
                   })()}
                 </>
               )}
@@ -567,37 +546,47 @@ export default function Presupuesto() {
         </div>
       </div>
 
-      {/* ── Gráfico de barras comparativo ── */}
+      {/* ── Gráfico de líneas: plan vs real ── */}
       <div style={card}>
-        <div style={{ marginBottom: 16 }}>
-          <div style={{ fontSize: 9, fontWeight: 700, color: '#B0B7C3', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 4 }}>
-            Desviación por categoría
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16 }}>
+          <div>
+            <div style={{ fontSize: 9, fontWeight: 700, color: '#B0B7C3', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 4 }}>
+              Evolución mensual
+            </div>
+            <div style={{ fontSize: 14, fontWeight: 700, color: '#1a1a1a' }}>
+              Presupuesto vs real · {periodoActivo.label}
+            </div>
           </div>
-          <div style={{ fontSize: 14, fontWeight: 700, color: '#1a1a1a' }}>
-            Esperado {periodoActivo.label} vs Real {periodoActivo.label}
+          <div style={{ display: 'flex', gap: 14, alignItems: 'center' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+              <div style={{ width: 20, height: 2, background: '#C7D2F8', borderRadius: 1 }} />
+              <span style={{ fontSize: 11, color: '#888' }}>Plan</span>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+              <div style={{ width: 20, height: 2, background: '#4361EE', borderRadius: 1 }} />
+              <span style={{ fontSize: 11, color: '#888' }}>Real</span>
+            </div>
           </div>
         </div>
         <ResponsiveContainer width="100%" height={200}>
-          <BarChart data={chartData} margin={{ top: 4, right: 4, left: 0, bottom: 0 }} barGap={3} barCategoryGap="25%">
+          <AreaChart data={chartData} margin={{ top: 4, right: 4, left: 0, bottom: 0 }}>
+            <defs>
+              <linearGradient id="gPlan" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor="#C7D2F8" stopOpacity={0.4} />
+                <stop offset="100%" stopColor="#C7D2F8" stopOpacity={0.02} />
+              </linearGradient>
+              <linearGradient id="gReal" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor="#4361EE" stopOpacity={0.3} />
+                <stop offset="100%" stopColor="#4361EE" stopOpacity={0.02} />
+              </linearGradient>
+            </defs>
             <CartesianGrid strokeDasharray="3 3" stroke="#F0F0F2" vertical={false} />
-            <XAxis dataKey="name" tick={{ fontSize: 10, fill: '#B0B7C3' }} axisLine={false} tickLine={false} />
-            <YAxis tick={{ fontSize: 10, fill: '#B0B7C3' }} axisLine={false} tickLine={false} tickFormatter={v => fmtK(v)} width={52} />
-            <Tooltip content={<CustomTooltip />} cursor={{ fill: '#F4F5F7' }} />
-            <Legend
-              wrapperStyle={{ fontSize: 11, color: '#888', paddingTop: 12 }}
-              formatter={(val) => <span style={{ color: '#888', fontSize: 11 }}>{val}</span>}
-            />
-            <Bar dataKey="Esperado" fill="#C7D2F8" radius={[4, 4, 0, 0]} />
-            <Bar dataKey="Real" radius={[4, 4, 0, 0]}>
-              {chartData.map((entry, index) => {
-                const planVal = entry['Esperado'] as number
-                const realVal = entry['Real'] as number | undefined
-                if (!realVal) return <Cell key={index} fill="#4361EE" fillOpacity={0.3} />
-                const over = entry.tipo === 'gasto' ? realVal > planVal : realVal < planVal
-                return <Cell key={index} fill={over ? '#EF4444' : '#4361EE'} />
-              })}
-            </Bar>
-          </BarChart>
+            <XAxis dataKey="mes" tick={{ fontSize: 11, fill: '#B0B7C3' }} axisLine={false} tickLine={false} />
+            <YAxis tick={{ fontSize: 11, fill: '#B0B7C3' }} axisLine={false} tickLine={false} tickFormatter={v => fmtK(v)} width={52} />
+            <Tooltip content={<CustomTooltip />} cursor={{ stroke: '#E8E8EC', strokeWidth: 1, strokeDasharray: '3 3' }} />
+            <Area type="monotone" dataKey="Plan" stroke="#C7D2F8" strokeWidth={2} fill="url(#gPlan)" dot={false} activeDot={{ r: 4, fill: '#C7D2F8', stroke: '#fff', strokeWidth: 2 }} />
+            <Area type="monotone" dataKey="Real" stroke="#4361EE" strokeWidth={2} fill="url(#gReal)" dot={false} activeDot={{ r: 4, fill: '#4361EE', stroke: '#fff', strokeWidth: 2 }} connectNulls={false} />
+          </AreaChart>
         </ResponsiveContainer>
       </div>
 
