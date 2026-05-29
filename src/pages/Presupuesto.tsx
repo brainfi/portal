@@ -1,12 +1,12 @@
 import { useState, useMemo } from 'react'
 import Layout from '@/components/Layout'
 import {
-  ComposedChart, Bar, XAxis, YAxis, CartesianGrid,
-  Tooltip, ResponsiveContainer, Cell,
+  AreaChart, Area, Line, XAxis, YAxis, CartesianGrid,
+  Tooltip, ResponsiveContainer, ComposedChart,
 } from 'recharts'
 
 type TipoPartida = 'ingreso' | 'gasto'
-type FiltroPeriodo = 'dia' | 'mes' | 'anual'
+type FiltroPeriodo = 'mes' | 'anual'
 
 interface Partida {
   id: number
@@ -56,9 +56,9 @@ function ChartTooltip({ active, payload, label }: any) {
     <div style={{ background:'#fff', border:'1px solid #E8E8EC', borderRadius:10, padding:'12px 16px', fontSize:12, boxShadow:'0 4px 16px rgba(0,0,0,0.08)' }}>
       <div style={{ fontWeight:600, color:'#1a1a1a', marginBottom:8 }}>{label}</div>
       {payload.map((p: any) => p.value != null && (
-        <div key={p.name} style={{ display:'flex', alignItems:'center', gap:8, marginBottom:4 }}>
-          <div style={{ width:8, height:8, borderRadius:2, background:p.fill }} />
-          <span style={{ color:'#666', minWidth:90 }}>{p.name === 'Plan' ? 'Presupuesto' : 'Real'}:</span>
+        <div key={p.dataKey} style={{ display:'flex', alignItems:'center', gap:8, marginBottom:4 }}>
+          <div style={{ width:8, height:8, borderRadius:2, background:p.stroke }} />
+          <span style={{ color:'#666', minWidth:80 }}>{p.dataKey === 'Real' ? 'Real acumulado' : 'Plan acumulado'}:</span>
           <span style={{ fontWeight:600, color:'#1a1a1a' }}>{fmtK(p.value)}</span>
         </div>
       ))}
@@ -91,8 +91,7 @@ export default function Presupuesto() {
   const [nuevaImporte, setNuevaImporte] = useState('')
 
   const mesesActivos = useMemo(() => {
-    if (filtro === 'dia' || filtro === 'mes') return [MES_ACTUAL]
-    return [0,1,2,3,4,5,6,7,8,9,10,11]
+    return filtro === 'mes' ? [MES_ACTUAL] : [0,1,2,3,4,5,6,7,8,9,10,11]
   }, [filtro])
 
   const mesesConReal = mesesActivos.filter(m => MESES_CON_REAL.includes(m))
@@ -108,14 +107,22 @@ export default function Presupuesto() {
   const utilPlan     = ingresosPlan - gastosPlan
   const utilReal     = ingresosReal - gastosReal
 
-  const periodoLabel = filtro === 'anual' ? '2026' : MESES[MES_ACTUAL]
-
-  const chartData = useMemo(() => MESES.map((mes, m) => ({
-    mes,
-    Plan: partidas.reduce((a, p) => a + p.planMensual[m], 0),
-    Real: MESES_CON_REAL.includes(m) ? partidas.reduce((a, p) => a + p.real[m], 0) : null,
-    isCurrent: m === MES_ACTUAL,
-  })), [partidas])
+  // Gráfico: líneas acumuladas mes a mes
+  const chartData = useMemo(() => {
+    let acumReal = 0
+    let acumPlan = 0
+    return MESES.map((mes, m) => {
+      const planMes = partidas.reduce((a, p) => a + p.planMensual[m], 0)
+      const realMes = MESES_CON_REAL.includes(m) ? partidas.reduce((a, p) => a + p.real[m], 0) : null
+      acumPlan += planMes
+      if (realMes !== null) acumReal += realMes
+      return {
+        mes,
+        Plan: acumPlan,
+        Real: realMes !== null ? acumReal : null,
+      }
+    })
+  }, [partidas])
 
   function handleEditPlanAnual(id: number, valor: string) {
     const n = parseFloat(valor) || 0
@@ -145,34 +152,36 @@ export default function Presupuesto() {
   const card: React.CSSProperties = { background:'#fff', borderRadius:14, border:'1px solid #E8E8EC' }
   const th: React.CSSProperties = { fontSize:9, fontWeight:700, color:'#B0B7C3', textTransform:'uppercase', letterSpacing:'0.1em', padding:'0 10px 10px', textAlign:'right' as const }
   const td: React.CSSProperties = { padding:'11px 10px', fontSize:12, color:'#1a1a1a', textAlign:'right' as const, verticalAlign:'middle' as const }
+  const tdTotal: React.CSSProperties = { ...td, background:'#EEF1FD', fontWeight:700 }
 
   const filtroBtns: { key: FiltroPeriodo; label: string }[] = [
-    { key:'dia',   label:'Este día' },
     { key:'mes',   label:'Este mes' },
     { key:'anual', label:'Este año' },
   ]
 
   function TablaPartidas({ tipo }: { tipo: TipoPartida }) {
     const arr = partidas.filter(p => p.tipo === tipo)
-    const totalPlan = arr.reduce((a, p) => a + sumMeses(p.planMensual, mesesActivos), 0)
-    const totalReal = arr.reduce((a, p) => a + sumMeses(p.real, mesesConReal), 0)
-    const colorAcc  = tipo === 'ingreso' ? '#2DC653' : '#EF4444'
-    const planAnualTotal = arr.reduce((a, p) => a + p.planAnual, 0)
+    const totalPlan    = arr.reduce((a, p) => a + sumMeses(p.planMensual, mesesActivos), 0)
+    const totalReal    = arr.reduce((a, p) => a + sumMeses(p.real, mesesConReal), 0)
+    const colorAcc     = tipo === 'ingreso' ? '#2DC653' : '#EF4444'
+    const planAnualTot = arr.reduce((a, p) => a + p.planAnual, 0)
 
     return (
-      <div>
-        <div style={{ display:'flex', alignItems:'center', gap:8, padding:'4px 0 10px' }}>
-          <span style={{ fontSize:13, fontWeight:700, color:'#1a1a1a' }}>{tipo === 'ingreso' ? 'Ingresos' : 'Gastos'}</span>
+      <div style={{ ...card, padding:'20px 22px' }}>
+        <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:14 }}>
+          <span style={{ fontSize:14, fontWeight:700, color:'#1a1a1a' }}>
+            {tipo === 'ingreso' ? 'Ingresos' : 'Gastos'}
+          </span>
           <span style={{ fontSize:11, color:'#B0B7C3' }}>{arr.length} categorías</span>
         </div>
         <div style={{ overflowX:'auto' }}>
-          <table style={{ width:'100%', borderCollapse:'collapse', minWidth:620 }}>
+          <table style={{ width:'100%', borderCollapse:'collapse', minWidth:580 }}>
             <thead>
               <tr style={{ borderBottom:'1px solid #ECEEF3' }}>
                 <th style={{ ...th, textAlign:'left' as const, paddingLeft:0, width:'30%' }}>Categoría</th>
                 <th style={{ ...th, width:130 }}>Plan anual</th>
-                <th style={th}>Esperado {periodoLabel}</th>
-                {hayReal && <th style={th}>Real {periodoLabel}</th>}
+                <th style={th}>Esperado</th>
+                {hayReal && <th style={th}>Real</th>}
                 <th style={th}>Desviación %</th>
                 {hayReal && <th style={th}>Δ importe</th>}
                 <th style={{ width:28 }} />
@@ -219,7 +228,7 @@ export default function Presupuesto() {
                         : <span style={{ fontSize:11, color:'#B0B7C3' }}>—</span>}
                     </td>
                     {hayReal && (
-                      <td style={{ ...td, fontWeight:600, color: tipo==='ingreso' ? (diff>=0?'#1a7a3a':'#b91c1c') : (diff<=0?'#1a7a3a':'#b91c1c') }}>
+                      <td style={{ ...td, fontWeight:600, color:tipo==='ingreso'?(diff>=0?'#1a7a3a':'#b91c1c'):(diff<=0?'#1a7a3a':'#b91c1c') }}>
                         {realPer > 0 ? (diff>=0?'+':'') + fmt(diff) : '—'}
                       </td>
                     )}
@@ -236,22 +245,22 @@ export default function Presupuesto() {
               })}
             </tbody>
             <tfoot>
-              <tr style={{ borderTop:'1px solid #ECEEF3' }}>
-                <td style={{ ...td, textAlign:'left' as const, paddingLeft:0, fontWeight:700 }}>
+              <tr>
+                <td style={{ ...tdTotal, textAlign:'left' as const, paddingLeft:8, borderRadius:'0 0 0 8px' }}>
                   Total {tipo === 'ingreso' ? 'ingresos' : 'gastos'}
                 </td>
-                <td style={{ ...td, fontWeight:700, color:'#888' }}>{fmt(planAnualTotal)}</td>
-                <td style={{ ...td, color:'#888' }}>{fmt(totalPlan)}</td>
-                {hayReal && <td style={{ ...td, fontWeight:700, color:colorAcc }}>{totalReal>0?fmt(totalReal):'—'}</td>}
-                <td style={td}>
+                <td style={{ ...tdTotal, color:'#4361EE' }}>{fmt(planAnualTot)}</td>
+                <td style={{ ...tdTotal, color:'#4361EE' }}>{fmt(totalPlan)}</td>
+                {hayReal && <td style={{ ...tdTotal, color:colorAcc }}>{totalReal>0?fmt(totalReal):'—'}</td>}
+                <td style={tdTotal}>
                   {hayReal && totalReal > 0 && <DeltaBadge real={totalReal} plan={totalPlan} tipo={tipo} />}
                 </td>
                 {hayReal && (
-                  <td style={{ ...td, fontWeight:700, color: tipo==='ingreso'?(totalReal-totalPlan>=0?'#1a7a3a':'#b91c1c'):(totalReal-totalPlan<=0?'#1a7a3a':'#b91c1c') }}>
-                    {totalReal > 0 ? (totalReal-totalPlan>=0?'+':'') + fmt(totalReal-totalPlan) : '—'}
+                  <td style={{ ...tdTotal, color:tipo==='ingreso'?(totalReal-totalPlan>=0?'#1a7a3a':'#b91c1c'):(totalReal-totalPlan<=0?'#1a7a3a':'#b91c1c'), borderRadius:'0 0 8px 0' }}>
+                    {totalReal>0?(totalReal-totalPlan>=0?'+':'')+fmt(totalReal-totalPlan):'—'}
                   </td>
                 )}
-                <td />
+                <td style={{ background:'#EEF1FD' }} />
               </tr>
             </tfoot>
           </table>
@@ -278,16 +287,12 @@ export default function Presupuesto() {
           <div style={{ display:'flex', gap:2, background:'#fff', border:'1px solid #E8E8EC', borderRadius:8, padding:3 }}>
             {filtroBtns.map(b => (
               <button key={b.key} className="pres-filtro-btn"
-                style={{ background: filtro===b.key ? '#4361EE' : 'transparent', color: filtro===b.key ? '#fff' : '#888', fontWeight: filtro===b.key ? 600 : 400 }}
+                style={{ background:filtro===b.key?'#4361EE':'transparent', color:filtro===b.key?'#fff':'#888', fontWeight:filtro===b.key?600:400 }}
                 onClick={() => setFiltro(b.key)}>
                 {b.label}
               </button>
             ))}
           </div>
-          <button style={{ display:'inline-flex', alignItems:'center', gap:6, padding:'8px 14px', fontSize:12, fontWeight:500, border:'1px solid #E8E8EC', borderRadius:8, background:'#fff', color:'#555', cursor:'pointer', fontFamily:'Inter,sans-serif' }}>
-            <i className="ti ti-download" style={{ fontSize:13 }} aria-hidden="true" />
-            Exportar
-          </button>
           {editandoPlan !== null && (
             <button onClick={handleSave} style={{ display:'inline-flex', alignItems:'center', gap:6, padding:'8px 14px', fontSize:12, fontWeight:600, border:'none', borderRadius:8, background:saved?'#2DC653':'#4361EE', color:'#fff', cursor:'pointer', fontFamily:'Inter,sans-serif' }}>
               {saved ? '✓ Guardado' : 'Guardar cambios'}
@@ -323,49 +328,44 @@ export default function Presupuesto() {
         ))}
       </div>
 
-      {/* ── Gráfico ── */}
+      {/* ── Gráfico 2 líneas acumuladas ── */}
       <div style={{ ...card, padding:'22px 24px' }}>
         <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:20 }}>
           <div style={{ fontSize:9, fontWeight:700, color:'#B0B7C3', textTransform:'uppercase', letterSpacing:'0.1em' }}>
-            Evolución mensual · {periodoLabel}
+            Evolución acumulada
           </div>
-          <div style={{ display:'flex', gap:14, alignItems:'center' }}>
+          <div style={{ display:'flex', gap:16, alignItems:'center' }}>
             <div style={{ display:'flex', alignItems:'center', gap:5 }}>
-              <div style={{ width:10, height:10, borderRadius:2, background:'#EEF1FD', border:'1px solid #C7D2F8' }} />
-              <span style={{ fontSize:11, color:'#888' }}>Presupuesto</span>
+              <div style={{ width:20, height:2, background:'#C7D2F8', borderRadius:1, borderTop:'2px dashed #C7D2F8' }} />
+              <span style={{ fontSize:11, color:'#888' }}>Plan</span>
             </div>
             <div style={{ display:'flex', alignItems:'center', gap:5 }}>
-              <div style={{ width:10, height:10, borderRadius:2, background:'#7DD3FC' }} />
+              <div style={{ width:20, height:2, background:'#4361EE', borderRadius:1 }} />
               <span style={{ fontSize:11, color:'#888' }}>Real</span>
             </div>
           </div>
         </div>
-        <ResponsiveContainer width="100%" height={220}>
-          <ComposedChart data={chartData} margin={{ top:4, right:4, left:0, bottom:0 }} barCategoryGap="25%">
+        <ResponsiveContainer width="100%" height={200}>
+          <ComposedChart data={chartData} margin={{ top:4, right:4, left:0, bottom:0 }}>
+            <defs>
+              <linearGradient id="gReal" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor="#4361EE" stopOpacity={0.15} />
+                <stop offset="100%" stopColor="#4361EE" stopOpacity={0.01} />
+              </linearGradient>
+            </defs>
             <CartesianGrid strokeDasharray="3 3" stroke="#F0F0F2" vertical={false} />
             <XAxis dataKey="mes" tick={{ fontSize:11, fill:'#B0B7C3' }} axisLine={false} tickLine={false} />
             <YAxis tick={{ fontSize:11, fill:'#B0B7C3' }} axisLine={false} tickLine={false} tickFormatter={v => fmtK(v)} width={52} />
-            <Tooltip content={<ChartTooltip />} cursor={{ fill:'rgba(67,97,238,0.04)' }} />
-            <Bar dataKey="Plan" radius={[4,4,0,0]} maxBarSize={36}>
-              {chartData.map((entry, i) => (
-                <Cell key={i} fill={entry.isCurrent ? '#C7D2F8' : '#EEF1FD'} />
-              ))}
-            </Bar>
-            <Bar dataKey="Real" radius={[4,4,0,0]} maxBarSize={36}>
-              {chartData.map((entry, i) => (
-                <Cell key={i} fill={entry.Real!=null ? (entry.isCurrent ? '#4361EE' : '#7DD3FC') : 'transparent'} />
-              ))}
-            </Bar>
+            <Tooltip content={<ChartTooltip />} cursor={{ stroke:'#E8E8EC', strokeWidth:1, strokeDasharray:'3 3' }} />
+            <Line type="monotone" dataKey="Plan" stroke="#C7D2F8" strokeWidth={2} strokeDasharray="5 3" dot={false} activeDot={{ r:4, fill:'#C7D2F8', stroke:'#fff', strokeWidth:2 }} />
+            <Area type="monotone" dataKey="Real" stroke="#4361EE" strokeWidth={2} fill="url(#gReal)" dot={false} activeDot={{ r:4, fill:'#4361EE', stroke:'#fff', strokeWidth:2 }} connectNulls={false} />
           </ComposedChart>
         </ResponsiveContainer>
       </div>
 
-      {/* ── Tablas ── */}
-      <div style={{ ...card, padding:'22px 24px' }}>
-        <TablaPartidas tipo="ingreso" />
-        <div style={{ height:'1px', background:'#ECEEF3', margin:'12px 0 16px' }} />
-        <TablaPartidas tipo="gasto" />
-      </div>
+      {/* ── Tablas independientes ── */}
+      <TablaPartidas tipo="ingreso" />
+      <TablaPartidas tipo="gasto" />
 
       {/* ── Modal ── */}
       {modalNueva && (
