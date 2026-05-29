@@ -6,6 +6,7 @@ const navGroups = [
     { label:'Resumen', path:'/', icon:<GridIcon/>, disabled:false },
     { label:'Cashflow', path:'/cashflow', icon:<CashflowIcon/>, disabled:false },
     { label:'Presupuesto', path:'/presupuesto', icon:<ChartIcon/>, disabled:false },
+    { label: 'Configurar', path: '/presupuesto/configurar', icon: <SettingsIcon/>, disabled: false },
     { label:'Impuestos', path:'/impuestos', icon:<TaxIcon/>, disabled:false },
   ]},
   { section:'Admin', items:[

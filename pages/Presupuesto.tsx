@@ -6,7 +6,8 @@ import {
 } from 'recharts'
 
 type TipoPartida = 'ingreso' | 'gasto'
-type FiltroPeriodo = 'mes' | 'anual'
+// filtro: número de mes (0-11) o 'anual'
+type FiltroPeriodo = number | 'anual'
 
 interface Partida {
   id: number
@@ -82,17 +83,23 @@ function DeltaBadge({ real, plan, tipo }: { real: number; plan: number; tipo: Ti
 
 export default function Presupuesto() {
   const [partidas, setPartidas] = useState<Partida[]>(initialPartidas)
-  const [filtro, setFiltro] = useState<FiltroPeriodo>('mes')
+  const [filtro, setFiltro] = useState<FiltroPeriodo>(MES_ACTUAL)
+  const [filtroOpen, setFiltroOpen] = useState(false)
   const [editandoPlan, setEditandoPlan] = useState<number | null>(null)
   const [saved, setSaved] = useState(false)
   const [modalNueva, setModalNueva] = useState(false)
   const [nuevaCategoria, setNuevaCategoria] = useState('')
   const [nuevaTipo, setNuevaTipo] = useState<TipoPartida>('gasto')
   const [nuevaImporte, setNuevaImporte] = useState('')
+  const [nuevaDistrib, setNuevaDistrib] = useState<'lineal' | 'mensual'>('lineal')
+  const [nuevaMensual, setNuevaMensual] = useState<number[]>(Array(12).fill(0))
 
   const mesesActivos = useMemo(() => {
-    return filtro === 'mes' ? [MES_ACTUAL] : [0,1,2,3,4,5,6,7,8,9,10,11]
+    return filtro === 'anual' ? [0,1,2,3,4,5,6,7,8,9,10,11] : [filtro as number]
   }, [filtro])
+
+  // Label del filtro activo
+  const filtroLabel = filtro === 'anual' ? 'Último año' : MESES[filtro as number]
 
   const mesesConReal = mesesActivos.filter(m => MESES_CON_REAL.includes(m))
   const hayReal = mesesConReal.length > 0
@@ -134,16 +141,24 @@ export default function Presupuesto() {
     setTimeout(() => setSaved(false), 2000)
   }
   function handleAddPartida() {
-    if (!nuevaCategoria.trim() || !nuevaImporte) return
+    if (!nuevaCategoria.trim()) return
     const anual = parseFloat(nuevaImporte) || 0
+    const mensual = nuevaDistrib === 'lineal'
+      ? Array(12).fill(Math.round(anual / 12))
+      : nuevaMensual.map(v => v || 0)
+    const planAnualReal = nuevaDistrib === 'mensual'
+      ? nuevaMensual.reduce((a, v) => a + (v || 0), 0)
+      : anual
     setPartidas(prev => [...prev, {
       id: Date.now(), categoria: nuevaCategoria.trim(), tipo: nuevaTipo,
-      planAnual: anual, planMensual: Array(12).fill(Math.round(anual/12)),
+      planAnual: planAnualReal, planMensual: mensual,
       real: Array(12).fill(0),
       icono: nuevaTipo === 'ingreso' ? 'ti-trending-up' : 'ti-receipt',
       color: nuevaTipo === 'ingreso' ? '#4361EE' : '#EF4444',
     }])
-    setNuevaCategoria(''); setNuevaImporte(''); setModalNueva(false)
+    setNuevaCategoria(''); setNuevaImporte('')
+    setNuevaDistrib('lineal'); setNuevaMensual(Array(12).fill(0))
+    setModalNueva(false)
   }
   function handleDelete(id: number) {
     setPartidas(prev => prev.filter(p => p.id !== id))
@@ -154,9 +169,14 @@ export default function Presupuesto() {
   const td: React.CSSProperties = { padding:'11px 10px', fontSize:12, color:'#1a1a1a', textAlign:'right' as const, verticalAlign:'middle' as const }
   const tdTotal: React.CSSProperties = { ...td, background:'#EEF1FD', fontWeight:700 }
 
-  const filtroBtns: { key: FiltroPeriodo; label: string }[] = [
-    { key:'mes',   label:'Este mes' },
-    { key:'anual', label:'Este año' },
+  // Opciones del dropdown: meses pasados del año + último año
+  const opcionesFiltro: { key: FiltroPeriodo; label: string; group: string }[] = [
+    ...Array.from({ length: MES_ACTUAL + 1 }, (_, m) => ({
+      key: m as FiltroPeriodo,
+      label: m === MES_ACTUAL ? `${MESES[m]} (este mes)` : MESES[m],
+      group: '2026',
+    })).reverse(),
+    { key: 'anual', label: 'Último año', group: 'Acumulado' },
   ]
 
   function TablaPartidas({ tipo }: { tipo: TipoPartida }) {
@@ -274,27 +294,67 @@ export default function Presupuesto() {
       <style>{`
         @media (max-width: 900px) { .pres-kgrid { grid-template-columns: 1fr 1fr !important; } }
         @media (max-width: 600px) { .pres-kgrid { grid-template-columns: 1fr !important; } }
-        .pres-filtro-btn { border:none; cursor:pointer; font-family:Inter,sans-serif; font-size:12px; padding:5px 12px; border-radius:6px; transition:background .12s,color .12s; }
+        .pres-dd-item { display:flex; align-items:center; justify-content:space-between; width:100%; padding:8px 12px; font-size:13px; border:none; background:transparent; cursor:pointer; font-family:inherit; text-align:left; color:#1a1a1a; border-radius:7px; }
+        .pres-dd-item:hover { background:#F4F5F7; }
+        .pres-dd-item.active { color:#4361EE; font-weight:600; }
       `}</style>
 
-      {/* ── Encabezado estilo Cazura ── */}
+      {filtroOpen && (
+        <div onClick={() => setFiltroOpen(false)} style={{ position:'fixed', inset:0, zIndex:40 }} />
+      )}
+
+      {/* ── Encabezado ── */}
       <div style={{ display:'flex', alignItems:'flex-start', justifyContent:'space-between', gap:12, flexWrap:'wrap' }}>
         <div>
           <div style={{ fontSize:22, fontWeight:700, color:'#1a1a1a', letterSpacing:'-0.4px', marginBottom:3 }}>Presupuesto</div>
           <div style={{ fontSize:12, color:'#888' }}>Controla y optimiza tu planificación financiera</div>
         </div>
         <div style={{ display:'flex', gap:8, alignItems:'center', flexWrap:'wrap' }}>
-          <div style={{ display:'flex', gap:2, background:'#fff', border:'1px solid #E8E8EC', borderRadius:8, padding:3 }}>
-            {filtroBtns.map(b => (
-              <button key={b.key} className="pres-filtro-btn"
-                style={{ background:filtro===b.key?'#4361EE':'transparent', color:filtro===b.key?'#fff':'#888', fontWeight:filtro===b.key?600:400 }}
-                onClick={() => setFiltro(b.key)}>
-                {b.label}
-              </button>
-            ))}
+
+          {/* Dropdown estilo imagen */}
+          <div style={{ position:'relative' }}>
+            <button
+              onClick={() => setFiltroOpen(o => !o)}
+              style={{
+                display:'inline-flex', alignItems:'center', gap:8,
+                padding:'8px 14px', fontSize:13, fontWeight:500,
+                border:'1px solid #E8E8EC', borderRadius:10,
+                background:'#F4F5F7', color:'#1a1a1a',
+                cursor:'pointer', fontFamily:'inherit',
+              }}>
+              {filtroLabel}
+              <i className="ti ti-chevron-down" style={{ fontSize:14, color:'#888' }} aria-hidden="true" />
+            </button>
+            {filtroOpen && (
+              <div style={{
+                position:'absolute', top:'calc(100% + 6px)', right:0, zIndex:50,
+                background:'#fff', border:'1px solid #E8E8EC', borderRadius:12,
+                padding:'6px', minWidth:180,
+                boxShadow:'0 4px 20px rgba(0,0,0,0.08)',
+              }}>
+                <div style={{ fontSize:9, fontWeight:700, color:'#B0B7C3', textTransform:'uppercase', letterSpacing:'0.1em', padding:'4px 12px 6px' }}>2026</div>
+                {opcionesFiltro.filter(o => o.group === '2026').map(o => (
+                  <button key={String(o.key)} className={`pres-dd-item${filtro===o.key?' active':''}`}
+                    onClick={() => { setFiltro(o.key); setFiltroOpen(false) }}>
+                    {o.label}
+                    {filtro === o.key && <i className="ti ti-check" style={{ fontSize:13 }} aria-hidden="true" />}
+                  </button>
+                ))}
+                <div style={{ height:'1px', background:'#F4F5F7', margin:'4px 0' }} />
+                <div style={{ fontSize:9, fontWeight:700, color:'#B0B7C3', textTransform:'uppercase', letterSpacing:'0.1em', padding:'4px 12px 6px' }}>Acumulado</div>
+                {opcionesFiltro.filter(o => o.group === 'Acumulado').map(o => (
+                  <button key={String(o.key)} className={`pres-dd-item${filtro===o.key?' active':''}`}
+                    onClick={() => { setFiltro(o.key); setFiltroOpen(false) }}>
+                    {o.label}
+                    {filtro === o.key && <i className="ti ti-check" style={{ fontSize:13 }} aria-hidden="true" />}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
+
           {editandoPlan !== null && (
-            <button onClick={handleSave} style={{ display:'inline-flex', alignItems:'center', gap:6, padding:'8px 14px', fontSize:12, fontWeight:600, border:'none', borderRadius:8, background:saved?'#2DC653':'#4361EE', color:'#fff', cursor:'pointer', fontFamily:'Inter,sans-serif' }}>
+            <button onClick={handleSave} style={{ display:'inline-flex', alignItems:'center', gap:6, padding:'8px 14px', fontSize:12, fontWeight:600, border:'none', borderRadius:8, background:saved?'#2DC653':'#4361EE', color:'#fff', cursor:'pointer', fontFamily:'inherit' }}>
               {saved ? '✓ Guardado' : 'Guardar cambios'}
             </button>
           )}
@@ -367,40 +427,97 @@ export default function Presupuesto() {
       <TablaPartidas tipo="ingreso" />
       <TablaPartidas tipo="gasto" />
 
-      {/* ── Modal ── */}
+      {/* ── Modal nueva partida ── */}
       {modalNueva && (
         <div onClick={e => { if (e.target===e.currentTarget) setModalNueva(false) }}
-          style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.22)', zIndex:200, display:'flex', alignItems:'center', justifyContent:'center' }}>
-          <div style={{ background:'#fff', borderRadius:16, padding:'26px 28px', width:360, boxShadow:'0 8px 40px rgba(0,0,0,0.12)' }}>
+          style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.22)', zIndex:200, display:'flex', alignItems:'center', justifyContent:'center', padding:20 }}>
+          <div style={{ background:'#fff', borderRadius:16, padding:'26px 28px', width: nuevaDistrib === 'mensual' ? 520 : 380, maxWidth:'100%', boxShadow:'0 8px 40px rgba(0,0,0,0.12)', maxHeight:'90vh', overflowY:'auto' }}>
             <div style={{ fontSize:15, fontWeight:700, color:'#1a1a1a', marginBottom:20 }}>Nueva línea presupuestaria</div>
+
+            {/* Tipo */}
             <div style={{ marginBottom:14 }}>
               <label style={{ display:'block', fontSize:12, fontWeight:500, color:'#555', marginBottom:7 }}>Tipo</label>
               <div style={{ display:'flex', gap:8 }}>
                 {(['ingreso','gasto'] as TipoPartida[]).map(t => (
-                  <button key={t} onClick={() => setNuevaTipo(t)} style={{ flex:1, padding:'9px', fontSize:12, borderRadius:8, fontFamily:'Inter,sans-serif', cursor:'pointer', fontWeight:nuevaTipo===t?600:400, border:nuevaTipo===t?'2px solid #4361EE':'1px solid #E8E8EC', background:nuevaTipo===t?'#EEF1FD':'#fff', color:nuevaTipo===t?'#4361EE':'#888' }}>
+                  <button key={t} onClick={() => setNuevaTipo(t)} style={{ flex:1, padding:'9px', fontSize:12, borderRadius:8, fontFamily:'inherit', cursor:'pointer', fontWeight:nuevaTipo===t?600:400, border:nuevaTipo===t?'2px solid #4361EE':'1px solid #E8E8EC', background:nuevaTipo===t?'#EEF1FD':'#fff', color:nuevaTipo===t?'#4361EE':'#888' }}>
                     {t==='ingreso'?'Ingreso':'Gasto'}
                   </button>
                 ))}
               </div>
             </div>
+
+            {/* Categoría */}
             <div style={{ marginBottom:14 }}>
               <label style={{ display:'block', fontSize:12, fontWeight:500, color:'#555', marginBottom:7 }}>Categoría</label>
               <input type="text" value={nuevaCategoria} onChange={e => setNuevaCategoria(e.target.value)} placeholder="ej. Consultoría externa"
-                style={{ width:'100%', padding:'10px 12px', fontSize:13, border:'1px solid #E8E8EC', borderRadius:9, outline:'none', fontFamily:'Inter,sans-serif', color:'#1a1a1a', boxSizing:'border-box' }}
+                style={{ width:'100%', padding:'10px 12px', fontSize:13, border:'1px solid #E8E8EC', borderRadius:9, outline:'none', fontFamily:'inherit', color:'#1a1a1a', boxSizing:'border-box' }}
                 onFocus={e => (e.target.style.borderColor='#4361EE')} onBlur={e => (e.target.style.borderColor='#E8E8EC')} />
             </div>
-            <div style={{ marginBottom:22 }}>
-              <label style={{ display:'block', fontSize:12, fontWeight:500, color:'#555', marginBottom:7 }}>Plan anual (€)</label>
-              <input type="number" value={nuevaImporte} onChange={e => setNuevaImporte(e.target.value)} placeholder="0" min="0"
-                style={{ width:'100%', padding:'10px 12px', fontSize:13, border:'1px solid #E8E8EC', borderRadius:9, outline:'none', fontFamily:'Inter,sans-serif', color:'#1a1a1a', boxSizing:'border-box' }}
-                onFocus={e => (e.target.style.borderColor='#4361EE')} onBlur={e => (e.target.style.borderColor='#E8E8EC')} />
-              <div style={{ fontSize:11, color:'#B0B7C3', marginTop:5 }}>Se distribuye automáticamente entre los 12 meses.</div>
+
+            {/* Distribución */}
+            <div style={{ marginBottom:14 }}>
+              <label style={{ display:'block', fontSize:12, fontWeight:500, color:'#555', marginBottom:7 }}>Distribución del presupuesto</label>
+              <div style={{ display:'flex', gap:8 }}>
+                {([
+                  { key:'lineal', label:'Lineal', sub:'Igual todos los meses' },
+                  { key:'mensual', label:'Por mes', sub:'Personaliza cada mes' },
+                ] as const).map(d => (
+                  <button key={d.key} onClick={() => setNuevaDistrib(d.key)} style={{ flex:1, padding:'10px 12px', fontSize:12, borderRadius:9, fontFamily:'inherit', cursor:'pointer', textAlign:'left', border:nuevaDistrib===d.key?'2px solid #4361EE':'1px solid #E8E8EC', background:nuevaDistrib===d.key?'#EEF1FD':'#fff' }}>
+                    <div style={{ fontWeight:600, color:nuevaDistrib===d.key?'#4361EE':'#1a1a1a', marginBottom:2 }}>{d.label}</div>
+                    <div style={{ fontSize:11, color:'#888' }}>{d.sub}</div>
+                  </button>
+                ))}
+              </div>
             </div>
+
+            {/* Importe — lineal */}
+            {nuevaDistrib === 'lineal' && (
+              <div style={{ marginBottom:22 }}>
+                <label style={{ display:'block', fontSize:12, fontWeight:500, color:'#555', marginBottom:7 }}>Plan anual (€)</label>
+                <input type="number" value={nuevaImporte} onChange={e => setNuevaImporte(e.target.value)} placeholder="0" min="0"
+                  style={{ width:'100%', padding:'10px 12px', fontSize:13, border:'1px solid #E8E8EC', borderRadius:9, outline:'none', fontFamily:'inherit', color:'#1a1a1a', boxSizing:'border-box' }}
+                  onFocus={e => (e.target.style.borderColor='#4361EE')} onBlur={e => (e.target.style.borderColor='#E8E8EC')} />
+                <div style={{ fontSize:11, color:'#B0B7C3', marginTop:5 }}>Se distribuye en {nuevaImporte ? `${fmt(Math.round((parseFloat(nuevaImporte)||0)/12))} / mes` : '— / mes'}</div>
+              </div>
+            )}
+
+            {/* Importe — mensual */}
+            {nuevaDistrib === 'mensual' && (
+              <div style={{ marginBottom:22 }}>
+                <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:10 }}>
+                  <label style={{ fontSize:12, fontWeight:500, color:'#555' }}>Importe por mes (€)</label>
+                  <span style={{ fontSize:11, color:'#4361EE', fontWeight:600 }}>
+                    Total: {fmt(nuevaMensual.reduce((a,v)=>a+(v||0),0))}
+                  </span>
+                </div>
+                <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:8 }}>
+                  {MESES.map((mes, i) => (
+                    <div key={i}>
+                      <div style={{ fontSize:10, fontWeight:600, color:'#B0B7C3', textTransform:'uppercase', letterSpacing:'0.08em', marginBottom:4 }}>{mes}</div>
+                      <input
+                        type="number"
+                        value={nuevaMensual[i] || ''}
+                        onChange={e => {
+                          const v = parseFloat(e.target.value) || 0
+                          setNuevaMensual(prev => prev.map((x, j) => j === i ? v : x))
+                        }}
+                        placeholder="0"
+                        min="0"
+                        style={{ width:'100%', padding:'7px 8px', fontSize:12, border:'1px solid #E8E8EC', borderRadius:7, outline:'none', fontFamily:'inherit', color:'#1a1a1a', boxSizing:'border-box', textAlign:'right' }}
+                        onFocus={e => (e.target.style.borderColor='#4361EE')} onBlur={e => (e.target.style.borderColor='#E8E8EC')}
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
             <div style={{ display:'flex', gap:8 }}>
-              <button onClick={() => setModalNueva(false)} style={{ flex:1, padding:'10px', fontSize:13, fontWeight:500, border:'1px solid #E8E8EC', borderRadius:9, background:'#F4F5F7', color:'#555', cursor:'pointer', fontFamily:'Inter,sans-serif' }}>Cancelar</button>
-              <button onClick={handleAddPartida} disabled={!nuevaCategoria.trim()||!nuevaImporte}
-                style={{ flex:1, padding:'10px', fontSize:13, fontWeight:600, border:'none', borderRadius:9, background:!nuevaCategoria.trim()||!nuevaImporte?'#C8CFDA':'#4361EE', color:'#fff', cursor:!nuevaCategoria.trim()||!nuevaImporte?'not-allowed':'pointer', fontFamily:'Inter,sans-serif' }}>
-                Añadir
+              <button onClick={() => setModalNueva(false)} style={{ flex:1, padding:'10px', fontSize:13, fontWeight:500, border:'1px solid #E8E8EC', borderRadius:9, background:'#F4F5F7', color:'#555', cursor:'pointer', fontFamily:'inherit' }}>Cancelar</button>
+              <button onClick={handleAddPartida}
+                disabled={!nuevaCategoria.trim() || (nuevaDistrib==='lineal' && !nuevaImporte)}
+                style={{ flex:2, padding:'10px', fontSize:13, fontWeight:600, border:'none', borderRadius:9, background:(!nuevaCategoria.trim()||(nuevaDistrib==='lineal'&&!nuevaImporte))?'#C8CFDA':'#4361EE', color:'#fff', cursor:(!nuevaCategoria.trim()||(nuevaDistrib==='lineal'&&!nuevaImporte))?'not-allowed':'pointer', fontFamily:'inherit' }}>
+                Añadir partida
               </button>
             </div>
           </div>
