@@ -403,168 +403,167 @@ export default function Presupuesto() {
         <div onClick={() => setDropdownOpen(false)} style={{ position: 'fixed', inset: 0, zIndex: 40 }} />
       )}
 
-      {/* ── KPIs — misma estructura que Dashboard ── */}
-      <div className="pres-hero-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 12 }}>
-        {[
-          { lbl: 'Ingreso plan / real', val: fmtK(ingresosPlan), real: ingresosReal, plan: ingresosPlan, tipo: 'ingreso' as TipoPartida, iconBg: '#F0F9F4', iconColor: '#2DC653', icon: 'ti-arrow-up-right' },
-          { lbl: 'Gasto plan / real',   val: fmtK(gastosPlan),   real: gastosReal,   plan: gastosPlan,   tipo: 'gasto'   as TipoPartida, iconBg: '#FEF2F2', iconColor: '#EF4444', icon: 'ti-arrow-down-right' },
-          { lbl: 'Utilidad neta YTD',   val: fmtK(utilPlan),     real: utilReal,     plan: utilPlan,     tipo: 'ingreso' as TipoPartida, iconBg: '#FFF8E6', iconColor: '#F4A100', icon: 'ti-chart-line' },
-          { lbl: 'Alertas del periodo', val: null, esAlertas: true, iconBg: sobrePlan > 0 ? '#FEF2F2' : '#F4F5F7', iconColor: sobrePlan > 0 ? '#EF4444' : '#B0B7C3', icon: 'ti-bell' },
-        ].map((k, i) => (
-          <div key={i} style={{ ...card, padding: '18px 20px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 }}>
-              <div style={{ fontSize: 9, fontWeight: 600, color: '#B0B7C3', textTransform: 'uppercase', letterSpacing: '0.12em' }}>
-                {k.lbl}
-              </div>
-              <div style={{ width: 30, height: 30, borderRadius: 8, background: k.iconBg, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <i className={`ti ${k.icon}`} style={{ fontSize: 15, color: k.iconColor }} aria-hidden="true" />
-              </div>
+      {/* ── Hero card azul ── */}
+      <div style={{ background: '#4361EE', borderRadius: 16, padding: '22px 26px', position: 'relative', overflow: 'hidden' }}>
+        {/* Círculos decorativos de fondo */}
+        <div style={{ position: 'absolute', top: -60, right: -60, width: 220, height: 220, borderRadius: '50%', background: 'rgba(255,255,255,0.06)', pointerEvents: 'none' }} />
+        <div style={{ position: 'absolute', bottom: -40, right: 120, width: 140, height: 140, borderRadius: '50%', background: 'rgba(255,255,255,0.04)', pointerEvents: 'none' }} />
+
+        {/* Fila superior: título + botones */}
+        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 22, gap: 12, flexWrap: 'wrap' }}>
+          <div>
+            <div style={{ fontSize: 9, fontWeight: 700, color: 'rgba(255,255,255,0.55)', textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: 4 }}>
+              Presupuesto 2026
             </div>
-            {(k as any).esAlertas ? (
-              <>
-                <div style={{ fontSize: 24, fontWeight: 400, color: '#1a1a1a', letterSpacing: '-0.5px', marginBottom: 8 }}>
-                  {sobrePlan + bajoPlan} alertas
-                </div>
-                <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-                  <span style={{ fontSize: 11, fontWeight: 600, padding: '2px 8px', borderRadius: 99, background: sobrePlan > 0 ? '#FEF2F2' : '#F4F5F7', color: sobrePlan > 0 ? '#b91c1c' : '#888' }}>
-                    {sobrePlan} sobre
-                  </span>
-                  <span style={{ fontSize: 11, fontWeight: 600, padding: '2px 8px', borderRadius: 99, background: bajoPlan > 0 ? '#FFF8E6' : '#F4F5F7', color: bajoPlan > 0 ? '#92400E' : '#888' }}>
-                    {bajoPlan} debajo
-                  </span>
-                </div>
-              </>
-            ) : (
-              <>
-                <div style={{ fontSize: 24, fontWeight: 400, color: '#1a1a1a', letterSpacing: '-0.5px', marginBottom: 8 }}>
-                  {k.val}
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                  {(k.real ?? 0) > 0 && <DeltaBadge real={k.real!} plan={k.plan!} tipo={k.tipo!} />}
-                  {(k.real ?? 0) > 0 && <span style={{ fontSize: 11, color: '#B0B7C3' }}>real {fmtK(k.real!)}</span>}
-                </div>
-              </>
-            )}
+            <div style={{ fontSize: 20, fontWeight: 700, color: '#fff', letterSpacing: '-0.4px' }}>
+              Plan anual vs ejecución
+            </div>
           </div>
-        ))}
-      </div>
-
-      {/* ── Toolbar: dropdown periodo + acciones ── */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 10 }}>
-
-        {/* Dropdown estilo GA */}
-        <div style={{ position: 'relative' }}>
-          <button
-            onClick={() => setDropdownOpen(o => !o)}
-            style={{
-              display: 'inline-flex', alignItems: 'center', gap: 8,
-              padding: '8px 14px', fontSize: 13, fontWeight: 500,
-              border: '1px solid #E8E8EC', borderRadius: 9,
-              background: '#fff', color: '#1a1a1a',
-              cursor: 'pointer', fontFamily: 'Inter,sans-serif',
-              minWidth: 160,
-            }}
-          >
-            <i className="ti ti-calendar" style={{ fontSize: 14, color: '#4361EE' }} aria-hidden="true" />
-            <span style={{ flex: 1, textAlign: 'left' }}>{periodoActivo.label}</span>
-            <i className={`ti ti-chevron-${dropdownOpen ? 'up' : 'down'}`} style={{ fontSize: 13, color: '#B0B7C3' }} aria-hidden="true" />
-          </button>
-
-          {dropdownOpen && (
-            <div style={{
-              position: 'absolute', top: 'calc(100% + 6px)', left: 0, zIndex: 50,
-              background: '#fff', border: '1px solid #E8E8EC', borderRadius: 10,
-              padding: '6px', minWidth: 200,
-              boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
-            }}>
-              {/* Grupo: Meses */}
-              <div style={{ fontSize: 9, fontWeight: 700, color: '#B0B7C3', textTransform: 'uppercase', letterSpacing: '0.1em', padding: '4px 10px 6px' }}>
-                Mes
-              </div>
-              {PERIODOS.filter(p => p.key === 'mes').map(p => (
-                <button key={p.key} onClick={() => { setPeriodo(p.key); setDropdownOpen(false) }}
-                  style={{
-                    display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                    width: '100%', padding: '8px 10px', fontSize: 13, border: 'none',
-                    borderRadius: 7, background: periodo === p.key ? '#EEF1FD' : 'transparent',
-                    color: periodo === p.key ? '#4361EE' : '#1a1a1a', fontWeight: periodo === p.key ? 600 : 400,
-                    cursor: 'pointer', fontFamily: 'Inter,sans-serif', textAlign: 'left',
-                  }}
-                >
-                  {p.label}
-                  {periodo === p.key && <i className="ti ti-check" style={{ fontSize: 13 }} aria-hidden="true" />}
-                </button>
-              ))}
-              <div style={{ height: '1px', background: '#F4F5F7', margin: '4px 0' }} />
-              {/* Grupo: Trimestres */}
-              <div style={{ fontSize: 9, fontWeight: 700, color: '#B0B7C3', textTransform: 'uppercase', letterSpacing: '0.1em', padding: '4px 10px 6px' }}>
-                Trimestre
-              </div>
-              {PERIODOS.filter(p => ['q1','q2','q3','q4'].includes(p.key)).map(p => (
-                <button key={p.key} onClick={() => { setPeriodo(p.key); setDropdownOpen(false) }}
-                  style={{
-                    display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                    width: '100%', padding: '8px 10px', fontSize: 13, border: 'none',
-                    borderRadius: 7, background: periodo === p.key ? '#EEF1FD' : 'transparent',
-                    color: periodo === p.key ? '#4361EE' : '#1a1a1a', fontWeight: periodo === p.key ? 600 : 400,
-                    cursor: 'pointer', fontFamily: 'Inter,sans-serif', textAlign: 'left',
-                  }}
-                >
-                  {p.label}
-                  {periodo === p.key && <i className="ti ti-check" style={{ fontSize: 13 }} aria-hidden="true" />}
-                </button>
-              ))}
-              <div style={{ height: '1px', background: '#F4F5F7', margin: '4px 0' }} />
-              {/* Grupo: Acumulados */}
-              <div style={{ fontSize: 9, fontWeight: 700, color: '#B0B7C3', textTransform: 'uppercase', letterSpacing: '0.1em', padding: '4px 10px 6px' }}>
-                Acumulado
-              </div>
-              {PERIODOS.filter(p => ['ytd','anual'].includes(p.key)).map(p => (
-                <button key={p.key} onClick={() => { setPeriodo(p.key); setDropdownOpen(false) }}
-                  style={{
-                    display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                    width: '100%', padding: '8px 10px', fontSize: 13, border: 'none',
-                    borderRadius: 7, background: periodo === p.key ? '#EEF1FD' : 'transparent',
-                    color: periodo === p.key ? '#4361EE' : '#1a1a1a', fontWeight: periodo === p.key ? 600 : 400,
-                    cursor: 'pointer', fontFamily: 'Inter,sans-serif', textAlign: 'left',
-                  }}
-                >
-                  {p.label}
-                  {periodo === p.key && <i className="ti ti-check" style={{ fontSize: 13 }} aria-hidden="true" />}
-                </button>
-              ))}
+          <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+            {/* Dropdown periodo */}
+            <div style={{ position: 'relative' }}>
+              <button
+                onClick={() => setDropdownOpen(o => !o)}
+                style={{
+                  display: 'inline-flex', alignItems: 'center', gap: 7,
+                  padding: '8px 13px', fontSize: 12, fontWeight: 500,
+                  border: '1px solid rgba(255,255,255,0.25)', borderRadius: 9,
+                  background: 'rgba(255,255,255,0.15)', color: '#fff',
+                  cursor: 'pointer', fontFamily: 'Inter,sans-serif', minWidth: 140,
+                }}
+              >
+                <i className="ti ti-calendar" style={{ fontSize: 13 }} aria-hidden="true" />
+                <span style={{ flex: 1, textAlign: 'left' }}>{periodoActivo.label}</span>
+                <i className={`ti ti-chevron-${dropdownOpen ? 'up' : 'down'}`} style={{ fontSize: 12, opacity: 0.7 }} aria-hidden="true" />
+              </button>
+              {dropdownOpen && (
+                <div style={{
+                  position: 'absolute', top: 'calc(100% + 8px)', right: 0, zIndex: 50,
+                  background: '#fff', border: '1px solid #E8E8EC', borderRadius: 10,
+                  padding: '6px', minWidth: 200,
+                  boxShadow: '0 8px 24px rgba(0,0,0,0.12)',
+                }}>
+                  {[
+                    { grupo: 'Mes',        keys: ['mes'] },
+                    { grupo: 'Trimestre',  keys: ['q1','q2','q3','q4'] },
+                    { grupo: 'Acumulado',  keys: ['ytd','anual'] },
+                  ].map((g, gi) => (
+                    <div key={g.grupo}>
+                      {gi > 0 && <div style={{ height: '1px', background: '#F4F5F7', margin: '4px 0' }} />}
+                      <div style={{ fontSize: 9, fontWeight: 700, color: '#B0B7C3', textTransform: 'uppercase', letterSpacing: '0.1em', padding: '4px 10px 6px' }}>
+                        {g.grupo}
+                      </div>
+                      {PERIODOS.filter(p => g.keys.includes(p.key)).map(p => (
+                        <button key={p.key}
+                          onClick={() => { setPeriodo(p.key); setDropdownOpen(false) }}
+                          style={{
+                            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                            width: '100%', padding: '8px 10px', fontSize: 13, border: 'none',
+                            borderRadius: 7, cursor: 'pointer', fontFamily: 'Inter,sans-serif',
+                            textAlign: 'left',
+                            background: periodo === p.key ? '#EEF1FD' : 'transparent',
+                            color: periodo === p.key ? '#4361EE' : '#1a1a1a',
+                            fontWeight: periodo === p.key ? 600 : 400,
+                          }}
+                        >
+                          {p.label}
+                          {periodo === p.key && <i className="ti ti-check" style={{ fontSize: 13 }} aria-hidden="true" />}
+                        </button>
+                      ))}
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
-          )}
-        </div>
-
-        <div style={{ display: 'flex', gap: 8 }}>
-          {editandoPlan !== null && (
+            {/* Nueva línea */}
             <button
-              onClick={handleSave}
+              onClick={() => setModalNueva(true)}
               style={{
                 display: 'inline-flex', alignItems: 'center', gap: 6,
                 padding: '8px 14px', fontSize: 12, fontWeight: 600,
-                borderRadius: 8, border: 'none',
-                background: saved ? '#2DC653' : '#4361EE',
-                color: '#fff', cursor: 'pointer', fontFamily: 'Inter,sans-serif',
+                border: 'none', borderRadius: 9,
+                background: '#fff', color: '#4361EE',
+                cursor: 'pointer', fontFamily: 'Inter,sans-serif',
               }}
             >
-              {saved ? '✓ Guardado' : 'Guardar cambios'}
+              <i className="ti ti-plus" style={{ fontSize: 13 }} aria-hidden="true" />
+              Nueva línea
             </button>
-          )}
-          <button
-            onClick={() => setModalNueva(true)}
-            style={{
-              display: 'inline-flex', alignItems: 'center', gap: 6,
-              padding: '8px 14px', fontSize: 12, fontWeight: 500,
-              border: '1px solid #E8E8EC', borderRadius: 8,
-              background: '#fff', color: '#1a1a1a',
-              cursor: 'pointer', fontFamily: 'Inter,sans-serif',
-            }}
-          >
-            <i className="ti ti-plus" style={{ fontSize: 13 }} aria-hidden="true" />
-            Nueva línea
-          </button>
+            {/* Guardar cambios (condicional) */}
+            {editandoPlan !== null && (
+              <button onClick={handleSave} style={{
+                display: 'inline-flex', alignItems: 'center', gap: 6,
+                padding: '8px 14px', fontSize: 12, fontWeight: 600, border: 'none', borderRadius: 9,
+                background: saved ? '#2DC653' : 'rgba(255,255,255,0.2)', color: '#fff',
+                cursor: 'pointer', fontFamily: 'Inter,sans-serif',
+              }}>
+                {saved ? '✓ Guardado' : 'Guardar cambios'}
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* KPIs dentro del hero */}
+        <div className="pres-hero-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 12 }}>
+          {[
+            { lbl: 'Ingresos · plan / real', plan: ingresosPlan, real: ingresosReal, tipo: 'ingreso' as TipoPartida },
+            { lbl: 'Gastos · plan / real',   plan: gastosPlan,   real: gastosReal,   tipo: 'gasto'   as TipoPartida },
+            { lbl: 'Utilidad neta',          plan: utilPlan,     real: utilReal,     tipo: 'ingreso' as TipoPartida },
+            { lbl: 'Alertas activas', esAlertas: true },
+          ].map((k, i) => (
+            <div key={i} style={{
+              background: 'rgba(255,255,255,0.12)', borderRadius: 12,
+              border: '1px solid rgba(255,255,255,0.18)', padding: '14px 16px',
+            }}>
+              <div style={{ fontSize: 9, fontWeight: 600, color: 'rgba(255,255,255,0.6)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 8 }}>
+                {k.lbl}
+              </div>
+              {(k as any).esAlertas ? (
+                <>
+                  <div style={{ fontSize: 22, fontWeight: 400, color: '#fff', letterSpacing: '-0.4px', marginBottom: 6 }}>
+                    {sobrePlan + bajoPlan} alertas
+                  </div>
+                  <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap' }}>
+                    <span style={{ fontSize: 10, fontWeight: 600, padding: '2px 7px', borderRadius: 99, background: sobrePlan > 0 ? 'rgba(239,68,68,0.25)' : 'rgba(255,255,255,0.15)', color: sobrePlan > 0 ? '#fca5a5' : 'rgba(255,255,255,0.6)' }}>
+                      {sobrePlan} sobre
+                    </span>
+                    <span style={{ fontSize: 10, fontWeight: 600, padding: '2px 7px', borderRadius: 99, background: bajoPlan > 0 ? 'rgba(244,161,0,0.25)' : 'rgba(255,255,255,0.15)', color: bajoPlan > 0 ? '#fcd34d' : 'rgba(255,255,255,0.6)' }}>
+                      {bajoPlan} debajo
+                    </span>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, flexWrap: 'wrap', marginBottom: 6 }}>
+                    <span style={{ fontSize: 22, fontWeight: 400, color: '#fff', letterSpacing: '-0.4px' }}>
+                      {fmtK(k.plan!)}
+                    </span>
+                    {(k.real ?? 0) > 0 && (
+                      <span style={{ fontSize: 14, fontWeight: 500, color: 'rgba(255,255,255,0.65)' }}>
+                        {fmtK(k.real!)}
+                      </span>
+                    )}
+                  </div>
+                  {(k.real ?? 0) > 0 && (() => {
+                    const d = calcDelta(k.real!, k.plan!)
+                    if (d === null) return null
+                    const isGood = k.tipo === 'ingreso' ? d >= 0 : d <= 0
+                    const neutral = Math.abs(d) < 3
+                    const sign = d > 0 ? '+' : ''
+                    return (
+                      <span style={{
+                        fontSize: 10, fontWeight: 600, padding: '2px 7px', borderRadius: 99,
+                        background: neutral ? 'rgba(255,255,255,0.2)' : isGood ? 'rgba(45,198,83,0.25)' : 'rgba(239,68,68,0.25)',
+                        color: neutral ? 'rgba(255,255,255,0.8)' : isGood ? '#86efac' : '#fca5a5',
+                      }}>
+                        {sign}{d.toFixed(1)}%
+                      </span>
+                    )
+                  })()}
+                </>
+              )}
+            </div>
+          ))}
         </div>
       </div>
 
