@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react'
 import Layout from '@/components/Layout'
-import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
+import { ComposedChart, Bar, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
 
 type TipoPartida = 'ingreso' | 'gasto'
 type PeriodoKey = 'mes' | 'q1' | 'q2' | 'q3' | 'q4' | 'ytd' | 'anual'
@@ -135,15 +135,13 @@ export default function Presupuesto() {
   }).length
 
   const chartData = useMemo(() => {
-    const mg = periodo === 'anual' ? [0,1,2,3,4,5,6,7,8,9,10,11]
-             : periodo === 'ytd'   ? [0,1,2,3,4]
-             : meses
-    return mg.map(m => ({
+    // El gráfico siempre muestra los 12 meses para ver la línea completa
+    return Array.from({ length: 12 }, (_, m) => ({
       mes: MESES_LABELS[m],
-      Plan: partidas.reduce((a, p) => a + p.planMensual[m], 0),
       Real: MESES_CON_REAL.includes(m) ? partidas.reduce((a, p) => a + p.real[m], 0) : null,
+      Forecast: !MESES_CON_REAL.includes(m) ? partidas.reduce((a, p) => a + p.planMensual[m], 0) : null,
     }))
-  }, [partidas, periodo, meses])
+  }, [partidas])
 
   function handleEditPlanAnual(id: number, valor: string) {
     const n = parseFloat(valor) || 0
@@ -361,38 +359,28 @@ export default function Presupuesto() {
         <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:16 }}>
           <div>
             <div style={{ fontSize:9, fontWeight:700, color:'#B0B7C3', textTransform:'uppercase', letterSpacing:'0.1em', marginBottom:4 }}>Evolución mensual</div>
-            <div style={{ fontSize:14, fontWeight:700, color:'#1a1a1a' }}>Presupuesto vs real · {periodoActivo.label}</div>
+            <div style={{ fontSize:14, fontWeight:700, color:'#1a1a1a' }}>Presupuesto vs real</div>
           </div>
           <div style={{ display:'flex', gap:14, alignItems:'center' }}>
             <div style={{ display:'flex', alignItems:'center', gap:5 }}>
-              <div style={{ width:20, height:2, background:'#C7D2F8', borderRadius:1 }} />
-              <span style={{ fontSize:11, color:'#888' }}>Plan</span>
+              <div style={{ width:12, height:12, background:'#4361EE', borderRadius:3 }} />
+              <span style={{ fontSize:11, color:'#888' }}>Real</span>
             </div>
             <div style={{ display:'flex', alignItems:'center', gap:5 }}>
-              <div style={{ width:20, height:2, background:'#4361EE', borderRadius:1 }} />
-              <span style={{ fontSize:11, color:'#888' }}>Real</span>
+              <div style={{ width:20, height:2, background:'#C7D2F8', borderRadius:1, borderTop:'2px dashed #C7D2F8' }} />
+              <span style={{ fontSize:11, color:'#888' }}>Forecast</span>
             </div>
           </div>
         </div>
         <ResponsiveContainer width="100%" height={200}>
-          <AreaChart data={chartData} margin={{ top:4, right:4, left:0, bottom:0 }}>
-            <defs>
-              <linearGradient id="gPlan" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="#C7D2F8" stopOpacity={0.4} />
-                <stop offset="100%" stopColor="#C7D2F8" stopOpacity={0.02} />
-              </linearGradient>
-              <linearGradient id="gReal" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="#4361EE" stopOpacity={0.3} />
-                <stop offset="100%" stopColor="#4361EE" stopOpacity={0.02} />
-              </linearGradient>
-            </defs>
+          <ComposedChart data={chartData} margin={{ top:4, right:4, left:0, bottom:0 }} barCategoryGap="30%">
             <CartesianGrid strokeDasharray="3 3" stroke="#F0F0F2" vertical={false} />
             <XAxis dataKey="mes" tick={{ fontSize:11, fill:'#B0B7C3' }} axisLine={false} tickLine={false} />
             <YAxis tick={{ fontSize:11, fill:'#B0B7C3' }} axisLine={false} tickLine={false} tickFormatter={v => fmtK(v)} width={52} />
-            <Tooltip content={<CustomTooltip />} cursor={{ stroke:'#E8E8EC', strokeWidth:1, strokeDasharray:'3 3' }} />
-            <Area type="monotone" dataKey="Plan" stroke="#C7D2F8" strokeWidth={2} fill="url(#gPlan)" dot={false} activeDot={{ r:4, fill:'#C7D2F8', stroke:'#fff', strokeWidth:2 }} />
-            <Area type="monotone" dataKey="Real" stroke="#4361EE" strokeWidth={2} fill="url(#gReal)" dot={false} activeDot={{ r:4, fill:'#4361EE', stroke:'#fff', strokeWidth:2 }} connectNulls={false} />
-          </AreaChart>
+            <Tooltip content={<CustomTooltip />} cursor={{ fill:'rgba(67,97,238,0.04)' }} />
+            <Bar dataKey="Real" fill="#4361EE" radius={[4,4,0,0]} maxBarSize={40} />
+            <Line dataKey="Forecast" stroke="#C7D2F8" strokeWidth={2} strokeDasharray="4 3" dot={false} activeDot={{ r:4, fill:'#C7D2F8', stroke:'#fff', strokeWidth:2 }} connectNulls={false} />
+          </ComposedChart>
         </ResponsiveContainer>
       </div>
 
