@@ -384,9 +384,9 @@ export default function Presupuesto() {
       {/* ── KPI cards ── */}
       <div className="pres-kgrid" style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:12 }}>
         {[
-          { lbl:'Presupuesto total', val:hayReal?fmt(utilReal):fmt(utilPlan), real:utilReal,     plan:utilPlan,     tipo:'ingreso' as TipoPartida, sub:`presupuestado ${fmt(utilPlan)}`,   iconBg:'#EEF1FD', iconColor:'#4361EE', icon:'ti-chart-pie' },
-          { lbl:'Ingresos',         val:hayReal?fmt(ingresosReal):fmt(ingresosPlan), real:ingresosReal, plan:ingresosPlan, tipo:'ingreso' as TipoPartida, sub:`plan ${fmt(ingresosPlan)}`, iconBg:'#F0F9F4', iconColor:'#2DC653', icon:'ti-arrow-up-right' },
-          { lbl:'Gastos',           val:hayReal?fmt(gastosReal):fmt(gastosPlan),     real:gastosReal,   plan:gastosPlan,   tipo:'gasto'   as TipoPartida, sub:`plan ${fmt(gastosPlan)}`,   iconBg:'#FEF2F2', iconColor:'#EF4444', icon:'ti-arrow-down-right' },
+          { lbl:'Presupuesto total', val:hayReal?fmt(utilReal):fmt(utilPlan), real:utilReal,     plan:utilPlan,     tipo:'ingreso' as TipoPartida, sub:`presupuestado ${fmt(utilPlan)}`,   desc:'Resultado neto: ingresos menos gastos del periodo seleccionado.', iconBg:'#EEF1FD', iconColor:'#4361EE', icon:'ti-chart-pie' },
+          { lbl:'Ingresos',         val:hayReal?fmt(ingresosReal):fmt(ingresosPlan), real:ingresosReal, plan:ingresosPlan, tipo:'ingreso' as TipoPartida, sub:`plan ${fmt(ingresosPlan)}`, desc:'Total de ingresos planificados y ejecutados en el periodo.', iconBg:'#F0F9F4', iconColor:'#2DC653', icon:'ti-arrow-up-right' },
+          { lbl:'Gastos',           val:hayReal?fmt(gastosReal):fmt(gastosPlan),     real:gastosReal,   plan:gastosPlan,   tipo:'gasto'   as TipoPartida, sub:`plan ${fmt(gastosPlan)}`,   desc:'Total de gastos planificados y ejecutados en el periodo.', iconBg:'#FEF2F2', iconColor:'#EF4444', icon:'ti-arrow-down-right' },
         ].map((k, i) => (
           <div key={i} style={{ ...card, padding:'20px 22px' }}>
             <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:14 }}>
@@ -400,6 +400,11 @@ export default function Presupuesto() {
               {hayReal && k.real > 0 && <DeltaBadge real={k.real} plan={k.plan} tipo={k.tipo} />}
               <span style={{ fontSize:11, color:'#B0B7C3' }}>{k.sub}</span>
             </div>
+            {(k as any).desc && (
+              <div style={{ fontSize:11, color:'#B0B7C3', lineHeight:1.5, borderTop:'1px solid #F4F5F7', paddingTop:8, marginTop:8 }}>
+                {(k as any).desc}
+              </div>
+            )}
           </div>
         ))}
       </div>
