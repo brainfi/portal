@@ -19,6 +19,8 @@ interface Partida {
   real: number[]
   icono: string
   color: string
+  cuentaCodigo?: string
+  cuentaNombre?: string
 }
 
 const MESES = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic']
@@ -26,14 +28,14 @@ const MES_ACTUAL = 4
 const MESES_CON_REAL = [0,1,2,3,4]
 
 const initialPartidas: Partida[] = [
-  { id:1, categoria:'Ventas directas',       tipo:'ingreso', planAnual:840000, planMensual:[65000,65000,68000,70000,70200,72000,72000,68000,74000,76000,78000,80000], real:[63200,66800,74000,88000,68000,0,0,0,0,0,0,0], icono:'ti-trending-up',      color:'#4361EE' },
-  { id:2, categoria:'Servicios recurrentes', tipo:'ingreso', planAnual:96000,  planMensual:[8000,8000,8000,8000,8000,8000,8000,8000,8000,8000,8000,8000],             real:[8100,8000,8200,8100,7900,0,0,0,0,0,0,0],   icono:'ti-refresh',          color:'#7B93FF' },
-  { id:3, categoria:'Licencias',             tipo:'ingreso', planAnual:60000,  planMensual:[4000,4000,5000,5000,5500,5500,5500,5000,5000,5500,5500,5500],             real:[5200,5800,8100,9200,10200,0,0,0,0,0,0,0],  icono:'ti-file-certificate',  color:'#60A5FA' },
-  { id:4, categoria:'Nóminas y SS',          tipo:'gasto',   planAnual:196800, planMensual:[16400,16400,16400,16400,16400,16400,16400,16400,16400,16400,16400,16400], real:[16400,16400,16800,17200,18400,0,0,0,0,0,0,0], icono:'ti-users',             color:'#EF4444' },
-  { id:5, categoria:'Alquiler oficina',      tipo:'gasto',   planAnual:25200,  planMensual:[2100,2100,2100,2100,2100,2100,2100,2100,2100,2100,2100,2100],             real:[2100,2100,2100,2100,2100,0,0,0,0,0,0,0],   icono:'ti-building',          color:'#F87171' },
-  { id:6, categoria:'Marketing',             tipo:'gasto',   planAnual:36000,  planMensual:[3000,3000,3000,3000,3000,3000,3000,3000,3000,3000,3000,3000],             real:[2800,3100,3400,3900,4300,0,0,0,0,0,0,0],   icono:'ti-speakerphone',      color:'#FB923C' },
-  { id:7, categoria:'Software',              tipo:'gasto',   planAnual:10800,  planMensual:[900,900,900,900,900,900,900,900,900,900,900,900],                         real:[740,740,740,740,740,0,0,0,0,0,0,0],        icono:'ti-device-laptop',     color:'#A78BFA' },
-  { id:8, categoria:'Viajes y dietas',       tipo:'gasto',   planAnual:8400,   planMensual:[600,600,800,800,800,800,800,600,800,800,600,400],                         real:[520,480,610,650,520,0,0,0,0,0,0,0],        icono:'ti-plane',             color:'#34D399' },
+  { id:1, categoria:'Ventas directas', cuentaCodigo:'700', cuentaNombre:'Ventas de mercaderías',       tipo:'ingreso', planAnual:840000, planMensual:[65000,65000,68000,70000,70200,72000,72000,68000,74000,76000,78000,80000], real:[63200,66800,74000,88000,68000,0,0,0,0,0,0,0], icono:'ti-trending-up',      color:'#4361EE' },
+  { id:2, categoria:'Servicios recurrentes', cuentaCodigo:'705', cuentaNombre:'Prestaciones de servicios', tipo:'ingreso', planAnual:96000,  planMensual:[8000,8000,8000,8000,8000,8000,8000,8000,8000,8000,8000,8000],             real:[8100,8000,8200,8100,7900,0,0,0,0,0,0,0],   icono:'ti-refresh',          color:'#7B93FF' },
+  { id:3, categoria:'Licencias', cuentaCodigo:'752', cuentaNombre:'Ingresos por arrendamientos',             tipo:'ingreso', planAnual:60000,  planMensual:[4000,4000,5000,5000,5500,5500,5500,5000,5000,5500,5500,5500],             real:[5200,5800,8100,9200,10200,0,0,0,0,0,0,0],  icono:'ti-file-certificate',  color:'#60A5FA' },
+  { id:4, categoria:'Nóminas y SS', cuentaCodigo:'640', cuentaNombre:'Sueldos y salarios',          tipo:'gasto',   planAnual:196800, planMensual:[16400,16400,16400,16400,16400,16400,16400,16400,16400,16400,16400,16400], real:[16400,16400,16800,17200,18400,0,0,0,0,0,0,0], icono:'ti-users',             color:'#EF4444' },
+  { id:5, categoria:'Alquiler oficina', cuentaCodigo:'621', cuentaNombre:'Arrendamientos y cánones',      tipo:'gasto',   planAnual:25200,  planMensual:[2100,2100,2100,2100,2100,2100,2100,2100,2100,2100,2100,2100],             real:[2100,2100,2100,2100,2100,0,0,0,0,0,0,0],   icono:'ti-building',          color:'#F87171' },
+  { id:6, categoria:'Marketing', cuentaCodigo:'627', cuentaNombre:'Publicidad, propaganda y RRPP',             tipo:'gasto',   planAnual:36000,  planMensual:[3000,3000,3000,3000,3000,3000,3000,3000,3000,3000,3000,3000],             real:[2800,3100,3400,3900,4300,0,0,0,0,0,0,0],   icono:'ti-speakerphone',      color:'#FB923C' },
+  { id:7, categoria:'Software', cuentaCodigo:'629', cuentaNombre:'Otros servicios',              tipo:'gasto',   planAnual:10800,  planMensual:[900,900,900,900,900,900,900,900,900,900,900,900],                         real:[740,740,740,740,740,0,0,0,0,0,0,0],        icono:'ti-device-laptop',     color:'#A78BFA' },
+  { id:8, categoria:'Viajes y dietas', cuentaCodigo:'624', cuentaNombre:'Transportes',       tipo:'gasto',   planAnual:8400,   planMensual:[600,600,800,800,800,800,800,600,800,800,600,400],                         real:[520,480,610,650,520,0,0,0,0,0,0,0],        icono:'ti-plane',             color:'#34D399' },
 ]
 
 function fmt(n: number) {
@@ -228,7 +230,14 @@ export default function Presupuesto() {
                         <div style={{ width:26, height:26, borderRadius:6, background:`${p.color}18`, display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
                           <i className={`ti ${p.icono}`} style={{ fontSize:12, color:p.color }} aria-hidden="true" />
                         </div>
-                        <span style={{ fontWeight:500 }}>{p.categoria}</span>
+                        <div>
+                          <span style={{ fontWeight:500 }}>{p.categoria}</span>
+                          {p.cuentaCodigo && (
+                            <div style={{ fontSize:10, color:'#B0B7C3', marginTop:1 }}>
+                              {p.cuentaCodigo} · {p.cuentaNombre}
+                            </div>
+                          )}
+                        </div>
                       </div>
                     </td>
                     <td style={{ ...td, width:130 }}>
