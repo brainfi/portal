@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react'
+import { useNavigate } from 'react-router-dom'
 import Layout from '@/components/Layout'
 import {
   AreaChart, Area, Line, XAxis, YAxis, CartesianGrid,
@@ -82,6 +83,7 @@ function DeltaBadge({ real, plan, tipo }: { real: number; plan: number; tipo: Ti
 }
 
 export default function Presupuesto() {
+  const navigate = useNavigate()
   const [partidas, setPartidas] = useState<Partida[]>(initialPartidas)
   const [filtro, setFiltro] = useState<FiltroPeriodo>(MES_ACTUAL)
   const [filtroOpen, setFiltroOpen] = useState(false)
@@ -363,9 +365,9 @@ export default function Presupuesto() {
               {saved ? '✓ Guardado' : 'Guardar cambios'}
             </button>
           )}
-          <button onClick={() => setModalNueva(true)} style={{ display:'inline-flex', alignItems:'center', gap:6, padding:'8px 14px', fontSize:12, fontWeight:600, border:'none', borderRadius:8, background:'#4361EE', color:'#fff', cursor:'pointer', fontFamily:'Inter,sans-serif' }}>
-            <i className="ti ti-plus" style={{ fontSize:13 }} aria-hidden="true" />
-            Nueva línea
+          <button onClick={() => navigate('/presupuesto/configurar')} style={{ display:'inline-flex', alignItems:'center', gap:6, padding:'8px 14px', fontSize:12, fontWeight:600, border:'none', borderRadius:8, background:'#4361EE', color:'#fff', cursor:'pointer', fontFamily:'Inter,sans-serif' }}>
+            <i className="ti ti-settings" style={{ fontSize:13 }} aria-hidden="true" />
+            Configurar
           </button>
         </div>
       </div>
