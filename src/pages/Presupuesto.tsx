@@ -197,11 +197,9 @@ export default function Presupuesto() {
 
     return (
       <div style={{ ...card, padding:'20px 22px' }}>
-        <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:14 }}>
-          <span style={{ fontSize:14, fontWeight:700, color:'#1a1a1a' }}>
-            {tipo === 'ingreso' ? 'Ingresos' : 'Gastos'}
-          </span>
-          <span style={{ fontSize:11, color:'#B0B7C3' }}>{arr.length} categorías</span>
+        <div style={{ marginBottom:14 }}>
+          <div style={{ fontSize:9, fontWeight:600, color:'#1a1a1a', textTransform:'uppercase', letterSpacing:'0.12em' }}>{tipo === 'ingreso' ? 'Ingresos' : 'Gastos'}</div>
+          <div style={{ fontSize:11, color:'#B0B7C3', lineHeight:1.5, marginTop:2 }}>{tipo === 'ingreso' ? 'Entradas de dinero planificadas y ejecutadas en el periodo.' : 'Salidas de dinero planificadas y ejecutadas en el periodo.'} {arr.length} categorías.</div>
         </div>
         <div style={{ overflowX:'auto' }}>
           <table style={{ width:'100%', borderCollapse:'collapse', minWidth:580 }}>
@@ -411,9 +409,10 @@ export default function Presupuesto() {
 
       {/* ── Gráfico 2 líneas acumuladas ── */}
       <div style={{ ...card, padding:'22px 24px' }}>
-        <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:20 }}>
-          <div style={{ fontSize:9, fontWeight:700, color:'#B0B7C3', textTransform:'uppercase', letterSpacing:'0.1em' }}>
-            Resultado Neto
+        <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:20 }}>
+          <div>
+            <div style={{ fontSize:9, fontWeight:600, color:'#1a1a1a', textTransform:'uppercase', letterSpacing:'0.12em' }}>Resultado Neto</div>
+            <div style={{ fontSize:11, color:'#B0B7C3', lineHeight:1.5, marginTop:2 }}>Evolución acumulada del neto mensual: ingresos menos gastos.</div>
           </div>
           <div style={{ display:'flex', gap:16, alignItems:'center' }}>
             <div style={{ display:'flex', alignItems:'center', gap:5 }}>
