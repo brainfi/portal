@@ -387,18 +387,18 @@ export default function Presupuesto() {
           { lbl:'Gastos',           val:hayReal?fmt(gastosReal):fmt(gastosPlan),     real:gastosReal,   plan:gastosPlan,   tipo:'gasto'   as TipoPartida, sub:`plan ${fmt(gastosPlan)}`,   desc:'Total de gastos planificados y ejecutados en el periodo.', iconBg:'#FEF2F2', iconColor:'#EF4444', icon:'ti-arrow-down-right' },
         ].map((k, i) => (
           <div key={i} style={{ ...card, padding:'20px 22px' }}>
-            <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:14 }}>
-              <div style={{ fontSize:9, fontWeight:600, color:'#1a1a1a', textTransform:'uppercase', letterSpacing:'0.12em' }}>{k.lbl}</div>
-              <div style={{ width:32, height:32, borderRadius:8, background:k.iconBg, display:'flex', alignItems:'center', justifyContent:'center' }}>
+            <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:6 }}>
+              <div>
+                <div style={{ fontSize:9, fontWeight:600, color:'#1a1a1a', textTransform:'uppercase', letterSpacing:'0.12em' }}>{k.lbl}</div>
+                {(k as any).desc && (
+                  <div style={{ fontSize:11, color:'#B0B7C3', lineHeight:1.5, marginTop:2 }}>{(k as any).desc}</div>
+                )}
+              </div>
+              <div style={{ width:32, height:32, borderRadius:8, background:k.iconBg, display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
                 <i className={`ti ${k.icon}`} style={{ fontSize:16, color:k.iconColor }} aria-hidden="true" />
               </div>
             </div>
-            {(k as any).desc && (
-              <div style={{ fontSize:11, color:'#B0B7C3', lineHeight:1.5, marginTop:2, marginBottom:10 }}>
-                {(k as any).desc}
-              </div>
-            )}
-            <div style={{ fontSize:28, fontWeight:400, color:'#1a1a1a', letterSpacing:'-0.5px', marginBottom:8 }}>{k.val}</div>
+            <div style={{ fontSize:28, fontWeight:400, color:'#1a1a1a', letterSpacing:'-0.5px', marginTop:10, marginBottom:8 }}>{k.val}</div>
             <div style={{ display:'flex', alignItems:'center', gap:8, flexWrap:'wrap' }}>
               {hayReal && k.real > 0 && <DeltaBadge real={k.real} plan={k.plan} tipo={k.tipo} />}
               <span style={{ fontSize:11, color:'#B0B7C3' }}>{k.sub}</span>
