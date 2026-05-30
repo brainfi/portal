@@ -395,16 +395,16 @@ export default function Presupuesto() {
                 <i className={`ti ${k.icon}`} style={{ fontSize:16, color:k.iconColor }} aria-hidden="true" />
               </div>
             </div>
+            {(k as any).desc && (
+              <div style={{ fontSize:11, color:'#B0B7C3', lineHeight:1.5, marginBottom:10 }}>
+                {(k as any).desc}
+              </div>
+            )}
             <div style={{ fontSize:28, fontWeight:400, color:'#1a1a1a', letterSpacing:'-0.5px', marginBottom:8 }}>{k.val}</div>
             <div style={{ display:'flex', alignItems:'center', gap:8, flexWrap:'wrap' }}>
               {hayReal && k.real > 0 && <DeltaBadge real={k.real} plan={k.plan} tipo={k.tipo} />}
               <span style={{ fontSize:11, color:'#B0B7C3' }}>{k.sub}</span>
             </div>
-            {(k as any).desc && (
-              <div style={{ fontSize:11, color:'#B0B7C3', lineHeight:1.5, borderTop:'1px solid #F4F5F7', paddingTop:8, marginTop:8 }}>
-                {(k as any).desc}
-              </div>
-            )}
           </div>
         ))}
       </div>
