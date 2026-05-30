@@ -397,7 +397,7 @@ export default function Presupuesto() {
       <div style={{ ...card, padding:'22px 24px' }}>
         <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:20 }}>
           <div style={{ fontSize:9, fontWeight:700, color:'#B0B7C3', textTransform:'uppercase', letterSpacing:'0.1em' }}>
-            Evolución acumulada
+            Resultado Neto
           </div>
           <div style={{ display:'flex', gap:16, alignItems:'center' }}>
             <div style={{ display:'flex', alignItems:'center', gap:5 }}>
