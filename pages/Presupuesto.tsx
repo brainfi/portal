@@ -119,14 +119,19 @@ export default function Presupuesto() {
     let acumReal = 0
     let acumPlan = 0
     return MESES.map((mes, m) => {
-      const planMes = partidas.reduce((a, p) => a + p.planMensual[m], 0)
-      const realMes = MESES_CON_REAL.includes(m) ? partidas.reduce((a, p) => a + p.real[m], 0) : null
-      acumPlan += planMes
-      if (realMes !== null) acumReal += realMes
+      const planIngresos = partidas.filter(p => p.tipo === 'ingreso').reduce((a, p) => a + p.planMensual[m], 0)
+      const planGastos   = partidas.filter(p => p.tipo === 'gasto').reduce((a, p) => a + p.planMensual[m], 0)
+      const planNeto     = planIngresos - planGastos
+      const hayRealMes   = MESES_CON_REAL.includes(m)
+      const realIngresos = hayRealMes ? partidas.filter(p => p.tipo === 'ingreso').reduce((a, p) => a + p.real[m], 0) : null
+      const realGastos   = hayRealMes ? partidas.filter(p => p.tipo === 'gasto').reduce((a, p) => a + p.real[m], 0) : null
+      const realNeto     = realIngresos !== null && realGastos !== null ? realIngresos - realGastos : null
+      acumPlan += planNeto
+      if (realNeto !== null) acumReal += realNeto
       return {
         mes,
         Plan: acumPlan,
-        Real: realMes !== null ? acumReal : null,
+        Real: realNeto !== null ? acumReal : null,
       }
     })
   }, [partidas])
