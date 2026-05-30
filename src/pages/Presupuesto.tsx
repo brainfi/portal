@@ -390,13 +390,13 @@ export default function Presupuesto() {
         ].map((k, i) => (
           <div key={i} style={{ ...card, padding:'20px 22px' }}>
             <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:14 }}>
-              <div style={{ fontSize:9, fontWeight:600, color:'#B0B7C3', textTransform:'uppercase', letterSpacing:'0.12em' }}>{k.lbl}</div>
+              <div style={{ fontSize:9, fontWeight:600, color:'#1a1a1a', textTransform:'uppercase', letterSpacing:'0.12em' }}>{k.lbl}</div>
               <div style={{ width:32, height:32, borderRadius:8, background:k.iconBg, display:'flex', alignItems:'center', justifyContent:'center' }}>
                 <i className={`ti ${k.icon}`} style={{ fontSize:16, color:k.iconColor }} aria-hidden="true" />
               </div>
             </div>
             {(k as any).desc && (
-              <div style={{ fontSize:11, color:'#B0B7C3', lineHeight:1.5, marginBottom:10 }}>
+              <div style={{ fontSize:11, color:'#B0B7C3', lineHeight:1.5, marginTop:2, marginBottom:10 }}>
                 {(k as any).desc}
               </div>
             )}
