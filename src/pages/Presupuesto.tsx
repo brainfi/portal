@@ -325,6 +325,16 @@ export default function Presupuesto() {
         </div>
         <div style={{ display:'flex', gap:8, alignItems:'center', flexWrap:'wrap' }}>
 
+
+          {editandoPlan !== null && (
+            <button onClick={handleSave} style={{ display:'inline-flex', alignItems:'center', gap:6, padding:'8px 14px', fontSize:12, fontWeight:600, border:'none', borderRadius:8, background:saved?'#2DC653':'#4361EE', color:'#fff', cursor:'pointer', fontFamily:'inherit' }}>
+              {saved ? '✓ Guardado' : 'Guardar cambios'}
+            </button>
+          )}
+          <button onClick={() => navigate('/presupuesto/configurar')} style={{ display:'inline-flex', alignItems:'center', gap:6, padding:'8px 14px', fontSize:12, fontWeight:600, border:'none', borderRadius:8, background:'#4361EE', color:'#fff', cursor:'pointer', fontFamily:'Inter,sans-serif' }}>
+            <i className="ti ti-settings" style={{ fontSize:13 }} aria-hidden="true" />
+            Configurar
+          </button>
           {/* Dropdown estilo imagen */}
           <div style={{ position:'relative' }}>
             <button
@@ -367,15 +377,6 @@ export default function Presupuesto() {
             )}
           </div>
 
-          {editandoPlan !== null && (
-            <button onClick={handleSave} style={{ display:'inline-flex', alignItems:'center', gap:6, padding:'8px 14px', fontSize:12, fontWeight:600, border:'none', borderRadius:8, background:saved?'#2DC653':'#4361EE', color:'#fff', cursor:'pointer', fontFamily:'inherit' }}>
-              {saved ? '✓ Guardado' : 'Guardar cambios'}
-            </button>
-          )}
-          <button onClick={() => navigate('/presupuesto/configurar')} style={{ display:'inline-flex', alignItems:'center', gap:6, padding:'8px 14px', fontSize:12, fontWeight:600, border:'none', borderRadius:8, background:'#4361EE', color:'#fff', cursor:'pointer', fontFamily:'Inter,sans-serif' }}>
-            <i className="ti ti-settings" style={{ fontSize:13 }} aria-hidden="true" />
-            Configurar
-          </button>
         </div>
       </div>
 
