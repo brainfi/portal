@@ -83,6 +83,10 @@ export default function Cobros() {
   const totalVencido   = facturas.filter(f => f.estado === 'vencida' || (f.estado === 'parcial' && f.diasVencida > 0)).reduce((a, f) => a + (f.importe - f.cobrado), 0)
   const cobradoMes     = 5000 // mock: lo que ya se ha cobrado en mayo
   const dsoGlobal      = Math.round(facturas.filter(f=>f.estado!=='cobrada').reduce((a,f)=>a+f.diasVencida,0) / facturas.filter(f=>f.estado!=='cobrada').length)
+  const totalFacturado = facturas.reduce((a, f) => a + f.importe, 0)
+  const pctPendiente   = Math.round((totalPendiente / totalFacturado) * 100)
+  const pctVencido     = Math.round((totalVencido / totalFacturado) * 100)
+  const pctCobrado     = Math.round((cobradoMes / totalFacturado) * 100)
 
   // ── Aging ──
   const aging = useMemo(() => [
@@ -140,22 +144,33 @@ export default function Cobros() {
       {/* ── KPI cards ── */}
       <div className="cobros-kgrid" style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:12 }}>
         {[
-          { lbl:'Pendiente de cobro', desc:'Total de facturas emitidas aún no cobradas.', val:fmt(totalPendiente), iconBg:'#EEF1FD', iconColor:'#4361EE', icon:'ti-file-invoice' },
-          { lbl:'Vencido sin cobrar', desc:'Facturas que han superado su fecha de vencimiento.', val:fmt(totalVencido), iconBg:'#FEF2F2', iconColor:'#EF4444', icon:'ti-alert-triangle' },
-          { lbl:'Cobrado este mes',   desc:'Total ingresado en el periodo actual.', val:fmt(cobradoMes), iconBg:'#F0F9F4', iconColor:'#2DC653', icon:'ti-circle-check' },
-          { lbl:'DSO medio',         desc:'Días medios desde emisión hasta cobro efectivo.', val:`${dsoGlobal} días`, iconBg:'#FFF8E6', iconColor:'#F4A100', icon:'ti-clock' },
+          { lbl:'Pendiente de cobro', desc:'Facturas emitidas sin cobrar.', val:fmt(totalPendiente), pct:pctPendiente, pctColor:'#4361EE', iconBg:'#EEF1FD', iconColor:'#4361EE', icon:'ti-file-invoice' },
+          { lbl:'Vencido sin cobrar', desc:'Facturas pasadas de fecha.', val:fmt(totalVencido), pct:pctVencido, pctColor:'#EF4444', iconBg:'#FEF2F2', iconColor:'#EF4444', icon:'ti-alert-triangle' },
+          { lbl:'Cobrado este mes',   desc:'Total ingresado en el periodo.', val:fmt(cobradoMes), pct:pctCobrado, pctColor:'#2DC653', iconBg:'#F0F9F4', iconColor:'#2DC653', icon:'ti-circle-check' },
+          { lbl:'DSO medio',         desc:'Días medios hasta cobro efectivo.', val:`${dsoGlobal} días`, pct:null, pctColor:'#F4A100', iconBg:'#FFF8E6', iconColor:'#F4A100', icon:'ti-clock' },
         ].map((k, i) => (
           <div key={i} style={{ ...card, padding:'20px 22px' }}>
             <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:6 }}>
-              <div style={{ flex:1, minWidth:0, paddingRight:12 }}>
+              <div style={{ flex:1, minWidth:0, paddingRight:10 }}>
                 <div style={{ fontSize:9, fontWeight:600, color:'#1a1a1a', textTransform:'uppercase', letterSpacing:'0.12em' }}>{k.lbl}</div>
-                <div style={{ fontSize:11, color:'#B0B7C3', lineHeight:1.5, marginTop:2 }}>{k.desc}</div>
+                <div style={{ fontSize:11, color:'#B0B7C3', marginTop:2, whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis' }}>{k.desc}</div>
               </div>
               <div style={{ width:32, height:32, borderRadius:8, background:k.iconBg, display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
                 <i className={`ti ${k.icon}`} style={{ fontSize:16, color:k.iconColor }} aria-hidden="true" />
               </div>
             </div>
-            <div style={{ fontSize:28, fontWeight:400, color:'#1a1a1a', letterSpacing:'-0.5px', marginTop:10 }}>{k.val}</div>
+            <div style={{ fontSize:28, fontWeight:400, color:'#1a1a1a', letterSpacing:'-0.5px', marginTop:10, marginBottom:(k as any).pct !== null ? 10 : 0 }}>{k.val}</div>
+            {(k as any).pct !== null && (
+              <div>
+                <div style={{ display:'flex', justifyContent:'space-between', marginBottom:5 }}>
+                  <span style={{ fontSize:10, color:'#B0B7C3' }}>sobre total facturado</span>
+                  <span style={{ fontSize:11, fontWeight:700, color:(k as any).pctColor }}>{(k as any).pct}%</span>
+                </div>
+                <div style={{ height:4, background:'#F4F5F7', borderRadius:99, overflow:'hidden' }}>
+                  <div style={{ width:`${(k as any).pct}%`, height:'100%', background:(k as any).pctColor, borderRadius:99 }} />
+                </div>
+              </div>
+            )}
           </div>
         ))}
       </div>
