@@ -75,6 +75,8 @@ export default function Cobros() {
   const [clienteSeleccionado, setClienteSeleccionado] = useState<Cliente | null>(null)
   const [filtroEstado, setFiltroEstado] = useState<string>('todos')
   const [filtroCliente, setFiltroCliente] = useState<string>('todos')
+  const [verMasPrevision, setVerMasPrevision] = useState(false)
+  const [verMasConcentracion, setVerMasConcentracion] = useState(false)
 
   // ── Totales ──
   const totalPendiente = facturas.filter(f => f.estado !== 'cobrada').reduce((a, f) => a + (f.importe - f.cobrado), 0)
@@ -84,11 +86,11 @@ export default function Cobros() {
 
   // ── Aging ──
   const aging = useMemo(() => [
-    { label:'Corriente',  dias:'Al día',    importe: facturas.filter(f=>f.diasVencida<=0&&f.estado!=='cobrada').reduce((a,f)=>a+(f.importe-f.cobrado),0), color:'#BAE6FD' },
-    { label:'0–30 días',  dias:'Reciente',  importe: facturas.filter(f=>f.diasVencida>0&&f.diasVencida<=30&&f.estado!=='cobrada').reduce((a,f)=>a+(f.importe-f.cobrado),0), color:'#7DD3FC' },
-    { label:'30–60 días', dias:'Atención',  importe: facturas.filter(f=>f.diasVencida>30&&f.diasVencida<=60&&f.estado!=='cobrada').reduce((a,f)=>a+(f.importe-f.cobrado),0), color:'#4361EE' },
-    { label:'60–90 días', dias:'Urgente',   importe: facturas.filter(f=>f.diasVencida>60&&f.diasVencida<=90&&f.estado!=='cobrada').reduce((a,f)=>a+(f.importe-f.cobrado),0), color:'#2B4BC4' },
-    { label:'+90 días',   dias:'Crítico',   importe: facturas.filter(f=>f.diasVencida>90&&f.estado!=='cobrada').reduce((a,f)=>a+(f.importe-f.cobrado),0), color:'#1E3A8A' },
+    { label:'Corriente',  dias:'Al día',    importe: facturas.filter(f=>f.diasVencida<=0&&f.estado!=='cobrada').reduce((a,f)=>a+(f.importe-f.cobrado),0), color:'#4361EE' },
+    { label:'0–30 días',  dias:'Reciente',  importe: facturas.filter(f=>f.diasVencida>0&&f.diasVencida<=30&&f.estado!=='cobrada').reduce((a,f)=>a+(f.importe-f.cobrado),0), color:'#F4A100' },
+    { label:'30–60 días', dias:'Atención',  importe: facturas.filter(f=>f.diasVencida>30&&f.diasVencida<=60&&f.estado!=='cobrada').reduce((a,f)=>a+(f.importe-f.cobrado),0), color:'#FB923C' },
+    { label:'60–90 días', dias:'Urgente',   importe: facturas.filter(f=>f.diasVencida>60&&f.diasVencida<=90&&f.estado!=='cobrada').reduce((a,f)=>a+(f.importe-f.cobrado),0), color:'#EF4444' },
+    { label:'+90 días',   dias:'Crítico',   importe: facturas.filter(f=>f.diasVencida>90&&f.estado!=='cobrada').reduce((a,f)=>a+(f.importe-f.cobrado),0), color:'#b91c1c' },
   ], [])
 
   // ── Previsión de cobros ──
@@ -159,26 +161,28 @@ export default function Cobros() {
       </div>
 
       {/* ── Aging + Previsión ── */}
-      <div style={{ display:'grid', gridTemplateColumns:'2fr 1fr', gap:12 }}>
+      <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:12 }}>
 
-        {/* Aging */}
-        <div style={{ ...card, padding:'22px 24px' }}>
+        {/* Aging — ocupa todo el espacio vertical */}
+        <div style={{ ...card, padding:'22px 24px', display:'flex', flexDirection:'column' }}>
           <div style={{ marginBottom:16 }}>
             <div style={{ fontSize:9, fontWeight:600, color:'#1a1a1a', textTransform:'uppercase', letterSpacing:'0.12em' }}>Antigüedad de saldo</div>
             <div style={{ fontSize:11, color:'#B0B7C3', marginTop:2 }}>Clasificación de facturas pendientes por tiempo vencido.</div>
           </div>
-          <ResponsiveContainer width="100%" height={160}>
-            <BarChart data={aging} margin={{ top:4, right:4, left:0, bottom:0 }} barCategoryGap="30%">
-              <CartesianGrid strokeDasharray="3 3" stroke="#F0F0F2" vertical={false} />
-              <XAxis dataKey="label" tick={{ fontSize:11, fill:'#B0B7C3' }} axisLine={false} tickLine={false} />
-              <YAxis tick={{ fontSize:11, fill:'#B0B7C3' }} axisLine={false} tickLine={false} tickFormatter={v => v>=1000?`${(v/1000).toFixed(0)}k`:v} width={40} />
-              <Tooltip formatter={(v: number) => fmt(v)} labelStyle={{ fontWeight:600 }} contentStyle={{ borderRadius:10, border:'1px solid #E8E8EC', fontSize:12 }} />
-              <Bar dataKey="importe" radius={[6,6,0,0]} maxBarSize={52}>
-                {aging.map((entry, i) => <Cell key={i} fill={entry.color} />)}
-              </Bar>
-            </BarChart>
-          </ResponsiveContainer>
-          <div style={{ display:'flex', gap:10, flexWrap:'wrap', marginTop:8 }}>
+          <div style={{ flex:1, minHeight:200 }}>
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={aging} margin={{ top:4, right:4, left:0, bottom:0 }} barCategoryGap="30%">
+                <CartesianGrid strokeDasharray="3 3" stroke="#F0F0F2" vertical={false} />
+                <XAxis dataKey="label" tick={{ fontSize:11, fill:'#B0B7C3' }} axisLine={false} tickLine={false} />
+                <YAxis tick={{ fontSize:11, fill:'#B0B7C3' }} axisLine={false} tickLine={false} tickFormatter={v => v>=1000?`${(v/1000).toFixed(0)}k €`:String(v)} width={48} />
+                <Tooltip formatter={(v: number) => fmt(v)} labelStyle={{ fontWeight:600 }} contentStyle={{ borderRadius:10, border:'1px solid #E8E8EC', fontSize:12 }} />
+                <Bar dataKey="importe" radius={[6,6,0,0]} maxBarSize={64}>
+                  {aging.map((entry, i) => <Cell key={i} fill={entry.color} />)}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+          <div style={{ display:'flex', gap:10, flexWrap:'wrap', marginTop:14, paddingTop:14, borderTop:'1px solid #F4F5F7' }}>
             {aging.map((a, i) => (
               <div key={i} style={{ display:'flex', alignItems:'center', gap:5 }}>
                 <div style={{ width:8, height:8, borderRadius:2, background:a.color }} />
@@ -188,14 +192,20 @@ export default function Cobros() {
           </div>
         </div>
 
-        {/* Previsión + Concentración */}
+        {/* Previsión + Concentración — columna derecha */}
         <div style={{ display:'flex', flexDirection:'column', gap:12 }}>
 
           {/* Previsión */}
           <div style={{ ...card, padding:'22px 24px' }}>
-            <div style={{ marginBottom:14 }}>
-              <div style={{ fontSize:9, fontWeight:600, color:'#1a1a1a', textTransform:'uppercase', letterSpacing:'0.12em' }}>Previsión de cobros</div>
-              <div style={{ fontSize:11, color:'#B0B7C3', marginTop:2 }}>Importes esperados según vencimientos.</div>
+            <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:14 }}>
+              <div>
+                <div style={{ fontSize:9, fontWeight:600, color:'#1a1a1a', textTransform:'uppercase', letterSpacing:'0.12em' }}>Previsión de cobros</div>
+                <div style={{ fontSize:11, color:'#B0B7C3', marginTop:2 }}>Importes esperados según vencimientos.</div>
+              </div>
+              <button onClick={() => setVerMasPrevision(v => !v)}
+                style={{ fontSize:11, fontWeight:500, color:'#4361EE', border:'none', background:'transparent', cursor:'pointer', fontFamily:'inherit', padding:0, flexShrink:0 }}>
+                {verMasPrevision ? 'Ver menos ↑' : 'Ver más ↓'}
+              </button>
             </div>
             {prevision.map((p, i) => (
               <div key={i} style={{ display:'flex', justifyContent:'space-between', alignItems:'center', padding:'10px 0', borderBottom: i < prevision.length-1 ? '1px solid #F4F5F7' : 'none' }}>
@@ -203,28 +213,54 @@ export default function Cobros() {
                 <span style={{ fontSize:13, fontWeight:600, color:'#1a1a1a' }}>{fmt(p.importe)}</span>
               </div>
             ))}
+            {verMasPrevision && (
+              <div style={{ marginTop:14, paddingTop:14, borderTop:'1px solid #F4F5F7' }}>
+                <div style={{ fontSize:11, fontWeight:600, color:'#B0B7C3', textTransform:'uppercase', letterSpacing:'0.08em', marginBottom:10 }}>Detalle por cliente</div>
+                {clientes.map((c, i) => {
+                  const imp = facturas.filter(f=>f.clienteId===c.id&&f.estado!=='cobrada').reduce((a,f)=>a+(f.importe-f.cobrado),0)
+                  if (!imp) return null
+                  return (
+                    <div key={i} style={{ display:'flex', justifyContent:'space-between', alignItems:'center', padding:'7px 0', borderBottom:'1px solid #F4F5F7' }}>
+                      <span style={{ fontSize:12, color:'#1a1a1a', fontWeight:500 }}>{c.nombre}</span>
+                      <span style={{ fontSize:12, fontWeight:600, color:'#4361EE' }}>{fmt(imp)}</span>
+                    </div>
+                  )
+                })}
+              </div>
+            )}
           </div>
 
           {/* Concentración */}
           <div style={{ ...card, padding:'22px 24px', flex:1 }}>
-            <div style={{ marginBottom:14 }}>
-              <div style={{ fontSize:9, fontWeight:600, color:'#1a1a1a', textTransform:'uppercase', letterSpacing:'0.12em' }}>Concentración</div>
-              <div style={{ fontSize:11, color:'#B0B7C3', marginTop:2 }}>Top clientes por saldo pendiente.</div>
+            <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:14 }}>
+              <div>
+                <div style={{ fontSize:9, fontWeight:600, color:'#1a1a1a', textTransform:'uppercase', letterSpacing:'0.12em' }}>Concentración</div>
+                <div style={{ fontSize:11, color:'#B0B7C3', marginTop:2 }}>Top clientes por saldo pendiente.</div>
+              </div>
+              <button onClick={() => setVerMasConcentracion(v => !v)}
+                style={{ fontSize:11, fontWeight:500, color:'#4361EE', border:'none', background:'transparent', cursor:'pointer', fontFamily:'inherit', padding:0, flexShrink:0 }}>
+                {verMasConcentracion ? 'Ver menos ↑' : 'Ver más ↓'}
+              </button>
             </div>
-            {clientes.sort((a,b)=>b.totalPendiente-a.totalPendiente).slice(0,4).map((c, i) => {
-              const pct = Math.round((c.totalPendiente / totalPendiente) * 100)
-              return (
-                <div key={i} style={{ marginBottom:10 }}>
-                  <div style={{ display:'flex', justifyContent:'space-between', marginBottom:4 }}>
-                    <span style={{ fontSize:11, fontWeight:500, color:'#1a1a1a', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap', maxWidth:'65%' }}>{c.nombre}</span>
-                    <span style={{ fontSize:11, fontWeight:600, color:'#4361EE' }}>{pct}%</span>
+            {clientes.sort((a,b)=>b.totalPendiente-a.totalPendiente)
+              .slice(0, verMasConcentracion ? clientes.length : 4)
+              .map((c, i) => {
+                const pct = Math.round((c.totalPendiente / totalPendiente) * 100)
+                return (
+                  <div key={i} style={{ marginBottom:12 }}>
+                    <div style={{ display:'flex', justifyContent:'space-between', marginBottom:5 }}>
+                      <div>
+                        <span style={{ fontSize:11, fontWeight:500, color:'#1a1a1a' }}>{c.nombre}</span>
+                        <span style={{ fontSize:10, color:'#B0B7C3', marginLeft:6 }}>{fmt(c.totalPendiente)}</span>
+                      </div>
+                      <span style={{ fontSize:11, fontWeight:600, color:'#4361EE' }}>{pct}%</span>
+                    </div>
+                    <div style={{ height:5, background:'#EEF1FD', borderRadius:99, overflow:'hidden' }}>
+                      <div style={{ width:`${pct}%`, height:'100%', background:'#4361EE', borderRadius:99 }} />
+                    </div>
                   </div>
-                  <div style={{ height:5, background:'#EEF1FD', borderRadius:99, overflow:'hidden' }}>
-                    <div style={{ width:`${pct}%`, height:'100%', background:'#4361EE', borderRadius:99 }} />
-                  </div>
-                </div>
-              )
-            })}
+                )
+              })}
           </div>
         </div>
       </div>
