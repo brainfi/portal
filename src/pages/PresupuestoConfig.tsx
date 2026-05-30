@@ -52,6 +52,8 @@ function SelectorCuenta({
 }) {
   const [busqueda, setBusqueda] = useState('')
   const [open, setOpen] = useState(false)
+  const [rect, setRect] = useState<DOMRect | null>(null)
+  const btnRef = useRef<HTMLButtonElement>(null)
   const cuentas = tipo === 'ingreso' ? CUENTAS_INGRESOS : CUENTAS_GASTOS
 
   const filtradas = busqueda.length >= 1
@@ -62,7 +64,6 @@ function SelectorCuenta({
       )
     : cuentas
 
-  // Agrupar
   const grupos: Record<string, CuentaContable[]> = {}
   filtradas.forEach(c => {
     if (!grupos[c.grupo]) grupos[c.grupo] = []
@@ -71,11 +72,14 @@ function SelectorCuenta({
 
   const seleccionada = TODAS_CUENTAS.find(c => c.codigo === valor)
 
+  function handleOpen() {
+    if (btnRef.current) setRect(btnRef.current.getBoundingClientRect())
+    setOpen(o => !o)
+  }
+
   return (
     <div style={{ position:'relative' }}>
-      <button
-        type="button"
-        onClick={() => setOpen(o => !o)}
+      <button ref={btnRef} type="button" onClick={handleOpen}
         style={{
           width:'100%', padding:'8px 10px', fontSize:12,
           border:'1px solid #E8E8EC', borderRadius:8,
@@ -84,70 +88,61 @@ function SelectorCuenta({
           display:'flex', alignItems:'center', justifyContent:'space-between', gap:8,
         }}
       >
-        <span>
+        <span style={{ overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap', flex:1 }}>
           {seleccionada
             ? <><strong style={{ color:'#4361EE' }}>{seleccionada.codigo}</strong> · {seleccionada.nombre}</>
-            : <span style={{ color:'#B0B7C3' }}>Seleccionar cuenta contable…</span>
-          }
+            : <span style={{ color:'#B0B7C3' }}>Seleccionar cuenta…</span>}
         </span>
         <i className={`ti ti-chevron-${open?'up':'down'}`} style={{ fontSize:12, color:'#B0B7C3', flexShrink:0 }} aria-hidden="true" />
       </button>
 
       {open && (
-        <div style={{
-          position:'absolute', top:'calc(100% + 4px)', left:0, right:0, zIndex:100,
-          background:'#fff', border:'1px solid #E8E8EC', borderRadius:10,
-          boxShadow:'0 8px 24px rgba(0,0,0,0.1)', maxHeight:300, overflow:'hidden',
-          display:'flex', flexDirection:'column',
-        }}>
-          <div style={{ padding:'8px 10px', borderBottom:'1px solid #F4F5F7' }}>
-            <input
-              autoFocus
-              type="text"
-              value={busqueda}
-              onChange={e => setBusqueda(e.target.value)}
-              placeholder="Buscar por código o nombre…"
-              style={{
-                width:'100%', padding:'6px 10px', fontSize:12,
-                border:'1px solid #E8E8EC', borderRadius:7, outline:'none',
-                fontFamily:'inherit', boxSizing:'border-box',
-              }}
-              onFocus={e => (e.target.style.borderColor='#4361EE')}
-              onBlur={e => (e.target.style.borderColor='#E8E8EC')}
-            />
-          </div>
-          <div style={{ overflowY:'auto', maxHeight:240 }}>
-            {Object.entries(grupos).map(([grupo, items]) => (
-              <div key={grupo}>
-                <div style={{ fontSize:9, fontWeight:700, color:'#B0B7C3', textTransform:'uppercase', letterSpacing:'0.1em', padding:'8px 12px 4px' }}>
-                  {grupo}
+        <>
+          {/* Overlay para cerrar */}
+          <div onClick={() => { setOpen(false); setBusqueda('') }}
+            style={{ position:'fixed', inset:0, zIndex:200 }} />
+          {/* Dropdown con position fixed para escapar del overflow:hidden */}
+          <div style={{
+            position:'fixed',
+            top: rect ? rect.bottom + 4 : 0,
+            left: rect ? rect.left : 0,
+            width: rect ? rect.width : 280,
+            zIndex:201,
+            background:'#fff', border:'1px solid #E8E8EC', borderRadius:10,
+            boxShadow:'0 8px 24px rgba(0,0,0,0.12)', overflow:'hidden',
+            display:'flex', flexDirection:'column',
+          }}>
+            <div style={{ padding:'8px 10px', borderBottom:'1px solid #F4F5F7' }}>
+              <input autoFocus type="text" value={busqueda}
+                onChange={e => setBusqueda(e.target.value)}
+                placeholder="Buscar por código o nombre…"
+                style={{ width:'100%', padding:'6px 10px', fontSize:12, border:'1px solid #E8E8EC', borderRadius:7, outline:'none', fontFamily:'inherit', boxSizing:'border-box' }}
+                onFocus={e => (e.target.style.borderColor='#4361EE')}
+                onBlur={e => (e.target.style.borderColor='#E8E8EC')} />
+            </div>
+            <div style={{ overflowY:'auto', maxHeight:260 }}>
+              {Object.entries(grupos).map(([grupo, items]) => (
+                <div key={grupo}>
+                  <div style={{ fontSize:9, fontWeight:700, color:'#B0B7C3', textTransform:'uppercase', letterSpacing:'0.1em', padding:'8px 12px 4px' }}>{grupo}</div>
+                  {items.map(c => (
+                    <button key={c.codigo} type="button"
+                      onClick={() => { onChange(c); setOpen(false); setBusqueda('') }}
+                      style={{ display:'flex', alignItems:'center', gap:10, width:'100%', padding:'8px 12px', fontSize:12, border:'none', background:c.codigo===valor?'#EEF1FD':'transparent', color:'#1a1a1a', cursor:'pointer', fontFamily:'inherit', textAlign:'left' }}
+                      onMouseEnter={e => { if (c.codigo!==valor) (e.currentTarget as HTMLButtonElement).style.background='#F4F5F7' }}
+                      onMouseLeave={e => { if (c.codigo!==valor) (e.currentTarget as HTMLButtonElement).style.background='transparent' }}>
+                      <span style={{ fontSize:11, fontWeight:700, color:'#4361EE', minWidth:32, flexShrink:0 }}>{c.codigo}</span>
+                      <span style={{ color:c.codigo===valor?'#4361EE':'#1a1a1a', fontWeight:c.codigo===valor?600:400 }}>{c.nombre}</span>
+                      {c.codigo===valor && <i className="ti ti-check" style={{ fontSize:12, color:'#4361EE', marginLeft:'auto' }} aria-hidden="true" />}
+                    </button>
+                  ))}
                 </div>
-                {items.map(c => (
-                  <button key={c.codigo} type="button"
-                    onClick={() => { onChange(c); setOpen(false); setBusqueda('') }}
-                    style={{
-                      display:'flex', alignItems:'center', gap:10,
-                      width:'100%', padding:'8px 12px', fontSize:12,
-                      border:'none', background: c.codigo===valor ? '#EEF1FD' : 'transparent',
-                      color:'#1a1a1a', cursor:'pointer', fontFamily:'inherit', textAlign:'left',
-                    }}
-                    onMouseEnter={e => { if (c.codigo!==valor) (e.currentTarget as HTMLButtonElement).style.background='#F4F5F7' }}
-                    onMouseLeave={e => { if (c.codigo!==valor) (e.currentTarget as HTMLButtonElement).style.background='transparent' }}
-                  >
-                    <span style={{ fontSize:11, fontWeight:700, color:'#4361EE', minWidth:32, flexShrink:0 }}>{c.codigo}</span>
-                    <span style={{ color: c.codigo===valor ? '#4361EE' : '#1a1a1a', fontWeight: c.codigo===valor ? 600 : 400 }}>{c.nombre}</span>
-                    {c.codigo===valor && <i className="ti ti-check" style={{ fontSize:12, color:'#4361EE', marginLeft:'auto' }} aria-hidden="true" />}
-                  </button>
-                ))}
-              </div>
-            ))}
-            {filtradas.length === 0 && (
-              <div style={{ padding:'20px', textAlign:'center', fontSize:12, color:'#B0B7C3' }}>
-                Sin resultados para "{busqueda}"
-              </div>
-            )}
+              ))}
+              {filtradas.length === 0 && (
+                <div style={{ padding:'20px', textAlign:'center', fontSize:12, color:'#B0B7C3' }}>Sin resultados para "{busqueda}"</div>
+              )}
+            </div>
           </div>
-        </div>
+        </>
       )}
     </div>
   )
