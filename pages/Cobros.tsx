@@ -84,11 +84,11 @@ export default function Cobros() {
 
   // ── Aging ──
   const aging = useMemo(() => [
-    { label:'Corriente',  dias:'Al día',    importe: facturas.filter(f=>f.diasVencida<=0&&f.estado!=='cobrada').reduce((a,f)=>a+(f.importe-f.cobrado),0), color:'#4361EE' },
-    { label:'0–30 días',  dias:'Reciente',  importe: facturas.filter(f=>f.diasVencida>0&&f.diasVencida<=30&&f.estado!=='cobrada').reduce((a,f)=>a+(f.importe-f.cobrado),0), color:'#F4A100' },
-    { label:'30–60 días', dias:'Atención',  importe: facturas.filter(f=>f.diasVencida>30&&f.diasVencida<=60&&f.estado!=='cobrada').reduce((a,f)=>a+(f.importe-f.cobrado),0), color:'#FB923C' },
-    { label:'60–90 días', dias:'Urgente',   importe: facturas.filter(f=>f.diasVencida>60&&f.diasVencida<=90&&f.estado!=='cobrada').reduce((a,f)=>a+(f.importe-f.cobrado),0), color:'#EF4444' },
-    { label:'+90 días',   dias:'Crítico',   importe: facturas.filter(f=>f.diasVencida>90&&f.estado!=='cobrada').reduce((a,f)=>a+(f.importe-f.cobrado),0), color:'#b91c1c' },
+    { label:'Corriente',  dias:'Al día',    importe: facturas.filter(f=>f.diasVencida<=0&&f.estado!=='cobrada').reduce((a,f)=>a+(f.importe-f.cobrado),0), color:'#BAE6FD' },
+    { label:'0–30 días',  dias:'Reciente',  importe: facturas.filter(f=>f.diasVencida>0&&f.diasVencida<=30&&f.estado!=='cobrada').reduce((a,f)=>a+(f.importe-f.cobrado),0), color:'#7DD3FC' },
+    { label:'30–60 días', dias:'Atención',  importe: facturas.filter(f=>f.diasVencida>30&&f.diasVencida<=60&&f.estado!=='cobrada').reduce((a,f)=>a+(f.importe-f.cobrado),0), color:'#4361EE' },
+    { label:'60–90 días', dias:'Urgente',   importe: facturas.filter(f=>f.diasVencida>60&&f.diasVencida<=90&&f.estado!=='cobrada').reduce((a,f)=>a+(f.importe-f.cobrado),0), color:'#2B4BC4' },
+    { label:'+90 días',   dias:'Crítico',   importe: facturas.filter(f=>f.diasVencida>90&&f.estado!=='cobrada').reduce((a,f)=>a+(f.importe-f.cobrado),0), color:'#1E3A8A' },
   ], [])
 
   // ── Previsión de cobros ──
