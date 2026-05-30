@@ -87,10 +87,10 @@ export default function Cobros() {
   // ── Aging ──
   const aging = useMemo(() => [
     { label:'Corriente',  dias:'Al día',    importe: facturas.filter(f=>f.diasVencida<=0&&f.estado!=='cobrada').reduce((a,f)=>a+(f.importe-f.cobrado),0), color:'#4361EE' },
-    { label:'0–30 días',  dias:'Reciente',  importe: facturas.filter(f=>f.diasVencida>0&&f.diasVencida<=30&&f.estado!=='cobrada').reduce((a,f)=>a+(f.importe-f.cobrado),0), color:'#F4A100' },
-    { label:'30–60 días', dias:'Atención',  importe: facturas.filter(f=>f.diasVencida>30&&f.diasVencida<=60&&f.estado!=='cobrada').reduce((a,f)=>a+(f.importe-f.cobrado),0), color:'#FB923C' },
-    { label:'60–90 días', dias:'Urgente',   importe: facturas.filter(f=>f.diasVencida>60&&f.diasVencida<=90&&f.estado!=='cobrada').reduce((a,f)=>a+(f.importe-f.cobrado),0), color:'#EF4444' },
-    { label:'+90 días',   dias:'Crítico',   importe: facturas.filter(f=>f.diasVencida>90&&f.estado!=='cobrada').reduce((a,f)=>a+(f.importe-f.cobrado),0), color:'#b91c1c' },
+    { label:'0–30 días',  dias:'Reciente',  importe: facturas.filter(f=>f.diasVencida>0&&f.diasVencida<=30&&f.estado!=='cobrada').reduce((a,f)=>a+(f.importe-f.cobrado),0), color:'#93C5FD' },
+    { label:'30–60 días', dias:'Atención',  importe: facturas.filter(f=>f.diasVencida>30&&f.diasVencida<=60&&f.estado!=='cobrada').reduce((a,f)=>a+(f.importe-f.cobrado),0), color:'#60A5FA' },
+    { label:'60–90 días', dias:'Urgente',   importe: facturas.filter(f=>f.diasVencida>60&&f.diasVencida<=90&&f.estado!=='cobrada').reduce((a,f)=>a+(f.importe-f.cobrado),0), color:'#4361EE' },
+    { label:'+90 días',   dias:'Crítico',   importe: facturas.filter(f=>f.diasVencida>90&&f.estado!=='cobrada').reduce((a,f)=>a+(f.importe-f.cobrado),0), color:'#1E3A8A' },
   ], [])
 
   // ── Previsión de cobros ──
@@ -202,9 +202,9 @@ export default function Cobros() {
                 <div style={{ fontSize:9, fontWeight:600, color:'#1a1a1a', textTransform:'uppercase', letterSpacing:'0.12em' }}>Previsión de cobros</div>
                 <div style={{ fontSize:11, color:'#B0B7C3', marginTop:2 }}>Importes esperados según vencimientos.</div>
               </div>
-              <button onClick={() => setVerMasPrevision(v => !v)}
-                style={{ fontSize:11, fontWeight:500, color:'#4361EE', border:'none', background:'transparent', cursor:'pointer', fontFamily:'inherit', padding:0, flexShrink:0 }}>
-                {verMasPrevision ? 'Ver menos ↑' : 'Ver más ↓'}
+              <button disabled title="Próximamente enlazará con tu ERP"
+                style={{ fontSize:11, fontWeight:500, color:'#B0B7C3', border:'none', background:'transparent', cursor:'not-allowed', fontFamily:'inherit', padding:0, flexShrink:0 }}>
+                Ver más ↓
               </button>
             </div>
             {prevision.map((p, i) => (
@@ -237,9 +237,9 @@ export default function Cobros() {
                 <div style={{ fontSize:9, fontWeight:600, color:'#1a1a1a', textTransform:'uppercase', letterSpacing:'0.12em' }}>Concentración</div>
                 <div style={{ fontSize:11, color:'#B0B7C3', marginTop:2 }}>Top clientes por saldo pendiente.</div>
               </div>
-              <button onClick={() => setVerMasConcentracion(v => !v)}
-                style={{ fontSize:11, fontWeight:500, color:'#4361EE', border:'none', background:'transparent', cursor:'pointer', fontFamily:'inherit', padding:0, flexShrink:0 }}>
-                {verMasConcentracion ? 'Ver menos ↑' : 'Ver más ↓'}
+              <button disabled title="Próximamente enlazará con tu ERP"
+                style={{ fontSize:11, fontWeight:500, color:'#B0B7C3', border:'none', background:'transparent', cursor:'not-allowed', fontFamily:'inherit', padding:0, flexShrink:0 }}>
+                Ver más ↓
               </button>
             </div>
             {clientes.sort((a,b)=>b.totalPendiente-a.totalPendiente)
