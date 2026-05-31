@@ -331,7 +331,7 @@ export default function Presupuesto() {
         }
         rows.push(
           <tr key={`bloque-${p.tipo}`}>
-            <td colSpan={colCount} style={{ padding:'14px 0 4px', paddingLeft:0, fontSize:11, fontWeight:700, color:'#1a1a1a', borderBottom:'2px solid #1a1a1a' }}>
+            <td colSpan={colCount} style={{ padding:'14px 0 6px', paddingLeft:0, fontSize:11, fontWeight:700, color:'#1a1a1a' }}>
               {p.tipo === 'ingreso' ? '+ INGRESOS DE EXPLOTACIÓN' : '− GASTOS DE EXPLOTACIÓN'}
             </td>
           </tr>
@@ -402,18 +402,18 @@ export default function Presupuesto() {
       const nextIsPostEbitda = nextP && nextTipoVal === 'gasto' && POST_EBITDA.has(nextPre)
       if (!ebitdaMostrado && p.tipo === 'gasto' && (isLastGasto || nextIsPostEbitda)) {
         ebitdaMostrado = true
-        rows.push(<SubtotalRow key="ebitda" label="EBITDA" plan={ebitdaPlan} real={ebitdaReal} color="#F4A100" />)
+        rows.push(<SubtotalRow key="ebitda" label="EBITDA" plan={ebitdaPlan} real={ebitdaReal} color="#4361EE" />)
       }
     })
 
     // Resultado neto al final
-    rows.push(<SubtotalRow key="rneto" label="Resultado neto" plan={rnetoPlan} real={rnetoReal} color="#2DC653" />)
+    rows.push(<SubtotalRow key="rneto" label="Resultado neto" plan={rnetoPlan} real={rnetoReal} color="#4361EE" />)
 
     return (
       <div style={{ ...card, padding:'20px 22px' }}>
         <div style={{ marginBottom:14 }}>
           <div style={{ fontSize:9, fontWeight:600, color:'#1a1a1a', textTransform:'uppercase', letterSpacing:'0.12em' }}>Cuenta de resultados</div>
-          <div style={{ fontSize:11, color:'#B0B7C3', marginTop:2 }}>Ingresos y gastos en orden P&L según PGC. Incluye subtotales de Margen bruto, EBITDA y Resultado neto.</div>
+          <div style={{ fontSize:11, color:'#B0B7C3', marginTop:2 }}>Estructura de la cuenta de pérdidas y ganancias según el PGC español.</div>
         </div>
         <div style={{ overflowX:'auto' }}>
           <table style={{ width:'100%', borderCollapse:'collapse', minWidth:580 }}>
