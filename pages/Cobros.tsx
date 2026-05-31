@@ -77,12 +77,19 @@ export default function Cobros() {
   const [filtroCliente, setFiltroCliente] = useState<string>('todos')
   const [verMasPrevision, setVerMasPrevision] = useState(false)
   const [verMasConcentracion, setVerMasConcentracion] = useState(false)
-  const [filtroFecha, setFiltroFecha] = useState<number | 'anual'>(4)
-  const [filtroFechaOpen, setFiltroFechaOpen] = useState(false)
-  const MESES_F = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic']
-  const filtroFechaLabel = filtroFecha === 'anual' ? 'Último año' : MESES_F[filtroFecha as number]
-  const opcionesFecha = [
-    ...Array.from({ length: 5 }, (_, m) => ({ key: m as number | 'anual', label: m === 4 ? 'May (este mes)' : ['Ene','Feb','Mar','Abr'][m], group: '2026' })).reverse(),
+  const [filtroOpen, setFiltroOpen] = useState(false)
+  const [filtro, setFiltro] = useState<number | 'anual'>(4)
+  const MESES_LABEL = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic']
+  const MES_ACTUAL_IDX = 4
+  const filtroLabel = filtro === 'anual' ? 'Este año' : MESES_LABEL[filtro as number]
+  const opcionesFiltro = [
+    ...Array.from({ length: MES_ACTUAL_IDX + 1 }, (_, m) => ({
+      key: m as number | 'anual',
+      label: m === MES_ACTUAL_IDX ? `${MESES_LABEL[m]} (este mes)` : MESES_LABEL[m],
+      group: '2026',
+    })).reverse(),
+    { key: 'anual' as const, label: 'Este año', group: 'Acumulado' },
+  ][m], group: '2026' })).reverse(),
     { key: 'anual' as const, label: 'Último año', group: 'Acumulado' },
   ]
 
@@ -136,8 +143,12 @@ export default function Cobros() {
         .cobros-filtro { border:none; cursor:pointer; font-family:inherit; font-size:12px; padding:5px 12px; border-radius:6px; transition:background .12s,color .12s; }
       `}</style>
 
-      {filtroFechaOpen && (
-        <div onClick={() => setFiltroFechaOpen(false)} style={{ position:'fixed', inset:0, zIndex:40 }} />
+      {filtroOpen && (
+        <div onClick={() => setFiltroOpen(false)} style={{ position:'fixed', inset:0, zIndex:40 }} />
+      )}
+
+      {filtroOpen && (
+        <div onClick={() => setFiltroOpen(false)} style={{ position:'fixed', inset:0, zIndex:40 }} />
       )}
 
       {/* ── Encabezado ── */}

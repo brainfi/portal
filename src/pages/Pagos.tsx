@@ -121,10 +121,10 @@ export default function Pagos() {
   const [filtroCategoria, setFiltroCategoria] = useState<string>('todos')
   const [prestamoSeleccionado, setPrestamoSeleccionado] = useState<Prestamo | null>(prestamos.find(p=>p.tipo==='prestamo')||null)
   const [mostrarTodasCuotas, setMostrarTodasCuotas] = useState(false)
-  const [filtroFechaOpen, setFiltroFechaOpen] = useState(false)
-  const [filtroFecha, setFiltroFecha] = useState<number|'anual'>(5)
+  const [filtroOpen, setFiltroOpen] = useState(false)
+  const [filtro, setFiltro] = useState<number|'anual'>(5)
   const MESES_F = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic']
-  const filtroFechaLabel = filtroFecha === 'anual' ? 'Último año' : MESES_F[filtroFecha as number]
+  const filtroLabel = filtro === 'anual' ? 'Último año' : MESES_LABEL[filtro as number]
 
   // ── Totales ──
   const totalOp        = obligaciones.reduce((a,o)=>a+o.importe,0)
@@ -133,10 +133,10 @@ export default function Pagos() {
   const proximoVenc    = obligaciones.filter(o=>o.diasRestantes>=0).sort((a,b)=>a.diasRestantes-b.diasRestantes)[0]
 
   // Importe del mes filtrado para deuda
-  const numMeses       = filtroFecha === 'anual' ? 12 : 1
+  const numMeses       = filtro === 'anual' ? 12 : 1
   const deudaFinMes    = prestamos.filter(p=>p.clasificacion==='financiera'&&p.cuotaMensual>0).reduce((a,p)=>a+p.cuotaMensual,0) * numMeses
   const deudaNoFinMes  = prestamos.filter(p=>p.clasificacion==='no_financiera').reduce((a,p)=>{
-    const meses = p.mesesRestantes <= (filtroFecha==='anual'?12:1) ? p.mesesRestantes : (filtroFecha==='anual'?12:1)
+    const meses = p.mesesRestantes <= (filtro==='anual'?12:1) ? p.mesesRestantes : (filtro==='anual'?12:1)
     return a + (p.capitalPendiente / Math.max(p.mesesRestantes,1)) * meses
   }, 0)
 
@@ -179,7 +179,11 @@ export default function Pagos() {
         .pagos-pres:hover{background:#F4F6FF!important;cursor:pointer}
       `}</style>
 
-      {filtroFechaOpen && <div onClick={()=>setFiltroFechaOpen(false)} style={{position:'fixed',inset:0,zIndex:40}}/>}
+      {filtroOpen && <div onClick={()=>setFiltroOpen(false)} style={{position:'fixed',inset:0,zIndex:40}}/>}
+
+      {filtroOpen && (
+        <div onClick={() => setFiltroOpen(false)} style={{ position:'fixed', inset:0, zIndex:40 }} />
+      )}
 
       {/* ── Encabezado ── */}
       <div style={{display:'flex',alignItems:'flex-start',justifyContent:'space-between',gap:12,flexWrap:'wrap'}}>
@@ -189,27 +193,27 @@ export default function Pagos() {
         </div>
         <div style={{display:'flex',gap:8,alignItems:'center',flexWrap:'wrap'}}>
           <div style={{position:'relative'}}>
-            <button onClick={()=>setFiltroFechaOpen(o=>!o)}
+            <button onClick={()=>setFiltroOpen(o=>!o)}
               style={{display:'inline-flex',alignItems:'center',gap:8,padding:'8px 14px',fontSize:13,fontWeight:500,border:'1px solid #E8E8EC',borderRadius:10,background:'#F4F5F7',color:'#1a1a1a',cursor:'pointer',fontFamily:'inherit'}}>
-              {filtroFechaLabel}
+              {filtroLabel}
               <i className="ti ti-chevron-down" style={{fontSize:14,color:'#888'}} aria-hidden="true"/>
             </button>
-            {filtroFechaOpen && (
+            {filtroOpen && (
               <div style={{position:'absolute',top:'calc(100% + 6px)',right:0,zIndex:50,background:'#fff',border:'1px solid #E8E8EC',borderRadius:12,padding:'6px',minWidth:180,boxShadow:'0 4px 20px rgba(0,0,0,0.08)'}}>
                 <div style={{fontSize:9,fontWeight:700,color:'#B0B7C3',textTransform:'uppercase',letterSpacing:'0.1em',padding:'4px 12px 6px'}}>2026</div>
                 {[4,5].map(m=>(
-                  <button key={m} onClick={()=>{setFiltroFecha(m);setFiltroFechaOpen(false)}}
-                    style={{display:'flex',alignItems:'center',justifyContent:'space-between',width:'100%',padding:'8px 12px',fontSize:13,border:'none',borderRadius:7,cursor:'pointer',fontFamily:'inherit',textAlign:'left',background:filtroFecha===m?'#EEF1FD':'transparent',color:filtroFecha===m?'#4361EE':'#1a1a1a',fontWeight:filtroFecha===m?600:400}}>
-                    {m===5?'Jun (este mes)':MESES_F[m]}
-                    {filtroFecha===m && <i className="ti ti-check" style={{fontSize:13}} aria-hidden="true"/>}
+                  <button key={m} onClick={()=>{setFiltro(m);setFiltroOpen(false)}}
+                    style={{display:'flex',alignItems:'center',justifyContent:'space-between',width:'100%',padding:'8px 12px',fontSize:13,border:'none',borderRadius:7,cursor:'pointer',fontFamily:'inherit',textAlign:'left',background:filtro===m?'#EEF1FD':'transparent',color:filtro===m?'#4361EE':'#1a1a1a',fontWeight:filtro===m?600:400}}>
+                    {m===5?'Jun (este mes)':MESES_LABEL[m]}
+                    {filtro===m && <i className="ti ti-check" style={{fontSize:13}} aria-hidden="true"/>}
                   </button>
                 ))}
                 <div style={{height:'1px',background:'#F4F5F7',margin:'4px 0'}}/>
                 <div style={{fontSize:9,fontWeight:700,color:'#B0B7C3',textTransform:'uppercase',letterSpacing:'0.1em',padding:'4px 12px 6px'}}>Acumulado</div>
-                <button onClick={()=>{setFiltroFecha('anual');setFiltroFechaOpen(false)}}
-                  style={{display:'flex',alignItems:'center',justifyContent:'space-between',width:'100%',padding:'8px 12px',fontSize:13,border:'none',borderRadius:7,cursor:'pointer',fontFamily:'inherit',textAlign:'left',background:filtroFecha==='anual'?'#EEF1FD':'transparent',color:filtroFecha==='anual'?'#4361EE':'#1a1a1a',fontWeight:filtroFecha==='anual'?600:400}}>
+                <button onClick={()=>{setFiltro('anual');setFiltroOpen(false)}}
+                  style={{display:'flex',alignItems:'center',justifyContent:'space-between',width:'100%',padding:'8px 12px',fontSize:13,border:'none',borderRadius:7,cursor:'pointer',fontFamily:'inherit',textAlign:'left',background:filtro==='anual'?'#EEF1FD':'transparent',color:filtro==='anual'?'#4361EE':'#1a1a1a',fontWeight:filtro==='anual'?600:400}}>
                   Último año
-                  {filtroFecha==='anual'&&<i className="ti ti-check" style={{fontSize:13}} aria-hidden="true"/>}
+                  {filtro==='anual'&&<i className="ti ti-check" style={{fontSize:13}} aria-hidden="true"/>}
                 </button>
               </div>
             )}
@@ -226,8 +230,8 @@ export default function Pagos() {
       <div className="pagos-kgrid" style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:12}}>
         {[
           { lbl:'Obligaciones operativas', desc:'Pagos pendientes próximos 30 días.', val:fmt(totalOp), iconBg:'#FEF2F2', iconColor:'#EF4444', icon:'ti-calendar-due' },
-          { lbl:'Deuda financiera', desc:`Cuotas ${filtroFechaLabel} · préstamos y leasing.`, val:fmt(Math.round(deudaFinMes)), sub:`Total pendiente ${fmt(deudaFin)}`, iconBg:'#EEF1FD', iconColor:'#4361EE', icon:'ti-building-bank' },
-          { lbl:'Deuda no financiera', desc:`Vencimientos ${filtroFechaLabel} · proveedores y AEAT.`, val:fmt(Math.round(deudaNoFinMes)), sub:`Total pendiente ${fmt(deudaNoFin)}`, iconBg:'#FFF8E6', iconColor:'#F4A100', icon:'ti-receipt' },
+          { lbl:'Deuda financiera', desc:`Cuotas ${filtroLabel} · préstamos y leasing.`, val:fmt(Math.round(deudaFinMes)), sub:`Total pendiente ${fmt(deudaFin)}`, iconBg:'#EEF1FD', iconColor:'#4361EE', icon:'ti-building-bank' },
+          { lbl:'Deuda no financiera', desc:`Vencimientos ${filtroLabel} · proveedores y AEAT.`, val:fmt(Math.round(deudaNoFinMes)), sub:`Total pendiente ${fmt(deudaNoFin)}`, iconBg:'#FFF8E6', iconColor:'#F4A100', icon:'ti-receipt' },
           { lbl:'Próximo vencimiento',     desc:'Obligación más urgente pendiente.', val:proximoVenc?`${proximoVenc.diasRestantes}d`:'—', sub:proximoVenc?`${proximoVenc.concepto} · ${fmt(proximoVenc.importe)}`:'', iconBg:'#F0F9F4', iconColor:'#2DC653', icon:'ti-clock' },
         ].map((k,i)=>(
           <div key={i} style={{...card,padding:'20px 22px'}}>
