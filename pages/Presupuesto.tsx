@@ -205,8 +205,38 @@ export default function Presupuesto() {
     { key: 'anual', label: 'Último año', group: 'Acumulado' },
   ]
 
+  // Orden y agrupación P&L según PGC
+  function plSortKey(codigo: string): number {
+    const n = parseInt(codigo, 10) || 999
+    return n
+  }
+  function plSeccion(codigo: string, tipo: TipoPartida): string {
+    const n = parseInt(codigo.slice(0, 2), 10)
+    if (tipo === 'ingreso') {
+      if (n >= 70 && n <= 73) return 'Cifra de negocios'
+      if (n === 74)           return 'Subvenciones de explotación'
+      if (n >= 75 && n <= 75) return 'Otros ingresos de gestión'
+      if (n >= 76 && n <= 76) return 'Ingresos financieros'
+      if (n >= 77 && n <= 79) return 'Beneficios excepcionales'
+      return 'Otros ingresos'
+    } else {
+      if (n >= 60 && n <= 61) return 'Aprovisionamientos'
+      if (n >= 62 && n <= 62) return 'Servicios exteriores'
+      if (n >= 63 && n <= 63) return 'Tributos'
+      if (n >= 64 && n <= 64) return 'Gastos de personal'
+      if (n >= 65 && n <= 65) return 'Otros gastos de gestión'
+      if (n >= 66 && n <= 66) return 'Gastos financieros'
+      if (n >= 67 && n <= 67) return 'Pérdidas'
+      if (n >= 68 && n <= 68) return 'Amortizaciones y deterioros'
+      return 'Otros gastos'
+    }
+  }
+
   function TablaPartidas({ tipo }: { tipo: TipoPartida }) {
-    const arr = partidas.filter(p => p.tipo === tipo)
+    const arr = partidas
+      .filter(p => p.tipo === tipo)
+      .slice()
+      .sort((a, b) => plSortKey(a.cuentaCodigo || '999') - plSortKey(b.cuentaCodigo || '999'))
     const totalPlan    = arr.reduce((a, p) => a + sumMeses(p.planMensual, mesesActivos), 0)
     const totalReal    = arr.reduce((a, p) => a + sumMeses(p.real, mesesConReal), 0)
     const colorAcc     = tipo === 'ingreso' ? '#2DC653' : '#EF4444'
@@ -232,11 +262,26 @@ export default function Presupuesto() {
               </tr>
             </thead>
             <tbody>
-              {arr.map(p => {
-                const planPer = sumMeses(p.planMensual, mesesActivos)
-                const realPer = sumMeses(p.real, mesesConReal)
-                const diff    = realPer - planPer
-                return (
+              {(() => {
+                let lastSec = ''
+                const colCount = hayReal ? 7 : 5
+                return arr.flatMap(p => {
+                  const sec = plSeccion(p.cuentaCodigo || '', tipo)
+                  const planPer = sumMeses(p.planMensual, mesesActivos)
+                  const realPer = sumMeses(p.real, mesesConReal)
+                  const diff    = realPer - planPer
+                  const rows: React.ReactNode[] = []
+                  if (sec !== lastSec) {
+                    lastSec = sec
+                    rows.push(
+                      <tr key={`sec-${sec}`}>
+                        <td colSpan={colCount} style={{ padding:'8px 10px 4px', paddingLeft:0, fontSize:9, fontWeight:700, color:'#4361EE', textTransform:'uppercase', letterSpacing:'0.1em', background:'#F8F9FF', borderBottom:'1px solid #EEF1FD', borderTop:'1px solid #EEF1FD' }}>
+                          {sec}
+                        </td>
+                      </tr>
+                    )
+                  }
+                  rows.push(
                   <tr key={p.id} style={{ borderBottom:'1px solid #F4F5F7' }}
                     onMouseEnter={e => (e.currentTarget.style.background='#FAFAFA')}
                     onMouseLeave={e => (e.currentTarget.style.background='transparent')}>
@@ -293,7 +338,9 @@ export default function Presupuesto() {
                     </td>
                   </tr>
                 )
-              })}
+                  return rows
+                })
+              })()}
             </tbody>
             <tfoot>
               <tr>
