@@ -286,26 +286,49 @@ export default function Presupuesto() {
     const rnetoPlan  = ebitdaPlan - amortPlan
     const rnetoReal  = ebitdaReal - amortReal
 
-    // Subtotales a insertar después de cada sección
-    const SUBTOTALES: Record<string, { label: string; plan: number; real: number; color: string }> = {
-      'Aprovisionamientos': { label:'Margen bruto', plan:mbPlan, real:mbReal, color:'#4361EE' },
-      'Otros gastos de gestión': { label:'EBITDA', plan:ebitdaPlan, real:ebitdaReal, color:'#F4A100' },
-      'Amortizaciones': { label:'Resultado neto', plan:rnetoPlan, real:rnetoReal, color:'#2DC653' },
-    }
-
     const colCount = hayReal ? 7 : 5
     let lastSec = ''
     let lastTipo: TipoPartida | '' = ''
 
+    // Prefijos de sección financiera/amortización (van DESPUÉS del EBITDA)
+    const POST_EBITDA = new Set(['66','67','68','63'])
+
+    let margenMostrado   = false
+    let ebitdaMostrado   = false
+
+    function SubtotalRow({ label, plan, real, color }: { label:string; plan:number; real:number; color:string }) {
+      const diff = real - plan
+      return (
+        <tr style={{ background:`${color}0D`, borderTop:`2px solid ${color}40`, borderBottom:`2px solid ${color}40` }}>
+          <td style={{ ...td, textAlign:'left' as const, paddingLeft:8, fontWeight:700, fontSize:13, color }}>{label}</td>
+          <td style={{ ...td, fontWeight:700, color:'#888' }}>{fmt(plan)}</td>
+          <td style={{ ...td, fontWeight:700, color:'#888' }}>{fmt(plan)}</td>
+          {hayReal && <td style={{ ...td, fontWeight:700, color }}>{fmt(real)}</td>}
+          <td style={td}>{hayReal&&real!==0&&<DeltaBadge real={Math.abs(real)} plan={Math.abs(plan)} tipo="ingreso"/>}</td>
+          {hayReal && <td style={{ ...td, fontWeight:700, color:diff>=0?'#1a7a3a':'#b91c1c' }}>{(diff>=0?'+':'')+fmt(diff)}</td>}
+          <td />
+        </tr>
+      )
+    }
+
     const rows: React.ReactNode[] = []
     allSorted.forEach((p, idx) => {
-      const sec  = plSeccion(p.cuentaCodigo||'', p.tipo)
+      const sec     = plSeccion(p.cuentaCodigo||''  , p.tipo)
+      const prefix  = (p.cuentaCodigo||'99').slice(0,2)
+      const nextP   = allSorted[idx + 1]
+      const nextPre = nextP ? (nextP.cuentaCodigo||'99').slice(0,2) : ''
+      const nextTipoVal = nextP ? nextP.tipo : ''
       const planPer = sumMeses(p.planMensual, mesesActivos)
       const realPer = sumMeses(p.real, mesesConReal)
       const diff    = realPer - planPer
 
-      // Cabecera de bloque ingresos/gastos
+      // Cabecera bloque ingresos/gastos
       if (p.tipo !== lastTipo) {
+        // Antes de gastos: insertar Margen bruto si no se mostró
+        if (p.tipo === 'gasto' && !margenMostrado) {
+          margenMostrado = true
+          rows.push(<SubtotalRow key="mb" label="Margen bruto" plan={mbPlan} real={mbReal} color="#4361EE" />)
+        }
         rows.push(
           <tr key={`bloque-${p.tipo}`}>
             <td colSpan={colCount} style={{ padding:'14px 0 4px', paddingLeft:0, fontSize:11, fontWeight:700, color:'#1a1a1a', borderBottom:'2px solid #1a1a1a' }}>
@@ -374,26 +397,17 @@ export default function Presupuesto() {
         </tr>
       )
 
-      // Subtotal tras cada sección clave
-      const nextSec = idx < allSorted.length - 1 ? plSeccion(allSorted[idx+1].cuentaCodigo||'', allSorted[idx+1].tipo) : ''
-      const nextTipo = idx < allSorted.length - 1 ? allSorted[idx+1].tipo : ''
-      const isLastInSec = nextSec !== sec || nextTipo !== p.tipo
-      if (isLastInSec && SUBTOTALES[sec]) {
-        const sub = SUBTOTALES[sec]
-        const diff = sub.real - sub.plan
-        rows.push(
-          <tr key={`sub-${sec}`} style={{ background:`${sub.color}0D`, borderTop:`2px solid ${sub.color}40`, borderBottom:`2px solid ${sub.color}40` }}>
-            <td style={{ ...td, textAlign:'left' as const, paddingLeft:8, fontWeight:700, fontSize:13, color:sub.color }}>{sub.label}</td>
-            <td style={{ ...td, fontWeight:700, color:'#888' }}>{fmt(sub.plan)}</td>
-            <td style={{ ...td, fontWeight:700, color:'#888' }}>{fmt(sub.plan)}</td>
-            {hayReal && <td style={{ ...td, fontWeight:700, color:sub.color }}>{fmt(sub.real)}</td>}
-            <td style={td}>{hayReal&&sub.real>0&&<DeltaBadge real={sub.real} plan={sub.plan} tipo="ingreso"/>}</td>
-            {hayReal && <td style={{ ...td, fontWeight:700, color:diff>=0?'#1a7a3a':'#b91c1c' }}>{(diff>=0?'+':'')+fmt(diff)}</td>}
-            <td />
-          </tr>
-        )
+      // EBITDA: insertar antes del primer gasto financiero/amortización, o al final de gastos
+      const isLastGasto = p.tipo === 'gasto' && (!nextP || nextTipoVal !== 'gasto')
+      const nextIsPostEbitda = nextP && nextTipoVal === 'gasto' && POST_EBITDA.has(nextPre)
+      if (!ebitdaMostrado && p.tipo === 'gasto' && (isLastGasto || nextIsPostEbitda)) {
+        ebitdaMostrado = true
+        rows.push(<SubtotalRow key="ebitda" label="EBITDA" plan={ebitdaPlan} real={ebitdaReal} color="#F4A100" />)
       }
     })
+
+    // Resultado neto al final
+    rows.push(<SubtotalRow key="rneto" label="Resultado neto" plan={rnetoPlan} real={rnetoReal} color="#2DC653" />)
 
     return (
       <div style={{ ...card, padding:'20px 22px' }}>
