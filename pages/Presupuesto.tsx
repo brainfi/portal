@@ -118,6 +118,23 @@ export default function Presupuesto() {
   const utilPlan     = ingresosPlan - gastosPlan
   const utilReal     = ingresosReal - gastosReal
 
+  // KPIs financieros
+  // Margen bruto = Ingresos - Coste de personal (cta. 640 — nóminas y SS)
+  const nominas        = partidas.filter(p => p.cuentaCodigo === '640')
+  const nominasPlan    = nominas.reduce((a, p) => a + sumMeses(p.planMensual, mesesActivos), 0)
+  const nominasReal    = nominas.reduce((a, p) => a + sumMeses(p.real, mesesConReal), 0)
+  const margenBrutoPlan = ingresosPlan - nominasPlan
+  const margenBrutoReal = ingresosReal - (nominasReal || nominasPlan * (ingresosReal / (ingresosPlan || 1)))
+  const margenBrutoPct  = ingresosPlan > 0 ? Math.round((margenBrutoPlan / ingresosPlan) * 100) : 0
+  const margenBrutoRealPct = ingresosReal > 0 && margenBrutoReal > 0 ? Math.round((margenBrutoReal / ingresosReal) * 100) : 0
+
+  // EBITDA = Margen bruto - resto opex (excluye 640 ya descontado, 66x financieros, 63x tributos, 68x amortizaciones)
+  const codigosNoEbitda = ['640','660','661','662','663','664','665','669','630','631','633','680','681','682']
+  const opexRestoPlan   = partidas.filter(p => p.tipo === 'gasto' && !codigosNoEbitda.includes(p.cuentaCodigo || '')).reduce((a, p) => a + sumMeses(p.planMensual, mesesActivos), 0)
+  const opexRestoReal   = partidas.filter(p => p.tipo === 'gasto' && !codigosNoEbitda.includes(p.cuentaCodigo || '')).reduce((a, p) => a + sumMeses(p.real, mesesConReal), 0)
+  const ebitdaPlan      = margenBrutoPlan - opexRestoPlan
+  const ebitdaReal      = hayReal ? margenBrutoReal - opexRestoReal : null
+
   // Gráfico: líneas acumuladas mes a mes
   const chartData = useMemo(() => {
     let acumReal = 0
@@ -306,7 +323,8 @@ export default function Presupuesto() {
   return (
     <Layout title="Presupuesto">
       <style>{`
-        @media (max-width: 900px) { .pres-kgrid { grid-template-columns: 1fr 1fr !important; } }
+        @media (max-width: 900px) { .pres-kgrid { grid-template-columns: 1fr 1fr !important; }
+        @media (max-width: 1100px) { .pres-kgrid { grid-template-columns: 1fr 1fr !important; } } }
         @media (max-width: 600px) { .pres-kgrid { grid-template-columns: 1fr !important; } }
         .pres-dd-item { display:flex; align-items:center; justify-content:space-between; width:100%; padding:8px 12px; font-size:13px; border:none; background:transparent; cursor:pointer; font-family:inherit; text-align:left; color:#1a1a1a; border-radius:7px; }
         .pres-dd-item:hover { background:#F4F5F7; }
@@ -381,11 +399,12 @@ export default function Presupuesto() {
       </div>
 
       {/* ── KPI cards ── */}
-      <div className="pres-kgrid" style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:12 }}>
+      <div className="pres-kgrid" style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:12 }}>
         {[
-          { lbl:'Presupuesto total', val:hayReal?fmt(utilReal):fmt(utilPlan), real:utilReal,     plan:utilPlan,     tipo:'ingreso' as TipoPartida, sub:`presupuestado ${fmt(utilPlan)}`,   desc:'Resultado neto: ingresos menos gastos del periodo seleccionado.', iconBg:'#EEF1FD', iconColor:'#4361EE', icon:'ti-chart-pie' },
-          { lbl:'Ingresos',         val:hayReal?fmt(ingresosReal):fmt(ingresosPlan), real:ingresosReal, plan:ingresosPlan, tipo:'ingreso' as TipoPartida, sub:`plan ${fmt(ingresosPlan)}`, desc:'Total de ingresos planificados y ejecutados en el periodo.', iconBg:'#F0F9F4', iconColor:'#2DC653', icon:'ti-arrow-up-right' },
-          { lbl:'Gastos',           val:hayReal?fmt(gastosReal):fmt(gastosPlan),     real:gastosReal,   plan:gastosPlan,   tipo:'gasto'   as TipoPartida, sub:`plan ${fmt(gastosPlan)}`,   desc:'Total de gastos planificados y ejecutados en el periodo.', iconBg:'#FEF2F2', iconColor:'#EF4444', icon:'ti-arrow-down-right' },
+          { lbl:'Ingresos reales',  val:hayReal?fmt(ingresosReal):fmt(ingresosPlan), real:ingresosReal, plan:ingresosPlan, tipo:'ingreso' as TipoPartida, desc:'Total facturado en el periodo.', sub:`plan ${fmt(ingresosPlan)}`, iconBg:'#F0F9F4', iconColor:'#2DC653', icon:'ti-arrow-up-right' },
+          { lbl:'Margen bruto',     val:hayReal?fmt(margenBrutoReal):fmt(margenBrutoPlan), real:margenBrutoReal||0, plan:margenBrutoPlan, tipo:'ingreso' as TipoPartida, desc:`Ingresos menos coste de personal.`, sub:`${hayReal?margenBrutoRealPct:margenBrutoPct}% s/ingresos`, iconBg:'#EEF1FD', iconColor:'#4361EE', icon:'ti-chart-bar' },
+          { lbl:'EBITDA',           val:ebitdaReal!=null?fmt(ebitdaReal):fmt(ebitdaPlan), real:ebitdaReal||0, plan:ebitdaPlan, tipo:'ingreso' as TipoPartida, desc:'Resultado antes de intereses e impuestos.', sub:`plan ${fmt(ebitdaPlan)}`, iconBg:'#FFF8E6', iconColor:'#F4A100', icon:'ti-trending-up' },
+          { lbl:'Resultado neto',   val:hayReal?fmt(utilReal):fmt(utilPlan), real:utilReal, plan:utilPlan, tipo:'ingreso' as TipoPartida, desc:'Ingresos menos todos los gastos.', sub:`plan ${fmt(utilPlan)}`, iconBg:'#F0F9F4', iconColor:'#2DC653', icon:'ti-chart-pie' },
         ].map((k, i) => (
           <div key={i} style={{ ...card, padding:'20px 22px' }}>
             <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:6 }}>
