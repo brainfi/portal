@@ -7,6 +7,7 @@ import Impuestos from '@/pages/Impuestos'
 import Cashflow from '@/pages/Cashflow'
 import Presupuesto from '@/pages/Presupuesto'
 import Cobros from '@/pages/Cobros'
+import Pagos from '@/pages/Pagos'
 import PresupuestoConfig from '@/pages/PresupuestoConfig'
 import Integraciones from '@/pages/Integraciones'
 
@@ -35,6 +36,7 @@ function AppRoutes() {
       <Route path="/impuestos" element={<ProtectedRoute><Impuestos /></ProtectedRoute>} />
       <Route path="/cashflow" element={<ProtectedRoute><Cashflow /></ProtectedRoute>} />
       <Route path="/cobros" element={<ProtectedRoute><Cobros /></ProtectedRoute>} />
+      <Route path="/pagos" element={<ProtectedRoute><Pagos /></ProtectedRoute>} />
       <Route path="/presupuesto" element={<ProtectedRoute><Presupuesto /></ProtectedRoute>} />
       <Route path="/presupuesto/configurar" element={<ProtectedRoute><PresupuestoConfig /></ProtectedRoute>} />
       <Route path="/ajustes" element={<ProtectedRoute><Ajustes /></ProtectedRoute>} />
