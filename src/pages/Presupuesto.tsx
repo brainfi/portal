@@ -232,27 +232,180 @@ export default function Presupuesto() {
     }
   }
 
-  function TablaPartidas({ tipo }: { tipo: TipoPartida }) {
-    const arr = partidas
-      .filter(p => p.tipo === tipo)
-      .slice()
-      .sort((a, b) => plSortKey(a.cuentaCodigo || '999') - plSortKey(b.cuentaCodigo || '999'))
-    const totalPlan    = arr.reduce((a, p) => a + sumMeses(p.planMensual, mesesActivos), 0)
-    const totalReal    = arr.reduce((a, p) => a + sumMeses(p.real, mesesConReal), 0)
-    const colorAcc     = tipo === 'ingreso' ? '#2DC653' : '#EF4444'
-    const planAnualTot = arr.reduce((a, p) => a + p.planAnual, 0)
+  // ── Cuenta de resultados P&L ──────────────────────────────────────────
+  function plSortKey(codigo: string): number {
+    return parseInt(codigo, 10) || 999
+  }
+  function plSeccion(codigo: string, tipo: TipoPartida): string {
+    const n = parseInt(codigo.slice(0, 2), 10)
+    if (tipo === 'ingreso') {
+      if (n <= 73) return 'Cifra de negocios'
+      if (n === 74) return 'Subvenciones'
+      if (n === 75) return 'Otros ingresos'
+      if (n === 76) return 'Ingresos financieros'
+      return 'Beneficios excepcionales'
+    }
+    if (n <= 61) return 'Aprovisionamientos'
+    if (n === 62) return 'Servicios exteriores'
+    if (n === 63) return 'Tributos'
+    if (n === 64) return 'Gastos de personal'
+    if (n === 65) return 'Otros gastos de gestión'
+    if (n === 66) return 'Gastos financieros'
+    if (n === 67) return 'Pérdidas'
+    if (n === 68) return 'Amortizaciones'
+    return 'Otros'
+  }
+
+  function CuentaResultados() {
+    const allSorted = [
+      ...partidas.filter(p => p.tipo === 'ingreso').sort((a, b) => plSortKey(a.cuentaCodigo||'999') - plSortKey(b.cuentaCodigo||'999')),
+      ...partidas.filter(p => p.tipo === 'gasto').sort((a, b) => plSortKey(a.cuentaCodigo||'999') - plSortKey(b.cuentaCodigo||'999')),
+    ]
+
+    // Calcular totales por sección
+    function secSum(seccion: string, campo: 'plan' | 'real'): number {
+      return allSorted
+        .filter(p => plSeccion(p.cuentaCodigo||'', p.tipo) === seccion)
+        .reduce((a, p) => a + (campo === 'plan'
+          ? sumMeses(p.planMensual, mesesActivos)
+          : sumMeses(p.real, mesesConReal)), 0)
+    }
+
+    const ingPlan    = allSorted.filter(p=>p.tipo==='ingreso').reduce((a,p)=>a+sumMeses(p.planMensual,mesesActivos),0)
+    const ingReal    = allSorted.filter(p=>p.tipo==='ingreso').reduce((a,p)=>a+sumMeses(p.real,mesesConReal),0)
+    const aprovPlan  = secSum('Aprovisionamientos','plan')
+    const aprovReal  = secSum('Aprovisionamientos','real')
+    const mbPlan     = ingPlan - aprovPlan
+    const mbReal     = ingReal - aprovReal
+    const svcPlan    = secSum('Servicios exteriores','plan') + secSum('Gastos de personal','plan') + secSum('Otros gastos de gestión','plan')
+    const svcReal    = secSum('Servicios exteriores','real') + secSum('Gastos de personal','real') + secSum('Otros gastos de gestión','real')
+    const ebitdaPlan = mbPlan - svcPlan
+    const ebitdaReal = mbReal - svcReal
+    const amortPlan  = secSum('Amortizaciones','plan') + secSum('Gastos financieros','plan') + secSum('Tributos','plan') + secSum('Pérdidas','plan')
+    const amortReal  = secSum('Amortizaciones','real') + secSum('Gastos financieros','real') + secSum('Tributos','real') + secSum('Pérdidas','real')
+    const rnetoPlan  = ebitdaPlan - amortPlan
+    const rnetoReal  = ebitdaReal - amortReal
+
+    // Subtotales a insertar después de cada sección
+    const SUBTOTALES: Record<string, { label: string; plan: number; real: number; color: string }> = {
+      'Aprovisionamientos': { label:'Margen bruto', plan:mbPlan, real:mbReal, color:'#4361EE' },
+      'Otros gastos de gestión': { label:'EBITDA', plan:ebitdaPlan, real:ebitdaReal, color:'#F4A100' },
+      'Amortizaciones': { label:'Resultado neto', plan:rnetoPlan, real:rnetoReal, color:'#2DC653' },
+    }
+
+    const colCount = hayReal ? 7 : 5
+    let lastSec = ''
+    let lastTipo: TipoPartida | '' = ''
+
+    const rows: React.ReactNode[] = []
+    allSorted.forEach((p, idx) => {
+      const sec  = plSeccion(p.cuentaCodigo||'', p.tipo)
+      const planPer = sumMeses(p.planMensual, mesesActivos)
+      const realPer = sumMeses(p.real, mesesConReal)
+      const diff    = realPer - planPer
+
+      // Cabecera de bloque ingresos/gastos
+      if (p.tipo !== lastTipo) {
+        rows.push(
+          <tr key={`bloque-${p.tipo}`}>
+            <td colSpan={colCount} style={{ padding:'14px 0 4px', paddingLeft:0, fontSize:11, fontWeight:700, color:'#1a1a1a', borderBottom:'2px solid #1a1a1a' }}>
+              {p.tipo === 'ingreso' ? '+ INGRESOS DE EXPLOTACIÓN' : '− GASTOS DE EXPLOTACIÓN'}
+            </td>
+          </tr>
+        )
+        lastTipo = p.tipo
+        lastSec = ''
+      }
+
+      // Cabecera de sección
+      if (sec !== lastSec) {
+        rows.push(
+          <tr key={`sec-${sec}-${idx}`}>
+            <td colSpan={colCount} style={{ padding:'10px 0 3px', paddingLeft:0, fontSize:9, fontWeight:700, color:'#4361EE', textTransform:'uppercase', letterSpacing:'0.1em', background:'#F8F9FF', borderBottom:'1px solid #EEF1FD', borderTop:'1px solid #EEF1FD' }}>
+              {sec}
+            </td>
+          </tr>
+        )
+        lastSec = sec
+      }
+
+      // Fila de partida
+      rows.push(
+        <tr key={p.id} style={{ borderBottom:'1px solid #F4F5F7' }}
+          onMouseEnter={e => (e.currentTarget.style.background='#FAFAFA')}
+          onMouseLeave={e => (e.currentTarget.style.background='transparent')}>
+          <td style={{ ...td, textAlign:'left' as const, paddingLeft:8 }}>
+            <div style={{ display:'flex', alignItems:'center', gap:8 }}>
+              <div style={{ width:24, height:24, borderRadius:6, background:`${p.color}18`, display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
+                <i className={`ti ${p.icono}`} style={{ fontSize:11, color:p.color }} aria-hidden="true" />
+              </div>
+              <div>
+                <span style={{ fontWeight:500 }}>{p.categoria}</span>
+                {p.cuentaCodigo && (
+                  <div style={{ fontSize:10, color:'#B0B7C3', marginTop:1 }}>{p.cuentaCodigo} · {p.cuentaNombre}</div>
+                )}
+              </div>
+            </div>
+          </td>
+          <td style={{ ...td, width:130 }}>
+            {editandoPlan === p.id ? (
+              <input type="number" defaultValue={p.planAnual}
+                onChange={e => handleEditPlanAnual(p.id, e.target.value)}
+                style={{ width:110, padding:'5px 8px', fontSize:12, border:'1px solid #4361EE', borderRadius:7, textAlign:'right', fontFamily:'Inter,sans-serif', background:'#F9FAFB', outline:'none' }} />
+            ) : (
+              <span onClick={() => setEditandoPlan(p.id)} title="Clic para editar"
+                style={{ cursor:'pointer', padding:'4px 8px', background:'#F4F5F7', borderRadius:6, fontSize:12, color:'#555', fontWeight:500 }}>
+                {fmt(p.planAnual)}
+              </span>
+            )}
+          </td>
+          <td style={{ ...td, color:'#888' }}>{fmt(planPer)}</td>
+          {hayReal && <td style={{ ...td, fontWeight:realPer>0?600:400, color:realPer>0?'#1a1a1a':'#B0B7C3' }}>{realPer>0?fmt(realPer):'—'}</td>}
+          <td style={td}>{hayReal&&realPer>0?<DeltaBadge real={realPer} plan={planPer} tipo={p.tipo}/>:<span style={{fontSize:11,color:'#B0B7C3'}}>—</span>}</td>
+          {hayReal && <td style={{ ...td, fontWeight:600, color:p.tipo==='ingreso'?(diff>=0?'#1a7a3a':'#b91c1c'):(diff<=0?'#1a7a3a':'#b91c1c') }}>{realPer>0?(diff>=0?'+':'')+fmt(diff):'—'}</td>}
+          <td style={{ textAlign:'center', verticalAlign:'middle' }}>
+            <button onClick={() => handleDelete(p.id)}
+              style={{ border:'none', background:'transparent', cursor:'pointer', color:'#D0D3DE', fontSize:13, padding:4, borderRadius:5, display:'flex', alignItems:'center' }}
+              onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.color='#EF4444'; (e.currentTarget as HTMLButtonElement).style.background='#FEF2F2' }}
+              onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.color='#D0D3DE'; (e.currentTarget as HTMLButtonElement).style.background='transparent' }}>
+              <i className="ti ti-trash" aria-hidden="true" />
+            </button>
+          </td>
+        </tr>
+      )
+
+      // Subtotal tras cada sección clave
+      const nextSec = idx < allSorted.length - 1 ? plSeccion(allSorted[idx+1].cuentaCodigo||'', allSorted[idx+1].tipo) : ''
+      const nextTipo = idx < allSorted.length - 1 ? allSorted[idx+1].tipo : ''
+      const isLastInSec = nextSec !== sec || nextTipo !== p.tipo
+      if (isLastInSec && SUBTOTALES[sec]) {
+        const sub = SUBTOTALES[sec]
+        const diff = sub.real - sub.plan
+        rows.push(
+          <tr key={`sub-${sec}`} style={{ background:`${sub.color}0D`, borderTop:`2px solid ${sub.color}40`, borderBottom:`2px solid ${sub.color}40` }}>
+            <td style={{ ...td, textAlign:'left' as const, paddingLeft:8, fontWeight:700, fontSize:13, color:sub.color }}>{sub.label}</td>
+            <td style={{ ...td, fontWeight:700, color:'#888' }}>{fmt(sub.plan)}</td>
+            <td style={{ ...td, fontWeight:700, color:'#888' }}>{fmt(sub.plan)}</td>
+            {hayReal && <td style={{ ...td, fontWeight:700, color:sub.color }}>{fmt(sub.real)}</td>}
+            <td style={td}>{hayReal&&sub.real>0&&<DeltaBadge real={sub.real} plan={sub.plan} tipo="ingreso"/>}</td>
+            {hayReal && <td style={{ ...td, fontWeight:700, color:diff>=0?'#1a7a3a':'#b91c1c' }}>{(diff>=0?'+':'')+fmt(diff)}</td>}
+            <td />
+          </tr>
+        )
+      }
+    })
 
     return (
       <div style={{ ...card, padding:'20px 22px' }}>
         <div style={{ marginBottom:14 }}>
-          <div style={{ fontSize:9, fontWeight:600, color:'#1a1a1a', textTransform:'uppercase', letterSpacing:'0.12em' }}>{tipo === 'ingreso' ? 'Ingresos' : 'Gastos'}</div>
-          <div style={{ fontSize:11, color:'#B0B7C3', lineHeight:1.5, marginTop:2 }}>{tipo === 'ingreso' ? 'Entradas de dinero planificadas y ejecutadas en el periodo.' : 'Salidas de dinero planificadas y ejecutadas en el periodo.'} {arr.length} categorías.</div>
+          <div style={{ fontSize:9, fontWeight:600, color:'#1a1a1a', textTransform:'uppercase', letterSpacing:'0.12em' }}>Cuenta de resultados</div>
+          <div style={{ fontSize:11, color:'#B0B7C3', marginTop:2 }}>Ingresos y gastos en orden P&L según PGC. Incluye subtotales de Margen bruto, EBITDA y Resultado neto.</div>
         </div>
         <div style={{ overflowX:'auto' }}>
           <table style={{ width:'100%', borderCollapse:'collapse', minWidth:580 }}>
             <thead>
-              <tr style={{ borderBottom:'1px solid #ECEEF3' }}>
-                <th style={{ ...th, textAlign:'left' as const, paddingLeft:0, width:'30%' }}>Categoría</th>
+              <tr style={{ borderBottom:'2px solid #ECEEF3' }}>
+                <th style={{ ...th, textAlign:'left' as const, paddingLeft:8, width:'30%' }}>Partida · Cuenta PGC</th>
                 <th style={{ ...th, width:130 }}>Plan anual</th>
                 <th style={th}>Esperado</th>
                 {hayReal && <th style={th}>Real</th>}
@@ -261,111 +414,13 @@ export default function Presupuesto() {
                 <th style={{ width:28 }} />
               </tr>
             </thead>
-            <tbody>
-              {(() => {
-                let lastSec = ''
-                const colCount = hayReal ? 7 : 5
-                return arr.flatMap(p => {
-                  const sec = plSeccion(p.cuentaCodigo || '', tipo)
-                  const planPer = sumMeses(p.planMensual, mesesActivos)
-                  const realPer = sumMeses(p.real, mesesConReal)
-                  const diff    = realPer - planPer
-                  const rows: React.ReactNode[] = []
-                  if (sec !== lastSec) {
-                    lastSec = sec
-                    rows.push(
-                      <tr key={`sec-${sec}`}>
-                        <td colSpan={colCount} style={{ padding:'8px 10px 4px', paddingLeft:0, fontSize:9, fontWeight:700, color:'#4361EE', textTransform:'uppercase', letterSpacing:'0.1em', background:'#F8F9FF', borderBottom:'1px solid #EEF1FD', borderTop:'1px solid #EEF1FD' }}>
-                          {sec}
-                        </td>
-                      </tr>
-                    )
-                  }
-                  rows.push(
-                  <tr key={p.id} style={{ borderBottom:'1px solid #F4F5F7' }}
-                    onMouseEnter={e => (e.currentTarget.style.background='#FAFAFA')}
-                    onMouseLeave={e => (e.currentTarget.style.background='transparent')}>
-                    <td style={{ ...td, textAlign:'left' as const, paddingLeft:0 }}>
-                      <div style={{ display:'flex', alignItems:'center', gap:8 }}>
-                        <div style={{ width:26, height:26, borderRadius:6, background:`${p.color}18`, display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
-                          <i className={`ti ${p.icono}`} style={{ fontSize:12, color:p.color }} aria-hidden="true" />
-                        </div>
-                        <div>
-                          <span style={{ fontWeight:500 }}>{p.categoria}</span>
-                          {p.cuentaCodigo && (
-                            <div style={{ fontSize:10, color:'#B0B7C3', marginTop:1 }}>
-                              {p.cuentaCodigo} · {p.cuentaNombre}
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    </td>
-                    <td style={{ ...td, width:130 }}>
-                      {editandoPlan === p.id ? (
-                        <input type="number" defaultValue={p.planAnual}
-                          onChange={e => handleEditPlanAnual(p.id, e.target.value)}
-                          style={{ width:110, padding:'5px 8px', fontSize:12, border:'1px solid #4361EE', borderRadius:7, textAlign:'right', fontFamily:'Inter,sans-serif', background:'#F9FAFB', outline:'none' }} />
-                      ) : (
-                        <span onClick={() => setEditandoPlan(p.id)} title="Clic para editar"
-                          style={{ cursor:'pointer', padding:'4px 8px', background:'#F4F5F7', borderRadius:6, fontSize:12, color:'#555', fontWeight:500 }}>
-                          {fmt(p.planAnual)}
-                        </span>
-                      )}
-                    </td>
-                    <td style={{ ...td, color:'#888' }}>{fmt(planPer)}</td>
-                    {hayReal && (
-                      <td style={{ ...td, fontWeight:realPer>0?600:400, color:realPer>0?'#1a1a1a':'#B0B7C3' }}>
-                        {realPer > 0 ? fmt(realPer) : '—'}
-                      </td>
-                    )}
-                    <td style={td}>
-                      {hayReal && realPer > 0
-                        ? <DeltaBadge real={realPer} plan={planPer} tipo={tipo} />
-                        : <span style={{ fontSize:11, color:'#B0B7C3' }}>—</span>}
-                    </td>
-                    {hayReal && (
-                      <td style={{ ...td, fontWeight:600, color:tipo==='ingreso'?(diff>=0?'#1a7a3a':'#b91c1c'):(diff<=0?'#1a7a3a':'#b91c1c') }}>
-                        {realPer > 0 ? (diff>=0?'+':'') + fmt(diff) : '—'}
-                      </td>
-                    )}
-                    <td style={{ textAlign:'center', verticalAlign:'middle' }}>
-                      <button onClick={() => handleDelete(p.id)}
-                        style={{ border:'none', background:'transparent', cursor:'pointer', color:'#D0D3DE', fontSize:13, padding:4, borderRadius:5, display:'flex', alignItems:'center' }}
-                        onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.color='#EF4444'; (e.currentTarget as HTMLButtonElement).style.background='#FEF2F2' }}
-                        onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.color='#D0D3DE'; (e.currentTarget as HTMLButtonElement).style.background='transparent' }}>
-                        <i className="ti ti-trash" aria-hidden="true" />
-                      </button>
-                    </td>
-                  </tr>
-                )
-                  return rows
-                })
-              })()}
-            </tbody>
-            <tfoot>
-              <tr>
-                <td style={{ ...tdTotal, textAlign:'left' as const, paddingLeft:8, borderRadius:'0 0 0 8px' }}>
-                  Total {tipo === 'ingreso' ? 'ingresos' : 'gastos'}
-                </td>
-                <td style={{ ...tdTotal, color:'#4361EE' }}>{fmt(planAnualTot)}</td>
-                <td style={{ ...tdTotal, color:'#4361EE' }}>{fmt(totalPlan)}</td>
-                {hayReal && <td style={{ ...tdTotal, color:colorAcc }}>{totalReal>0?fmt(totalReal):'—'}</td>}
-                <td style={tdTotal}>
-                  {hayReal && totalReal > 0 && <DeltaBadge real={totalReal} plan={totalPlan} tipo={tipo} />}
-                </td>
-                {hayReal && (
-                  <td style={{ ...tdTotal, color:tipo==='ingreso'?(totalReal-totalPlan>=0?'#1a7a3a':'#b91c1c'):(totalReal-totalPlan<=0?'#1a7a3a':'#b91c1c'), borderRadius:'0 0 8px 0' }}>
-                    {totalReal>0?(totalReal-totalPlan>=0?'+':'')+fmt(totalReal-totalPlan):'—'}
-                  </td>
-                )}
-                <td style={{ background:'#EEF1FD' }} />
-              </tr>
-            </tfoot>
+            <tbody>{rows}</tbody>
           </table>
         </div>
       </div>
     )
   }
+
 
   return (
     <Layout title="Presupuesto">
@@ -511,8 +566,7 @@ export default function Presupuesto() {
       </div>
 
       {/* ── Tablas independientes ── */}
-      <TablaPartidas tipo="ingreso" />
-      <TablaPartidas tipo="gasto" />
+      <CuentaResultados />
 
       {/* ── Modal nueva partida ── */}
       {modalNueva && (
