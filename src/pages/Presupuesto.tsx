@@ -256,11 +256,68 @@ export default function Presupuesto() {
     return 'Otros'
   }
 
+
+  // ── Plantilla fija P&L — PGC España ──────────────────────────────────────
+  const PL_TEMPLATE: { codigo:string; nombre:string; tipo:'ingreso'|'gasto'; seccion:string }[] = [
+    // INGRESOS
+    { codigo:'700', nombre:'Ventas de mercaderías',                tipo:'ingreso', seccion:'Cifra de negocios' },
+    { codigo:'701', nombre:'Ventas de productos terminados',       tipo:'ingreso', seccion:'Cifra de negocios' },
+    { codigo:'705', nombre:'Prestaciones de servicios',            tipo:'ingreso', seccion:'Cifra de negocios' },
+    { codigo:'708', nombre:'Devoluciones de ventas',               tipo:'ingreso', seccion:'Cifra de negocios' },
+    { codigo:'740', nombre:'Subvenciones de explotación',          tipo:'ingreso', seccion:'Subvenciones' },
+    { codigo:'752', nombre:'Ingresos por arrendamientos',          tipo:'ingreso', seccion:'Otros ingresos' },
+    { codigo:'753', nombre:'Ingresos de propiedad industrial',     tipo:'ingreso', seccion:'Otros ingresos' },
+    { codigo:'754', nombre:'Ingresos por comisiones',              tipo:'ingreso', seccion:'Otros ingresos' },
+    { codigo:'759', nombre:'Ingresos por servicios diversos',      tipo:'ingreso', seccion:'Otros ingresos' },
+    { codigo:'760', nombre:'Ingresos de participaciones',          tipo:'ingreso', seccion:'Ingresos financieros' },
+    { codigo:'762', nombre:'Ingresos de créditos',                 tipo:'ingreso', seccion:'Ingresos financieros' },
+    { codigo:'769', nombre:'Otros ingresos financieros',           tipo:'ingreso', seccion:'Ingresos financieros' },
+    // GASTOS
+    { codigo:'600', nombre:'Compras de mercaderías',               tipo:'gasto', seccion:'Aprovisionamientos' },
+    { codigo:'601', nombre:'Compras de materias primas',           tipo:'gasto', seccion:'Aprovisionamientos' },
+    { codigo:'607', nombre:'Trabajos realizados por otras empresas',tipo:'gasto', seccion:'Aprovisionamientos' },
+    { codigo:'621', nombre:'Arrendamientos y cánones',             tipo:'gasto', seccion:'Servicios exteriores' },
+    { codigo:'622', nombre:'Reparaciones y conservación',          tipo:'gasto', seccion:'Servicios exteriores' },
+    { codigo:'623', nombre:'Servicios de profesionales independientes',tipo:'gasto', seccion:'Servicios exteriores' },
+    { codigo:'624', nombre:'Transportes',                          tipo:'gasto', seccion:'Servicios exteriores' },
+    { codigo:'625', nombre:'Primas de seguros',                    tipo:'gasto', seccion:'Servicios exteriores' },
+    { codigo:'626', nombre:'Servicios bancarios y similares',      tipo:'gasto', seccion:'Servicios exteriores' },
+    { codigo:'627', nombre:'Publicidad, propaganda y RRPP',        tipo:'gasto', seccion:'Servicios exteriores' },
+    { codigo:'628', nombre:'Suministros',                          tipo:'gasto', seccion:'Servicios exteriores' },
+    { codigo:'629', nombre:'Otros servicios',                      tipo:'gasto', seccion:'Servicios exteriores' },
+    { codigo:'640', nombre:'Sueldos y salarios',                   tipo:'gasto', seccion:'Gastos de personal' },
+    { codigo:'641', nombre:'Indemnizaciones',                      tipo:'gasto', seccion:'Gastos de personal' },
+    { codigo:'642', nombre:'Seguridad Social a cargo de la empresa',tipo:'gasto', seccion:'Gastos de personal' },
+    { codigo:'649', nombre:'Otros gastos sociales',                tipo:'gasto', seccion:'Gastos de personal' },
+    { codigo:'650', nombre:'Pérdidas de créditos por insolvencias',tipo:'gasto', seccion:'Otros gastos de gestión' },
+    { codigo:'659', nombre:'Otras pérdidas en gestión corriente',  tipo:'gasto', seccion:'Otros gastos de gestión' },
+    { codigo:'662', nombre:'Intereses de deudas',                  tipo:'gasto', seccion:'Gastos financieros' },
+    { codigo:'665', nombre:'Descuentos s/ventas por pronto pago',  tipo:'gasto', seccion:'Gastos financieros' },
+    { codigo:'669', nombre:'Otros gastos financieros',             tipo:'gasto', seccion:'Gastos financieros' },
+    { codigo:'680', nombre:'Amortización inmovilizado intangible', tipo:'gasto', seccion:'Amortizaciones' },
+    { codigo:'681', nombre:'Amortización inmovilizado material',   tipo:'gasto', seccion:'Amortizaciones' },
+    { codigo:'630', nombre:'Impuesto sobre beneficios',            tipo:'gasto', seccion:'Tributos' },
+    { codigo:'631', nombre:'Otros tributos',                       tipo:'gasto', seccion:'Tributos' },
+  ]
+
   function CuentaResultados() {
-    const allSorted = [
-      ...partidas.filter(p => p.tipo === 'ingreso').sort((a, b) => plSortKey(a.cuentaCodigo||'999') - plSortKey(b.cuentaCodigo||'999')),
-      ...partidas.filter(p => p.tipo === 'gasto').sort((a, b) => plSortKey(a.cuentaCodigo||'999') - plSortKey(b.cuentaCodigo||'999')),
-    ]
+    // Usar plantilla fija — la tabla siempre tiene el mismo tamaño
+    const allSorted = PL_TEMPLATE.map(tpl => {
+      const match = partidas.find(p => p.cuentaCodigo === tpl.codigo)
+      return match ?? {
+        id: -parseInt(tpl.codigo),
+        categoria: tpl.nombre,
+        cuentaCodigo: tpl.codigo,
+        cuentaNombre: tpl.nombre,
+        tipo: tpl.tipo,
+        planAnual: 0,
+        planMensual: Array(12).fill(0),
+        real: Array(12).fill(0),
+        icono: tpl.tipo === 'ingreso' ? 'ti-trending-up' : 'ti-receipt',
+        color: tpl.tipo === 'ingreso' ? '#4361EE' : '#EF4444',
+        distribucion: 'lineal' as const,
+      }
+    })
 
     // Calcular totales por sección
     function secSum(seccion: string, campo: 'plan' | 'real'): number {
@@ -313,7 +370,8 @@ export default function Presupuesto() {
 
     const rows: React.ReactNode[] = []
     allSorted.forEach((p, idx) => {
-      const sec     = plSeccion(p.cuentaCodigo||''  , p.tipo)
+      const tplEntry = PL_TEMPLATE.find(t => t.codigo === p.cuentaCodigo)
+      const sec     = tplEntry?.seccion || plSeccion(p.cuentaCodigo||'', p.tipo)
       const prefix  = (p.cuentaCodigo||'99').slice(0,2)
       const nextP   = allSorted[idx + 1]
       const nextPre = nextP ? (nextP.cuentaCodigo||'99').slice(0,2) : ''
@@ -332,7 +390,7 @@ export default function Presupuesto() {
         rows.push(
           <tr key={`bloque-${p.tipo}`}>
             <td colSpan={colCount} style={{ padding:'14px 0 6px', paddingLeft:0, fontSize:11, fontWeight:700, color:'#1a1a1a' }}>
-              {p.tipo === 'ingreso' ? '+ INGRESOS DE EXPLOTACIÓN' : '− GASTOS DE EXPLOTACIÓN'}
+              {p.tipo === 'ingreso' ? 'INGRESOS DE EXPLOTACIÓN' : 'GASTOS DE EXPLOTACIÓN'}
             </td>
           </tr>
         )
@@ -387,12 +445,14 @@ export default function Presupuesto() {
           <td style={td}>{hayReal&&realPer>0?<DeltaBadge real={realPer} plan={planPer} tipo={p.tipo}/>:<span style={{fontSize:11,color:'#B0B7C3'}}>—</span>}</td>
           {hayReal && <td style={{ ...td, fontWeight:600, color:p.tipo==='ingreso'?(diff>=0?'#1a7a3a':'#b91c1c'):(diff<=0?'#1a7a3a':'#b91c1c') }}>{realPer>0?(diff>=0?'+':'')+fmt(diff):'—'}</td>}
           <td style={{ textAlign:'center', verticalAlign:'middle' }}>
-            <button onClick={() => handleDelete(p.id)}
-              style={{ border:'none', background:'transparent', cursor:'pointer', color:'#D0D3DE', fontSize:13, padding:4, borderRadius:5, display:'flex', alignItems:'center' }}
-              onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.color='#EF4444'; (e.currentTarget as HTMLButtonElement).style.background='#FEF2F2' }}
-              onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.color='#D0D3DE'; (e.currentTarget as HTMLButtonElement).style.background='transparent' }}>
-              <i className="ti ti-trash" aria-hidden="true" />
-            </button>
+            {p.id > 0 && (
+              <button onClick={() => handleDelete(p.id)}
+                style={{ border:'none', background:'transparent', cursor:'pointer', color:'#D0D3DE', fontSize:13, padding:4, borderRadius:5, display:'flex', alignItems:'center' }}
+                onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.color='#EF4444'; (e.currentTarget as HTMLButtonElement).style.background='#FEF2F2' }}
+                onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.color='#D0D3DE'; (e.currentTarget as HTMLButtonElement).style.background='transparent' }}>
+                <i className="ti ti-trash" aria-hidden="true" />
+              </button>
+            )}
           </td>
         </tr>
       )
