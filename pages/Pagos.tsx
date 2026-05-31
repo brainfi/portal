@@ -179,7 +179,6 @@ export default function Pagos() {
         .pagos-pres:hover{background:#F4F6FF!important;cursor:pointer}
       `}</style>
 
-      {filtroOpen && <div onClick={()=>setFiltroOpen(false)} style={{position:'fixed',inset:0,zIndex:40}}/>}
 
       {filtroOpen && (
         <div onClick={() => setFiltroOpen(false)} style={{ position:'fixed', inset:0, zIndex:40 }} />
