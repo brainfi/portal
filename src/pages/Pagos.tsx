@@ -132,6 +132,14 @@ export default function Pagos() {
   const deudaNoFin     = prestamos.filter(p=>p.clasificacion==='no_financiera').reduce((a,p)=>a+p.capitalPendiente,0)
   const proximoVenc    = obligaciones.filter(o=>o.diasRestantes>=0).sort((a,b)=>a.diasRestantes-b.diasRestantes)[0]
 
+  // Importe del mes filtrado para deuda
+  const numMeses       = filtroFecha === 'anual' ? 12 : 1
+  const deudaFinMes    = prestamos.filter(p=>p.clasificacion==='financiera'&&p.cuotaMensual>0).reduce((a,p)=>a+p.cuotaMensual,0) * numMeses
+  const deudaNoFinMes  = prestamos.filter(p=>p.clasificacion==='no_financiera').reduce((a,p)=>{
+    const meses = p.mesesRestantes <= (filtroFecha==='anual'?12:1) ? p.mesesRestantes : (filtroFecha==='anual'?12:1)
+    return a + (p.capitalPendiente / Math.max(p.mesesRestantes,1)) * meses
+  }, 0)
+
   // ── Obligaciones filtradas ──
   const obFiltradas = useMemo(() => obligaciones.filter(o => {
     if (filtroEstado !== 'todos' && o.estado !== filtroEstado) return false
@@ -218,8 +226,8 @@ export default function Pagos() {
       <div className="pagos-kgrid" style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:12}}>
         {[
           { lbl:'Obligaciones operativas', desc:'Pagos pendientes próximos 30 días.', val:fmt(totalOp), iconBg:'#FEF2F2', iconColor:'#EF4444', icon:'ti-calendar-due' },
-          { lbl:'Deuda financiera',        desc:'Capital vivo en préstamos y leasing.', val:fmt(deudaFin), iconBg:'#EEF1FD', iconColor:'#4361EE', icon:'ti-building-bank' },
-          { lbl:'Deuda no financiera',     desc:'Proveedores y administraciones.', val:fmt(deudaNoFin), iconBg:'#FFF8E6', iconColor:'#F4A100', icon:'ti-receipt' },
+          { lbl:'Deuda financiera', desc:`Cuotas ${filtroFechaLabel} · préstamos y leasing.`, val:fmt(Math.round(deudaFinMes)), sub:`Total pendiente ${fmt(deudaFin)}`, iconBg:'#EEF1FD', iconColor:'#4361EE', icon:'ti-building-bank' },
+          { lbl:'Deuda no financiera', desc:`Vencimientos ${filtroFechaLabel} · proveedores y AEAT.`, val:fmt(Math.round(deudaNoFinMes)), sub:`Total pendiente ${fmt(deudaNoFin)}`, iconBg:'#FFF8E6', iconColor:'#F4A100', icon:'ti-receipt' },
           { lbl:'Próximo vencimiento',     desc:'Obligación más urgente pendiente.', val:proximoVenc?`${proximoVenc.diasRestantes}d`:'—', sub:proximoVenc?`${proximoVenc.concepto} · ${fmt(proximoVenc.importe)}`:'', iconBg:'#F0F9F4', iconColor:'#2DC653', icon:'ti-clock' },
         ].map((k,i)=>(
           <div key={i} style={{...card,padding:'20px 22px'}}>
