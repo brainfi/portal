@@ -89,8 +89,6 @@ export default function Cobros() {
       group: '2026',
     })).reverse(),
     { key: 'anual' as const, label: 'Este año', group: 'Acumulado' },
-  ][m], group: '2026' })).reverse(),
-    { key: 'anual' as const, label: 'Último año', group: 'Acumulado' },
   ]
 
   // ── Totales ──
