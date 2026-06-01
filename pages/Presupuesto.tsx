@@ -319,6 +319,15 @@ export default function Presupuesto() {
       const r = rm.reduce((a, m) => a + (p.real[m]||0), 0)
       return { real:r, plan:ms.reduce((a,m)=>a+(p.planMensual[m]||0),0), hayReal:rm.length>0&&r>0 }
     }
+    // Meses del periodo seleccionado
+    const mesesVista = vista === 'anual' ? MESES_CON_REAL
+      : vista === 'trimestral' ? [3,4,5].filter(m => MESES_CON_REAL.includes(m))
+      : [4].filter(m => MESES_CON_REAL.includes(m))
+    const planMesesVista = vista === 'anual' ? Array.from({length:12},(_,i)=>i)
+      : vista === 'trimestral' ? [3,4,5]
+      : [4]
+    const labelVista = vista === 'anual' ? 'Real YTD' : vista === 'trimestral' ? 'Real Q2' : 'Real May'
+
     const POST_EBITDA = new Set(['66','67','68','63'])
     let margenMostrado = false, ebitdaMostrado = false, lastSec = '', lastTipo: TipoPartida | '' = ''
     function SubtotalRow({ slabel, plan, real, color }: { slabel:string; plan:number; real:number; color:string }) {
@@ -327,17 +336,9 @@ export default function Presupuesto() {
         <tr style={{ background:`${color}0D`, borderTop:`2px solid ${color}40`, borderBottom:`2px solid ${color}40` }}>
           <td style={{ ...td, textAlign:'left' as const, paddingLeft:8, fontWeight:700, fontSize:13, color }}>{slabel}</td>
           <td style={{ ...td, fontWeight:700, color:'#888' }}>{fmt(plan)}</td>
-          {vista === 'anual' ? (<>
-            <td style={{ ...td, textAlign:'right' as const, fontWeight:700, color }}>{real!==0?fmt(real):'—'}</td>
-            <td style={{ ...td, textAlign:'right' as const, fontWeight:700, color:diff>=0?'#1a7a3a':'#b91c1c' }}>{real!==0?(diff>=0?'+':'')+fmt(diff):'—'}</td>
-            <td style={td}>{real!==0&&<DeltaBadge real={Math.abs(real)} plan={Math.abs(plan)} tipo="ingreso"/>}</td>
-          </>) : vista === 'trimestral' ? (<>
-            {TRIMESTRES.map(q=><td key={q.label} style={{...td,background:q.isCurrent?'#F4F6FF':'transparent'}}/>)}
-            <td style={td}/>
-          </>) : (<>
-            {MESES_SHORT.map(m=><td key={m} style={td}/>)}
-            <td style={td}/>
-          </>)}
+          <td style={{ ...td, textAlign:'right' as const, fontWeight:700, color }}>{real!==0?fmt(real):'—'}</td>
+          <td style={{ ...td, textAlign:'right' as const, fontWeight:700, color:diff>=0?'#1a7a3a':'#b91c1c' }}>{real!==0?(diff>=0?'+':'')+fmt(diff):'—'}</td>
+          <td style={td}>{real!==0&&<DeltaBadge real={Math.abs(real)} plan={Math.abs(plan)} tipo="ingreso"/>}</td>
           <td />
         </tr>
       )
@@ -381,19 +382,17 @@ export default function Presupuesto() {
           ):(
             <td style={{...td,width:110}}><span style={{padding:'4px 6px',background:'#F4F5F7',borderRadius:6,fontSize:11,color:'#555',fontWeight:500}}>{fmt(p.planAnual)}</span></td>
           )}
-          {vista==='anual'?(()=>{
-            const rYTD=MESES_CON_REAL.reduce((a,m)=>a+(p.real[m]||0),0)
-            const dA=rYTD-p.planAnual, good=p.tipo==='ingreso'?dA>=0:dA<=0
-            return(<><td style={{...td,textAlign:'right' as const,fontWeight:rYTD>0?600:400,color:rYTD>0?'#1a1a1a':'#B0B7C3'}}>{rYTD>0?fmt(rYTD):'—'}</td>
-              <td style={{...td,textAlign:'right' as const,fontWeight:600,color:rYTD>0?(good?'#1a7a3a':'#b91c1c'):'#B0B7C3'}}>{rYTD>0?(dA>=0?'+':'')+fmt(dA):'—'}</td>
-              <td style={{...td,textAlign:'right' as const}}>{rYTD>0?<DeltaBadge real={rYTD} plan={p.planAnual} tipo={p.tipo}/>:<span style={{fontSize:11,color:'#B0B7C3'}}>—</span>}</td></>)
-          })():vista==='trimestral'?(<>
-            {TRIMESTRES.map(q=>{const cv=cellVal(p,q.meses);const bad=cv.hayReal&&(p.tipo==='ingreso'?cv.real<cv.plan*0.97:cv.real>cv.plan*1.03);const good=cv.hayReal&&!bad;return(<td key={q.label} style={{...td,textAlign:'right' as const,background:q.isCurrent?'#F4F6FF':'transparent',fontSize:11,fontWeight:cv.hayReal?600:400,color:cv.hayReal?(bad?'#b91c1c':good?'#1a7a3a':'#1a1a1a'):'#C7D2F8'}}>{cv.hayReal?fmt(cv.real):fmt(cv.plan)}</td>)})}
-            <td style={td}>{hayReal&&realPer>0?<DeltaBadge real={realPer} plan={planPer} tipo={p.tipo}/>:<span style={{fontSize:11,color:'#B0B7C3'}}>—</span>}</td>
-          </>):(<>
-            {MESES_SHORT.map((m,mi)=>{const hr=MESES_CON_REAL.includes(mi)&&p.real[mi]>0;const ic=mi===MES_ACTUAL_IDX;return(<td key={m} style={{...td,textAlign:'right' as const,background:ic?'#F4F6FF':'transparent',fontSize:11,fontWeight:hr?600:400,color:hr?'#1a1a1a':ic?'#4361EE':'#C7D2F8'}}>{hr?fmt(p.real[mi]):p.planMensual[mi]>0?fmt(p.planMensual[mi]):<span style={{color:'#E8E8EC'}}>—</span>}</td>)})}
-            <td style={td}>{hayReal&&realPer>0?<DeltaBadge real={realPer} plan={planPer} tipo={p.tipo}/>:<span style={{fontSize:11,color:'#B0B7C3'}}>—</span>}</td>
-          </>)}
+          {(()=>{
+            const rV   = mesesVista.reduce((a,m)=>a+(p.real[m]||0),0)
+            const pV   = planMesesVista.reduce((a,m)=>a+(p.planMensual[m]||0),0)
+            const dV   = rV - pV
+            const good = p.tipo==='ingreso'?dV>=0:dV<=0
+            return(<>
+              <td style={{...td,textAlign:'right' as const,fontWeight:rV>0?600:400,color:rV>0?'#1a1a1a':'#B0B7C3'}}>{rV>0?fmt(rV):'—'}</td>
+              <td style={{...td,textAlign:'right' as const,fontWeight:600,color:rV>0?(good?'#1a7a3a':'#b91c1c'):'#B0B7C3'}}>{rV>0?(dV>=0?'+':'')+fmt(dV):'—'}</td>
+              <td style={{...td,textAlign:'right' as const}}>{rV>0?<DeltaBadge real={rV} plan={pV} tipo={p.tipo}/>:<span style={{fontSize:11,color:'#B0B7C3'}}>—</span>}</td>
+            </>)
+          })()}
           <td style={{textAlign:'center',verticalAlign:'middle'}}>
             {p.id>0&&(<button onClick={()=>handleDelete(p.id)} style={{border:'none',background:'transparent',cursor:'pointer',color:'#D0D3DE',fontSize:13,padding:4,borderRadius:5,display:'flex',alignItems:'center'}} onMouseEnter={e=>{(e.currentTarget as HTMLButtonElement).style.color='#EF4444';(e.currentTarget as HTMLButtonElement).style.background='#FEF2F2'}} onMouseLeave={e=>{(e.currentTarget as HTMLButtonElement).style.color='#D0D3DE';(e.currentTarget as HTMLButtonElement).style.background='transparent'}}><i className="ti ti-trash" aria-hidden="true"/></button>)}
           </td>
@@ -429,9 +428,10 @@ export default function Presupuesto() {
             <thead>
               <tr style={{borderBottom:'2px solid #ECEEF3'}}>
                 <th style={{...th,textAlign:'left' as const,paddingLeft:8,width:'28%'}}>Partida · Cuenta PGC</th>
-                {vista==='anual'?(<><th style={{...th,width:110}}>Plan anual</th><th style={{...th,textAlign:'right' as const}}>Real YTD</th><th style={{...th,textAlign:'right' as const}}>Desv. €</th><th style={{...th,textAlign:'right' as const}}>Desv. %</th></>)
-                :vista==='trimestral'?(<><th style={{...th,width:110}}>Plan anual</th>{TRIMESTRES.map(q=>(<th key={q.label} style={{...th,textAlign:'right' as const,background:q.isCurrent?'#EEF1FD':'transparent',borderRadius:6,minWidth:72}}>{q.label}</th>))}<th style={th}>Desv.%</th></>)
-                :(<><th style={{...th,width:110}}>Plan anual</th>{MESES_SHORT.map((m,i)=>(<th key={m} style={{...th,textAlign:'right' as const,background:i===MES_ACTUAL_IDX?'#EEF1FD':'transparent',borderRadius:6,minWidth:52,fontSize:9}}>{m}</th>))}<th style={th}>Desv.%</th></>)}
+                <th style={{...th,width:110}}>Plan anual</th>
+                <th style={{...th,textAlign:'right' as const}}>{labelVista}</th>
+                <th style={{...th,textAlign:'right' as const}}>Desv. €</th>
+                <th style={{...th,textAlign:'right' as const}}>Desv. %</th>
                 <th style={{width:28}}/>
               </tr>
             </thead>
