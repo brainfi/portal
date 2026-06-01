@@ -208,6 +208,46 @@ export default function Presupuesto() {
   ]
 
   // Orden y agrupación P&L según PGC
+  const PL_TEMPLATE: { codigo:string; nombre:string; tipo:'ingreso'|'gasto'; seccion:string }[] = [
+    { codigo:'700', nombre:'Ventas de mercaderías',                  tipo:'ingreso', seccion:'Cifra de negocios' },
+    { codigo:'701', nombre:'Ventas de productos terminados',         tipo:'ingreso', seccion:'Cifra de negocios' },
+    { codigo:'705', nombre:'Prestaciones de servicios',              tipo:'ingreso', seccion:'Cifra de negocios' },
+    { codigo:'708', nombre:'Devoluciones de ventas',                 tipo:'ingreso', seccion:'Cifra de negocios' },
+    { codigo:'740', nombre:'Subvenciones de explotación',            tipo:'ingreso', seccion:'Subvenciones' },
+    { codigo:'752', nombre:'Ingresos por arrendamientos',            tipo:'ingreso', seccion:'Otros ingresos' },
+    { codigo:'753', nombre:'Ingresos de propiedad industrial',       tipo:'ingreso', seccion:'Otros ingresos' },
+    { codigo:'754', nombre:'Ingresos por comisiones',                tipo:'ingreso', seccion:'Otros ingresos' },
+    { codigo:'759', nombre:'Ingresos por servicios diversos',        tipo:'ingreso', seccion:'Otros ingresos' },
+    { codigo:'760', nombre:'Ingresos de participaciones',            tipo:'ingreso', seccion:'Ingresos financieros' },
+    { codigo:'762', nombre:'Ingresos de créditos',                   tipo:'ingreso', seccion:'Ingresos financieros' },
+    { codigo:'769', nombre:'Otros ingresos financieros',             tipo:'ingreso', seccion:'Ingresos financieros' },
+    { codigo:'600', nombre:'Compras de mercaderías',                 tipo:'gasto', seccion:'Aprovisionamientos' },
+    { codigo:'601', nombre:'Compras de materias primas',             tipo:'gasto', seccion:'Aprovisionamientos' },
+    { codigo:'607', nombre:'Trabajos realizados por otras empresas', tipo:'gasto', seccion:'Aprovisionamientos' },
+    { codigo:'621', nombre:'Arrendamientos y cánones',               tipo:'gasto', seccion:'Servicios exteriores' },
+    { codigo:'622', nombre:'Reparaciones y conservación',            tipo:'gasto', seccion:'Servicios exteriores' },
+    { codigo:'623', nombre:'Servicios de profesionales independientes', tipo:'gasto', seccion:'Servicios exteriores' },
+    { codigo:'624', nombre:'Transportes',                            tipo:'gasto', seccion:'Servicios exteriores' },
+    { codigo:'625', nombre:'Primas de seguros',                      tipo:'gasto', seccion:'Servicios exteriores' },
+    { codigo:'626', nombre:'Servicios bancarios y similares',        tipo:'gasto', seccion:'Servicios exteriores' },
+    { codigo:'627', nombre:'Publicidad, propaganda y RRPP',          tipo:'gasto', seccion:'Servicios exteriores' },
+    { codigo:'628', nombre:'Suministros',                            tipo:'gasto', seccion:'Servicios exteriores' },
+    { codigo:'629', nombre:'Otros servicios',                        tipo:'gasto', seccion:'Servicios exteriores' },
+    { codigo:'640', nombre:'Sueldos y salarios',                     tipo:'gasto', seccion:'Gastos de personal' },
+    { codigo:'641', nombre:'Indemnizaciones',                        tipo:'gasto', seccion:'Gastos de personal' },
+    { codigo:'642', nombre:'Seguridad Social a cargo de la empresa', tipo:'gasto', seccion:'Gastos de personal' },
+    { codigo:'649', nombre:'Otros gastos sociales',                  tipo:'gasto', seccion:'Gastos de personal' },
+    { codigo:'650', nombre:'Pérdidas de créditos por insolvencias',  tipo:'gasto', seccion:'Otros gastos de gestión' },
+    { codigo:'659', nombre:'Otras pérdidas en gestión corriente',    tipo:'gasto', seccion:'Otros gastos de gestión' },
+    { codigo:'662', nombre:'Intereses de deudas',                    tipo:'gasto', seccion:'Gastos financieros' },
+    { codigo:'665', nombre:'Descuentos s/ventas por pronto pago',    tipo:'gasto', seccion:'Gastos financieros' },
+    { codigo:'669', nombre:'Otros gastos financieros',               tipo:'gasto', seccion:'Gastos financieros' },
+    { codigo:'680', nombre:'Amortización inmovilizado intangible',   tipo:'gasto', seccion:'Amortizaciones' },
+    { codigo:'681', nombre:'Amortización inmovilizado material',     tipo:'gasto', seccion:'Amortizaciones' },
+    { codigo:'630', nombre:'Impuesto sobre beneficios',              tipo:'gasto', seccion:'Tributos' },
+    { codigo:'631', nombre:'Otros tributos',                         tipo:'gasto', seccion:'Tributos' },
+  ]
+
   function plSortKey(codigo: string): number {
     return parseInt(codigo, 10) || 999
   }
