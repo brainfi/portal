@@ -90,6 +90,8 @@ export default function Presupuesto() {
   const [filtro, setFiltro] = useState<FiltroPeriodo>(MES_ACTUAL)
   const [filtroOpen, setFiltroOpen] = useState(false)
   const [editandoPlan, setEditandoPlan] = useState<number | null>(null)
+  const [vistaPL,     setVistaPL]     = useState<'anual' | 'trimestral' | 'mensual'>('anual')
+  const [modalPL,     setModalPL]     = useState(false)
   const [saved, setSaved] = useState(false)
   const [modalNueva, setModalNueva] = useState(false)
   const [nuevaCategoria, setNuevaCategoria] = useState('')
@@ -262,8 +264,8 @@ export default function Presupuesto() {
     const amortReal = secSum('Amortizaciones','real')+secSum('Gastos financieros','real')+secSum('Tributos','real')+secSum('Pérdidas','real')
     const rnetoPlan = ebitdaPlan - amortPlan
     const rnetoReal = ebitdaReal - amortReal
-    const [vista, setVista] = useState<'anual' | 'trimestral' | 'mensual'>('anual')
-    const [modalPL, setModalPL] = useState(false)
+    const vista   = vistaPL
+    const setVista = setVistaPL
     const TRIMESTRES = [
       { label:'Q1', meses:[0,1,2],   isCurrent:false },
       { label:'Q2', meses:[3,4,5],   isCurrent:true  },
