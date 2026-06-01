@@ -339,7 +339,27 @@ export default function Presupuesto() {
     const rnetoPlan  = ebitdaPlan - amortPlan
     const rnetoReal  = ebitdaReal - amortReal
 
-    const colCount = hayReal ? 7 : 5
+    const [vista, setVista] = useState<'trimestral' | 'mensual'>('trimestral')
+
+    const TRIMESTRES = [
+      { label:'Q1', meses:[0,1,2],    isCurrent: false },
+      { label:'Q2', meses:[3,4,5],    isCurrent: true  },
+      { label:'Q3', meses:[6,7,8],    isCurrent: false },
+      { label:'Q4', meses:[9,10,11],  isCurrent: false },
+    ]
+    const MESES_SHORT = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic']
+    const MES_ACTUAL_IDX = 4
+    const Q_ACTUAL_IDX   = 1
+
+    // Valor de celda por periodo (trimestre o mes)
+    function cellVal(p: typeof allSorted[0], periodoMeses: number[]) {
+      const realMeses = periodoMeses.filter(m => MESES_CON_REAL.includes(m))
+      const r = realMeses.reduce((a, m) => a + (p.real[m] || 0), 0)
+      const plan = periodoMeses.reduce((a, m) => a + (p.planMensual[m] || 0), 0)
+      return { real: r, plan, hayReal: realMeses.length > 0 && r > 0 }
+    }
+
+    const colCount = vista === 'trimestral' ? 7 : 16
     let lastSec = ''
     let lastTipo: TipoPartida | '' = ''
 
@@ -424,20 +444,43 @@ export default function Presupuesto() {
               </div>
             </div>
           </td>
-          <td style={{ ...td, width:130 }}>
+          <td style={{ ...td, width:110 }}>
             {editandoPlan === p.id ? (
               <input type="number" defaultValue={p.planAnual}
                 onChange={e => handleEditPlanAnual(p.id, e.target.value)}
-                style={{ width:110, padding:'5px 8px', fontSize:12, border:'1px solid #4361EE', borderRadius:7, textAlign:'right', fontFamily:'Inter,sans-serif', background:'#F9FAFB', outline:'none' }} />
+                style={{ width:90, padding:'5px 8px', fontSize:12, border:'1px solid #4361EE', borderRadius:7, textAlign:'right', fontFamily:'Inter,sans-serif', background:'#F9FAFB', outline:'none' }} />
             ) : (
               <span onClick={() => setEditandoPlan(p.id)} title="Clic para editar"
-                style={{ cursor:'pointer', padding:'4px 8px', background:'#F4F5F7', borderRadius:6, fontSize:12, color:'#555', fontWeight:500 }}>
+                style={{ cursor:'pointer', padding:'4px 6px', background:'#F4F5F7', borderRadius:6, fontSize:11, color:'#555', fontWeight:500 }}>
                 {fmt(p.planAnual)}
               </span>
             )}
           </td>
-          <td style={{ ...td, color:'#888' }}>{fmt(planPer)}</td>
-          {hayReal && <td style={{ ...td, fontWeight:realPer>0?600:400, color:realPer>0?'#1a1a1a':'#B0B7C3' }}>{realPer>0?fmt(realPer):'—'}</td>}
+          {vista === 'trimestral'
+            ? TRIMESTRES.map((q, qi) => {
+                const cv = cellVal(p, q.meses)
+                const isBad = cv.hayReal && (p.tipo==='ingreso' ? cv.real < cv.plan*0.97 : cv.real > cv.plan*1.03)
+                const isGood = cv.hayReal && (p.tipo==='ingreso' ? cv.real >= cv.plan*0.97 : cv.real <= cv.plan*1.03)
+                return (
+                  <td key={q.label} style={{ ...td, textAlign:'right' as const, background:q.isCurrent?'#F4F6FF':'transparent', fontSize:11, fontWeight:cv.hayReal?600:400,
+                    color: cv.hayReal ? (isBad?'#b91c1c':isGood?'#1a7a3a':'#1a1a1a') : '#C7D2F8' }}>
+                    {cv.hayReal ? fmt(cv.real) : fmt(cv.plan)}
+                  </td>
+                )
+              })
+            : MESES_SHORT.map((m, mi) => {
+                const hasReal = MESES_CON_REAL.includes(mi) && p.real[mi] > 0
+                const val = hasReal ? p.real[mi] : p.planMensual[mi]
+                const isCur = mi === MES_ACTUAL_IDX
+                return (
+                  <td key={m} style={{ ...td, textAlign:'right' as const, background:isCur?'#F4F6FF':'transparent', fontSize:11,
+                    fontWeight: hasReal ? 600 : 400,
+                    color: hasReal ? '#1a1a1a' : isCur ? '#4361EE' : '#C7D2F8' }}>
+                    {val > 0 ? fmt(val) : <span style={{color:'#E8E8EC'}}>—</span>}
+                  </td>
+                )
+              })
+          }
           <td style={td}>{hayReal&&realPer>0?<DeltaBadge real={realPer} plan={planPer} tipo={p.tipo}/>:<span style={{fontSize:11,color:'#B0B7C3'}}>—</span>}</td>
           {hayReal && <td style={{ ...td, fontWeight:600, color:p.tipo==='ingreso'?(diff>=0?'#1a7a3a':'#b91c1c'):(diff<=0?'#1a7a3a':'#b91c1c') }}>{realPer>0?(diff>=0?'+':'')+fmt(diff):'—'}</td>}
           <td style={{ textAlign:'center', verticalAlign:'middle' }}>
@@ -467,20 +510,38 @@ export default function Presupuesto() {
 
     return (
       <div style={{ ...card, padding:'20px 22px' }}>
-        <div style={{ marginBottom:14 }}>
-          <div style={{ fontSize:9, fontWeight:600, color:'#1a1a1a', textTransform:'uppercase', letterSpacing:'0.12em' }}>Cuenta de resultados</div>
-          <div style={{ fontSize:11, color:'#B0B7C3', marginTop:2 }}>Estructura de la cuenta de pérdidas y ganancias según el PGC español.</div>
+        <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:14 }}>
+          <div>
+            <div style={{ fontSize:9, fontWeight:600, color:'#1a1a1a', textTransform:'uppercase', letterSpacing:'0.12em' }}>Cuenta de resultados</div>
+            <div style={{ fontSize:11, color:'#B0B7C3', marginTop:2 }}>Estructura de la cuenta de pérdidas y ganancias según el PGC español.</div>
+          </div>
+          <div style={{ display:'flex', gap:2, background:'#F4F5F7', borderRadius:8, padding:3, flexShrink:0 }}>
+            {(['trimestral','mensual'] as const).map(v => (
+              <button key={v} onClick={() => setVista(v)}
+                style={{ border:'none', cursor:'pointer', fontFamily:'inherit', fontSize:11, fontWeight:vista===v?600:400, padding:'5px 12px', borderRadius:6,
+                  background:vista===v?'#fff':'transparent', color:vista===v?'#1a1a1a':'#888',
+                  boxShadow:vista===v?'0 1px 4px rgba(0,0,0,0.08)':'none', transition:'all .12s' }}>
+                {v === 'trimestral' ? 'Q' : 'Mes'}
+              </button>
+            ))}
+          </div>
         </div>
         <div style={{ overflowX:'auto' }}>
           <table style={{ width:'100%', borderCollapse:'collapse', minWidth:580 }}>
             <thead>
               <tr style={{ borderBottom:'2px solid #ECEEF3' }}>
-                <th style={{ ...th, textAlign:'left' as const, paddingLeft:8, width:'30%' }}>Partida · Cuenta PGC</th>
-                <th style={{ ...th, width:130 }}>Plan anual</th>
-                <th style={th}>Esperado</th>
-                {hayReal && <th style={th}>Real</th>}
-                <th style={th}>Desviación %</th>
-                {hayReal && <th style={th}>Δ importe</th>}
+                <th style={{ ...th, textAlign:'left' as const, paddingLeft:8, width:'28%' }}>Partida · Cuenta PGC</th>
+                <th style={{ ...th, width:110 }}>Plan anual</th>
+                {vista === 'trimestral'
+                  ? TRIMESTRES.map(q => (
+                      <th key={q.label} style={{ ...th, textAlign:'right' as const, background:q.isCurrent?'#EEF1FD':'transparent', borderRadius:6, minWidth:72 }}>{q.label}</th>
+                    ))
+                  : MESES_SHORT.map((m, i) => (
+                      <th key={m} style={{ ...th, textAlign:'right' as const, background:i===MES_ACTUAL_IDX?'#EEF1FD':'transparent', borderRadius:6, minWidth:56, fontSize:9 }}>{m}</th>
+                    ))
+                }
+                <th style={th}>Desv.%</th>
+                {hayReal && <th style={th}>Δ</th>}
                 <th style={{ width:28 }} />
               </tr>
             </thead>
