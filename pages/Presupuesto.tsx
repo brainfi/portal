@@ -605,7 +605,6 @@ export default function Presupuesto() {
             <tbody>{rows}</tbody>
           </table>
         </div>
-      </div>
 
       {/* ── Modal P&L completa (mes a mes) ── */}
       {modalPL && (
