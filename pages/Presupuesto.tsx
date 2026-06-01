@@ -457,16 +457,53 @@ export default function Presupuesto() {
                     </tr>
                   </thead>
                   <tbody>
-                    {allSorted.map(p=>{
-                      const rYTD=MESES_CON_REAL.reduce((a,m)=>a+(p.real[m]||0),0)
-                      return(<tr key={`m-${p.id}`} style={{borderBottom:'1px solid #F4F5F7'}} onMouseEnter={e=>(e.currentTarget.style.background='#FAFAFA')} onMouseLeave={e=>(e.currentTarget.style.background='transparent')}>
-                        <td style={{...td,textAlign:'left' as const,paddingLeft:0,fontSize:11}}><div style={{fontWeight:500}}>{p.categoria}</div>{p.cuentaCodigo&&<div style={{fontSize:9,color:'#B0B7C3'}}>{p.cuentaCodigo}</div>}</td>
-                        <td style={{...td,fontSize:11,color:'#888'}}>{p.planAnual>0?fmt(p.planAnual):'—'}</td>
-                        {MESES_SHORT.map((m,mi)=>{const hr=MESES_CON_REAL.includes(mi)&&p.real[mi]>0;const ic=mi===MES_ACTUAL_IDX;return(<td key={m} style={{...td,textAlign:'right' as const,fontSize:11,background:ic?'#F4F6FF':'transparent',fontWeight:hr?600:400,color:hr?'#1a1a1a':p.planMensual[mi]>0?'#C7D2F8':'#E8E8EC'}}>{hr?fmt(p.real[mi]):p.planMensual[mi]>0?fmt(p.planMensual[mi]):'—'}</td>)})}
-                        <td style={{...td,textAlign:'right' as const,fontWeight:rYTD>0?600:400,color:rYTD>0?'#1a1a1a':'#B0B7C3',fontSize:11}}>{rYTD>0?fmt(rYTD):'—'}</td>
-                        <td style={{...td,textAlign:'right' as const,fontSize:11}}>{rYTD>0&&p.planAnual>0?<DeltaBadge real={rYTD} plan={p.planAnual} tipo={p.tipo}/>:<span style={{color:'#B0B7C3'}}>—</span>}</td>
-                      </tr>)
-                    })}
+                    {(()=>{
+                      const mRows: React.ReactNode[] = []
+                      let mMargen=false, mEbitda=false, mLastSec='', mLastTipo: TipoPartida|''=''
+                      function MSubtotal({slabel,plan,real,color}:{slabel:string;plan:number;real:number;color:string}) {
+                        const diff=real-plan
+                        return(<tr style={{background:`${color}0D`,borderTop:`2px solid ${color}40`,borderBottom:`2px solid ${color}40`}}>
+                          <td style={{...td,textAlign:'left' as const,paddingLeft:0,fontWeight:700,fontSize:12,color}}>{slabel}</td>
+                          <td style={{...td,fontSize:11,fontWeight:700,color:'#888'}}>{fmt(plan)}</td>
+                          {MESES_SHORT.map(m=><td key={m} style={td}/>)}
+                          <td style={{...td,textAlign:'right' as const,fontWeight:700,color}}>{real!==0?fmt(real):'—'}</td>
+                          <td style={{...td,textAlign:'right' as const,fontSize:11}}>{real!==0&&<DeltaBadge real={Math.abs(real)} plan={Math.abs(plan)} tipo="ingreso"/>}</td>
+                        </tr>)
+                      }
+                      allSorted.forEach((p,idx)=>{
+                        const tplE=PL_TEMPLATE.find(t=>t.codigo===p.cuentaCodigo)
+                        const sec=tplE?.seccion||plSeccion(p.cuentaCodigo||'',p.tipo)
+                        const nextP=allSorted[idx+1]
+                        const nextPre=nextP?(nextP.cuentaCodigo||'99').slice(0,2):''
+                        const nextTipoVal=nextP?nextP.tipo:''
+                        const nextSec=(nextP?PL_TEMPLATE.find(t=>t.codigo===nextP.cuentaCodigo):undefined)?.seccion||(nextP?plSeccion(nextP.cuentaCodigo||'',nextP.tipo):'')
+                        const rYTD=MESES_CON_REAL.reduce((a,m)=>a+(p.real[m]||0),0)
+                        const COLS=16
+                        if (p.tipo!==mLastTipo) {
+                          if (p.tipo==='gasto'&&!mMargen) { mMargen=true; mRows.push(<MSubtotal key="m-mb-pre" slabel="Margen bruto" plan={mbPlan} real={mbReal} color="#4361EE"/>) }
+                          mRows.push(<tr key={`mb-${p.tipo}`}><td colSpan={COLS} style={{padding:'14px 0 6px',paddingLeft:0,fontSize:11,fontWeight:700,color:'#1a1a1a'}}>{p.tipo==='ingreso'?'INGRESOS DE EXPLOTACIÓN':'GASTOS DE EXPLOTACIÓN'}</td></tr>)
+                          mLastTipo=p.tipo; mLastSec=''
+                        }
+                        if (sec!==mLastSec) {
+                          mRows.push(<tr key={`ms-${sec}-${idx}`}><td colSpan={COLS} style={{padding:'8px 0 3px',paddingLeft:0,fontSize:9,fontWeight:700,color:'#4361EE',textTransform:'uppercase',letterSpacing:'0.1em',background:'#F8F9FF',borderBottom:'1px solid #EEF1FD'}}>{sec}</td></tr>)
+                          mLastSec=sec
+                        }
+                        mRows.push(<tr key={`m-${p.id}`} style={{borderBottom:'1px solid #F4F5F7'}} onMouseEnter={e=>(e.currentTarget.style.background='#FAFAFA')} onMouseLeave={e=>(e.currentTarget.style.background='transparent')}>
+                          <td style={{...td,textAlign:'left' as const,paddingLeft:0,fontSize:11}}><div style={{fontWeight:500}}>{p.categoria}</div>{p.cuentaCodigo&&<div style={{fontSize:9,color:'#B0B7C3'}}>{p.cuentaCodigo}</div>}</td>
+                          <td style={{...td,fontSize:11,color:'#888'}}>{p.planAnual>0?fmt(p.planAnual):'—'}</td>
+                          {MESES_SHORT.map((m,mi)=>{const hr=MESES_CON_REAL.includes(mi)&&p.real[mi]>0;const ic=mi===MES_ACTUAL_IDX;return(<td key={m} style={{...td,textAlign:'right' as const,fontSize:11,background:ic?'#F4F6FF':'transparent',fontWeight:hr?600:400,color:hr?'#1a1a1a':p.planMensual[mi]>0?'#C7D2F8':'#E8E8EC'}}>{hr?fmt(p.real[mi]):p.planMensual[mi]>0?fmt(p.planMensual[mi]):'—'}</td>)})}
+                          <td style={{...td,textAlign:'right' as const,fontWeight:rYTD>0?600:400,color:rYTD>0?'#1a1a1a':'#B0B7C3',fontSize:11}}>{rYTD>0?fmt(rYTD):'—'}</td>
+                          <td style={{...td,textAlign:'right' as const,fontSize:11}}>{rYTD>0&&p.planAnual>0?<DeltaBadge real={rYTD} plan={p.planAnual} tipo={p.tipo}/>:<span style={{color:'#B0B7C3'}}>—</span>}</td>
+                        </tr>)
+                        const isLastAprov=sec==='Aprovisionamientos'&&(nextSec!=='Aprovisionamientos'||nextTipoVal!==p.tipo)
+                        if (!mMargen&&isLastAprov) { mMargen=true; mRows.push(<MSubtotal key="m-mb" slabel="Margen bruto" plan={mbPlan} real={mbReal} color="#4361EE"/>) }
+                        const isLast=p.tipo==='gasto'&&(!nextP||nextTipoVal!=='gasto')
+                        const nextPost=nextP&&nextTipoVal==='gasto'&&POST_EBITDA.has(nextPre)
+                        if (!mEbitda&&p.tipo==='gasto'&&(isLast||nextPost)) { mEbitda=true; mRows.push(<MSubtotal key="m-ebitda" slabel="EBITDA" plan={ebitdaPlan} real={ebitdaReal} color="#4361EE"/>) }
+                      })
+                      mRows.push(<MSubtotal key="m-rneto" slabel="Resultado neto" plan={rnetoPlan} real={rnetoReal} color="#4361EE"/>)
+                      return mRows
+                    })()}
                   </tbody>
                 </table>
               </div>
