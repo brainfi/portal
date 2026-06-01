@@ -355,7 +355,6 @@ export default function Presupuesto() {
       const realPer = sumMeses(p.real, mesesConReal)
       const colSpan = vista==='anual'?6:vista==='trimestral'?8:16
       if (p.tipo !== lastTipo) {
-        rows.push(<tr key={`bloque-${p.tipo}`}><td colSpan={colSpan} style={{padding:'14px 0 6px',paddingLeft:0,fontSize:11,fontWeight:700,color:'#1a1a1a'}}>{p.tipo==='ingreso'?'INGRESOS DE EXPLOTACIÓN':'GASTOS DE EXPLOTACIÓN'}</td></tr>)
         lastTipo=p.tipo; lastSec=''
       }
       if (sec !== lastSec) {
@@ -479,7 +478,6 @@ export default function Presupuesto() {
                         const rYTD=MESES_CON_REAL.reduce((a,m)=>a+(p.real[m]||0),0)
                         const COLS=16
                         if (p.tipo!==mLastTipo) {
-                                            mRows.push(<tr key={`mb-${p.tipo}`}><td colSpan={COLS} style={{padding:'14px 0 6px',paddingLeft:0,fontSize:11,fontWeight:700,color:'#1a1a1a'}}>{p.tipo==='ingreso'?'INGRESOS DE EXPLOTACIÓN':'GASTOS DE EXPLOTACIÓN'}</td></tr>)
                           mLastTipo=p.tipo; mLastSec=''
                         }
                         if (sec!==mLastSec) {
