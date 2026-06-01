@@ -207,33 +207,6 @@ export default function Presupuesto() {
 
   // Orden y agrupación P&L según PGC
   function plSortKey(codigo: string): number {
-    const n = parseInt(codigo, 10) || 999
-    return n
-  }
-  function plSeccion(codigo: string, tipo: TipoPartida): string {
-    const n = parseInt(codigo.slice(0, 2), 10)
-    if (tipo === 'ingreso') {
-      if (n >= 70 && n <= 73) return 'Cifra de negocios'
-      if (n === 74)           return 'Subvenciones de explotación'
-      if (n >= 75 && n <= 75) return 'Otros ingresos de gestión'
-      if (n >= 76 && n <= 76) return 'Ingresos financieros'
-      if (n >= 77 && n <= 79) return 'Beneficios excepcionales'
-      return 'Otros ingresos'
-    } else {
-      if (n >= 60 && n <= 61) return 'Aprovisionamientos'
-      if (n >= 62 && n <= 62) return 'Servicios exteriores'
-      if (n >= 63 && n <= 63) return 'Tributos'
-      if (n >= 64 && n <= 64) return 'Gastos de personal'
-      if (n >= 65 && n <= 65) return 'Otros gastos de gestión'
-      if (n >= 66 && n <= 66) return 'Gastos financieros'
-      if (n >= 67 && n <= 67) return 'Pérdidas'
-      if (n >= 68 && n <= 68) return 'Amortizaciones y deterioros'
-      return 'Otros gastos'
-    }
-  }
-
-  // ── Cuenta de resultados P&L ──────────────────────────────────────────
-  function plSortKey(codigo: string): number {
     return parseInt(codigo, 10) || 999
   }
   function plSeccion(codigo: string, tipo: TipoPartida): string {
@@ -256,47 +229,6 @@ export default function Presupuesto() {
     return 'Otros'
   }
 
-
-  const PL_TEMPLATE: { codigo:string; nombre:string; tipo:'ingreso'|'gasto'; seccion:string }[] = [
-    { codigo:'700', nombre:'Ventas de mercaderías',                  tipo:'ingreso', seccion:'Cifra de negocios' },
-    { codigo:'701', nombre:'Ventas de productos terminados',         tipo:'ingreso', seccion:'Cifra de negocios' },
-    { codigo:'705', nombre:'Prestaciones de servicios',              tipo:'ingreso', seccion:'Cifra de negocios' },
-    { codigo:'708', nombre:'Devoluciones de ventas',                 tipo:'ingreso', seccion:'Cifra de negocios' },
-    { codigo:'740', nombre:'Subvenciones de explotación',            tipo:'ingreso', seccion:'Subvenciones' },
-    { codigo:'752', nombre:'Ingresos por arrendamientos',            tipo:'ingreso', seccion:'Otros ingresos' },
-    { codigo:'753', nombre:'Ingresos de propiedad industrial',       tipo:'ingreso', seccion:'Otros ingresos' },
-    { codigo:'754', nombre:'Ingresos por comisiones',                tipo:'ingreso', seccion:'Otros ingresos' },
-    { codigo:'759', nombre:'Ingresos por servicios diversos',        tipo:'ingreso', seccion:'Otros ingresos' },
-    { codigo:'760', nombre:'Ingresos de participaciones',            tipo:'ingreso', seccion:'Ingresos financieros' },
-    { codigo:'762', nombre:'Ingresos de créditos',                   tipo:'ingreso', seccion:'Ingresos financieros' },
-    { codigo:'769', nombre:'Otros ingresos financieros',             tipo:'ingreso', seccion:'Ingresos financieros' },
-    { codigo:'600', nombre:'Compras de mercaderías',                 tipo:'gasto', seccion:'Aprovisionamientos' },
-    { codigo:'601', nombre:'Compras de materias primas',             tipo:'gasto', seccion:'Aprovisionamientos' },
-    { codigo:'607', nombre:'Trabajos realizados por otras empresas', tipo:'gasto', seccion:'Aprovisionamientos' },
-    { codigo:'621', nombre:'Arrendamientos y cánones',               tipo:'gasto', seccion:'Servicios exteriores' },
-    { codigo:'622', nombre:'Reparaciones y conservación',            tipo:'gasto', seccion:'Servicios exteriores' },
-    { codigo:'623', nombre:'Servicios de profesionales independientes',tipo:'gasto', seccion:'Servicios exteriores' },
-    { codigo:'624', nombre:'Transportes',                            tipo:'gasto', seccion:'Servicios exteriores' },
-    { codigo:'625', nombre:'Primas de seguros',                      tipo:'gasto', seccion:'Servicios exteriores' },
-    { codigo:'626', nombre:'Servicios bancarios y similares',        tipo:'gasto', seccion:'Servicios exteriores' },
-    { codigo:'627', nombre:'Publicidad, propaganda y RRPP',          tipo:'gasto', seccion:'Servicios exteriores' },
-    { codigo:'628', nombre:'Suministros',                            tipo:'gasto', seccion:'Servicios exteriores' },
-    { codigo:'629', nombre:'Otros servicios',                        tipo:'gasto', seccion:'Servicios exteriores' },
-    { codigo:'640', nombre:'Sueldos y salarios',                     tipo:'gasto', seccion:'Gastos de personal' },
-    { codigo:'641', nombre:'Indemnizaciones',                        tipo:'gasto', seccion:'Gastos de personal' },
-    { codigo:'642', nombre:'Seguridad Social a cargo de la empresa', tipo:'gasto', seccion:'Gastos de personal' },
-    { codigo:'649', nombre:'Otros gastos sociales',                  tipo:'gasto', seccion:'Gastos de personal' },
-    { codigo:'650', nombre:'Pérdidas de créditos por insolvencias',  tipo:'gasto', seccion:'Otros gastos de gestión' },
-    { codigo:'659', nombre:'Otras pérdidas en gestión corriente',    tipo:'gasto', seccion:'Otros gastos de gestión' },
-    { codigo:'662', nombre:'Intereses de deudas',                    tipo:'gasto', seccion:'Gastos financieros' },
-    { codigo:'665', nombre:'Descuentos s/ventas por pronto pago',    tipo:'gasto', seccion:'Gastos financieros' },
-    { codigo:'669', nombre:'Otros gastos financieros',               tipo:'gasto', seccion:'Gastos financieros' },
-    { codigo:'680', nombre:'Amortización inmovilizado intangible',   tipo:'gasto', seccion:'Amortizaciones' },
-    { codigo:'681', nombre:'Amortización inmovilizado material',     tipo:'gasto', seccion:'Amortizaciones' },
-    { codigo:'630', nombre:'Impuesto sobre beneficios',              tipo:'gasto', seccion:'Tributos' },
-    { codigo:'631', nombre:'Otros tributos',                         tipo:'gasto', seccion:'Tributos' },
-  ]
-
   function CuentaResultados() {
     const allSorted = PL_TEMPLATE.map(tpl => {
       const match = partidas.find(p => p.cuentaCodigo === tpl.codigo)
@@ -314,368 +246,195 @@ export default function Presupuesto() {
         distribucion: 'lineal' as const,
       }
     })
-
-    // Calcular totales por sección
     function secSum(seccion: string, campo: 'plan' | 'real'): number {
-      return allSorted
-        .filter(p => plSeccion(p.cuentaCodigo||'', p.tipo) === seccion)
-        .reduce((a, p) => a + (campo === 'plan'
-          ? sumMeses(p.planMensual, mesesActivos)
-          : sumMeses(p.real, mesesConReal)), 0)
+      return allSorted.filter(p => plSeccion(p.cuentaCodigo||'', p.tipo) === seccion)
+        .reduce((a, p) => a + (campo === 'plan' ? sumMeses(p.planMensual, mesesActivos) : sumMeses(p.real, mesesConReal)), 0)
     }
-
-    const ingPlan    = allSorted.filter(p=>p.tipo==='ingreso').reduce((a,p)=>a+sumMeses(p.planMensual,mesesActivos),0)
-    const ingReal    = allSorted.filter(p=>p.tipo==='ingreso').reduce((a,p)=>a+sumMeses(p.real,mesesConReal),0)
-    const aprovPlan  = secSum('Aprovisionamientos','plan')
-    const aprovReal  = secSum('Aprovisionamientos','real')
-    const mbPlan     = ingPlan - aprovPlan
-    const mbReal     = ingReal - aprovReal
-    const svcPlan    = secSum('Servicios exteriores','plan') + secSum('Gastos de personal','plan') + secSum('Otros gastos de gestión','plan')
-    const svcReal    = secSum('Servicios exteriores','real') + secSum('Gastos de personal','real') + secSum('Otros gastos de gestión','real')
+    const ingPlan = allSorted.filter(p=>p.tipo==='ingreso').reduce((a,p)=>a+sumMeses(p.planMensual,mesesActivos),0)
+    const ingReal = allSorted.filter(p=>p.tipo==='ingreso').reduce((a,p)=>a+sumMeses(p.real,mesesConReal),0)
+    const mbPlan = ingPlan - secSum('Aprovisionamientos','plan')
+    const mbReal = ingReal - secSum('Aprovisionamientos','real')
+    const svcPlan = secSum('Servicios exteriores','plan')+secSum('Gastos de personal','plan')+secSum('Otros gastos de gestión','plan')
+    const svcReal = secSum('Servicios exteriores','real')+secSum('Gastos de personal','real')+secSum('Otros gastos de gestión','real')
     const ebitdaPlan = mbPlan - svcPlan
     const ebitdaReal = mbReal - svcReal
-    const amortPlan  = secSum('Amortizaciones','plan') + secSum('Gastos financieros','plan') + secSum('Tributos','plan') + secSum('Pérdidas','plan')
-    const amortReal  = secSum('Amortizaciones','real') + secSum('Gastos financieros','real') + secSum('Tributos','real') + secSum('Pérdidas','real')
-    const rnetoPlan  = ebitdaPlan - amortPlan
-    const rnetoReal  = ebitdaReal - amortReal
-
+    const amortPlan = secSum('Amortizaciones','plan')+secSum('Gastos financieros','plan')+secSum('Tributos','plan')+secSum('Pérdidas','plan')
+    const amortReal = secSum('Amortizaciones','real')+secSum('Gastos financieros','real')+secSum('Tributos','real')+secSum('Pérdidas','real')
+    const rnetoPlan = ebitdaPlan - amortPlan
+    const rnetoReal = ebitdaReal - amortReal
     const [vista, setVista] = useState<'anual' | 'trimestral' | 'mensual'>('anual')
     const [modalPL, setModalPL] = useState(false)
-
     const TRIMESTRES = [
-      { label:'Q1', meses:[0,1,2],    isCurrent: false },
-      { label:'Q2', meses:[3,4,5],    isCurrent: true  },
-      { label:'Q3', meses:[6,7,8],    isCurrent: false },
-      { label:'Q4', meses:[9,10,11],  isCurrent: false },
+      { label:'Q1', meses:[0,1,2],   isCurrent:false },
+      { label:'Q2', meses:[3,4,5],   isCurrent:true  },
+      { label:'Q3', meses:[6,7,8],   isCurrent:false },
+      { label:'Q4', meses:[9,10,11], isCurrent:false },
     ]
     const MESES_SHORT = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic']
     const MES_ACTUAL_IDX = 4
-    const Q_ACTUAL_IDX   = 1
-
-    // Valor de celda por periodo (trimestre o mes)
-    function cellVal(p: typeof allSorted[0], periodoMeses: number[]) {
-      const realMeses = periodoMeses.filter(m => MESES_CON_REAL.includes(m))
-      const r = realMeses.reduce((a, m) => a + (p.real[m] || 0), 0)
-      const plan = periodoMeses.reduce((a, m) => a + (p.planMensual[m] || 0), 0)
-      return { real: r, plan, hayReal: realMeses.length > 0 && r > 0 }
+    function cellVal(p: typeof allSorted[0], ms: number[]) {
+      const rm = ms.filter(m => MESES_CON_REAL.includes(m))
+      const r = rm.reduce((a, m) => a + (p.real[m]||0), 0)
+      return { real:r, plan:ms.reduce((a,m)=>a+(p.planMensual[m]||0),0), hayReal:rm.length>0&&r>0 }
     }
-
-    const colCount = vista === 'anual' ? 6 : vista === 'trimestral' ? 8 : 16
-    let lastSec = ''
-    let lastTipo: TipoPartida | '' = ''
-
-    // Prefijos de sección financiera/amortización (van DESPUÉS del EBITDA)
     const POST_EBITDA = new Set(['66','67','68','63'])
-
-    let margenMostrado   = false
-    let ebitdaMostrado   = false
-
-    function SubtotalRow({ label, plan, real, color }: { label:string; plan:number; real:number; color:string }) {
+    let margenMostrado = false, ebitdaMostrado = false, lastSec = '', lastTipo: TipoPartida | '' = ''
+    function SubtotalRow({ slabel, plan, real, color }: { slabel:string; plan:number; real:number; color:string }) {
       const diff = real - plan
       return (
         <tr style={{ background:`${color}0D`, borderTop:`2px solid ${color}40`, borderBottom:`2px solid ${color}40` }}>
-          <td style={{ ...td, textAlign:'left' as const, paddingLeft:8, fontWeight:700, fontSize:13, color }}>{label}</td>
+          <td style={{ ...td, textAlign:'left' as const, paddingLeft:8, fontWeight:700, fontSize:13, color }}>{slabel}</td>
           <td style={{ ...td, fontWeight:700, color:'#888' }}>{fmt(plan)}</td>
-          <td style={{ ...td, fontWeight:700, color:'#888' }}>{fmt(plan)}</td>
-          {hayReal && <td style={{ ...td, fontWeight:700, color }}>{fmt(real)}</td>}
-          <td style={td}>{hayReal&&real!==0&&<DeltaBadge real={Math.abs(real)} plan={Math.abs(plan)} tipo="ingreso"/>}</td>
-          {hayReal && <td style={{ ...td, fontWeight:700, color:diff>=0?'#1a7a3a':'#b91c1c' }}>{(diff>=0?'+':'')+fmt(diff)}</td>}
+          {vista === 'anual' ? (<>
+            <td style={{ ...td, textAlign:'right' as const, fontWeight:700, color }}>{real!==0?fmt(real):'—'}</td>
+            <td style={{ ...td, textAlign:'right' as const, fontWeight:700, color:diff>=0?'#1a7a3a':'#b91c1c' }}>{real!==0?(diff>=0?'+':'')+fmt(diff):'—'}</td>
+            <td style={td}>{real!==0&&<DeltaBadge real={Math.abs(real)} plan={Math.abs(plan)} tipo="ingreso"/>}</td>
+          </>) : vista === 'trimestral' ? (<>
+            {TRIMESTRES.map(q=><td key={q.label} style={{...td,background:q.isCurrent?'#F4F6FF':'transparent'}}/>)}
+            <td style={td}/>
+          </>) : (<>
+            {MESES_SHORT.map(m=><td key={m} style={td}/>)}
+            <td style={td}/>
+          </>)}
           <td />
         </tr>
       )
     }
-
     const rows: React.ReactNode[] = []
     allSorted.forEach((p, idx) => {
-      const tplEntry = PL_TEMPLATE.find(t => t.codigo === p.cuentaCodigo)
-      const sec     = tplEntry?.seccion || plSeccion(p.cuentaCodigo||'', p.tipo)
-      const prefix  = (p.cuentaCodigo||'99').slice(0,2)
-      const nextP   = allSorted[idx + 1]
-      const nextPre = nextP ? (nextP.cuentaCodigo||'99').slice(0,2) : ''
-      const nextTipoVal = nextP ? nextP.tipo : ''
-      const nextTplEntry = nextP ? PL_TEMPLATE.find(t => t.codigo === nextP.cuentaCodigo) : undefined
-      const nextSec = nextTplEntry?.seccion || (nextP ? plSeccion(nextP.cuentaCodigo||'', nextP.tipo) : '')
+      const tplE = PL_TEMPLATE.find(t=>t.codigo===p.cuentaCodigo)
+      const sec = tplE?.seccion || plSeccion(p.cuentaCodigo||'', p.tipo)
+      const nextP = allSorted[idx+1]
+      const nextPre = nextP?(nextP.cuentaCodigo||'99').slice(0,2):''
+      const nextTipoVal = nextP?nextP.tipo:''
+      const nextSec = (nextP?PL_TEMPLATE.find(t=>t.codigo===nextP.cuentaCodigo):undefined)?.seccion || (nextP?plSeccion(nextP.cuentaCodigo||'',nextP.tipo):'')
       const planPer = sumMeses(p.planMensual, mesesActivos)
       const realPer = sumMeses(p.real, mesesConReal)
-      const diff    = realPer - planPer
-
-      // Cabecera bloque ingresos/gastos
+      const colSpan = vista==='anual'?6:vista==='trimestral'?8:16
       if (p.tipo !== lastTipo) {
-        // Margen bruto se inserta después de Aprovisionamientos (ver lógica abajo)
-        rows.push(
-          <tr key={`bloque-${p.tipo}`}>
-            <td colSpan={colCount} style={{ padding:'14px 0 6px', paddingLeft:0, fontSize:11, fontWeight:700, color:'#1a1a1a' }}>
-              {p.tipo === 'ingreso' ? 'INGRESOS DE EXPLOTACIÓN' : 'GASTOS DE EXPLOTACIÓN'}
-            </td>
-          </tr>
-        )
-        lastTipo = p.tipo
-        lastSec = ''
+        if (p.tipo==='gasto'&&!margenMostrado) { margenMostrado=true; rows.push(<SubtotalRow key="mb-pre" slabel="Margen bruto" plan={mbPlan} real={mbReal} color="#4361EE"/>) }
+        rows.push(<tr key={`bloque-${p.tipo}`}><td colSpan={colSpan} style={{padding:'14px 0 6px',paddingLeft:0,fontSize:11,fontWeight:700,color:'#1a1a1a'}}>{p.tipo==='ingreso'?'INGRESOS DE EXPLOTACIÓN':'GASTOS DE EXPLOTACIÓN'}</td></tr>)
+        lastTipo=p.tipo; lastSec=''
       }
-
-      // Cabecera de sección
       if (sec !== lastSec) {
-        rows.push(
-          <tr key={`sec-${sec}-${idx}`}>
-            <td colSpan={colCount} style={{ padding:'10px 0 3px', paddingLeft:0, fontSize:9, fontWeight:700, color:'#4361EE', textTransform:'uppercase', letterSpacing:'0.1em', background:'#F8F9FF', borderBottom:'1px solid #EEF1FD', borderTop:'1px solid #EEF1FD' }}>
-              {sec}
-            </td>
-          </tr>
-        )
-        lastSec = sec
+        rows.push(<tr key={`sec-${sec}-${idx}`}><td colSpan={colSpan} style={{padding:'10px 0 3px',paddingLeft:0,fontSize:9,fontWeight:700,color:'#4361EE',textTransform:'uppercase',letterSpacing:'0.1em',background:'#F8F9FF',borderBottom:'1px solid #EEF1FD',borderTop:'1px solid #EEF1FD'}}>{sec}</td></tr>)
+        lastSec=sec
       }
-
-      // Fila de partida
       rows.push(
-        <tr key={p.id} style={{ borderBottom:'1px solid #F4F5F7' }}
-          onMouseEnter={e => (e.currentTarget.style.background='#FAFAFA')}
-          onMouseLeave={e => (e.currentTarget.style.background='transparent')}>
-          <td style={{ ...td, textAlign:'left' as const, paddingLeft:8 }}>
-            <div style={{ display:'flex', alignItems:'center', gap:8 }}>
-              <div style={{ width:24, height:24, borderRadius:6, background:`${p.color}18`, display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
-                <i className={`ti ${p.icono}`} style={{ fontSize:11, color:p.color }} aria-hidden="true" />
+        <tr key={p.id} style={{borderBottom:'1px solid #F4F5F7'}} onMouseEnter={e=>(e.currentTarget.style.background='#FAFAFA')} onMouseLeave={e=>(e.currentTarget.style.background='transparent')}>
+          <td style={{...td,textAlign:'left' as const,paddingLeft:8}}>
+            <div style={{display:'flex',alignItems:'center',gap:8}}>
+              <div style={{width:24,height:24,borderRadius:6,background:`${p.color}18`,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
+                <i className={`ti ${p.icono}`} style={{fontSize:11,color:p.color}} aria-hidden="true"/>
               </div>
-              <div>
-                <span style={{ fontWeight:500 }}>{p.categoria}</span>
-                {p.cuentaCodigo && (
-                  <div style={{ fontSize:10, color:'#B0B7C3', marginTop:1 }}>{p.cuentaCodigo} · {p.cuentaNombre}</div>
-                )}
+              <div><span style={{fontWeight:500}}>{p.categoria}</span>
+                {p.cuentaCodigo&&<div style={{fontSize:10,color:'#B0B7C3',marginTop:1}}>{p.cuentaCodigo} · {p.cuentaNombre}</div>}
               </div>
             </div>
           </td>
-          {/* Plan anual — siempre editable */}
-          {vista === 'anual' ? (
-            <td style={{ ...td, width:110 }}>
-              {editandoPlan === p.id ? (
-                <input type="number" defaultValue={p.planAnual}
-                  onChange={e => handleEditPlanAnual(p.id, e.target.value)}
-                  style={{ width:90, padding:'5px 8px', fontSize:12, border:'1px solid #4361EE', borderRadius:7, textAlign:'right', fontFamily:'Inter,sans-serif', background:'#F9FAFB', outline:'none' }} />
-              ) : (
-                <span onClick={() => setEditandoPlan(p.id)} title="Clic para editar"
-                  style={{ cursor:'pointer', padding:'4px 6px', background:'#F4F5F7', borderRadius:6, fontSize:11, color:'#555', fontWeight:500 }}>
-                  {fmt(p.planAnual)}
-                </span>
-              )}
+          {vista==='anual'?(
+            <td style={{...td,width:110}}>
+              {editandoPlan===p.id?(<input type="number" defaultValue={p.planAnual} onChange={e=>handleEditPlanAnual(p.id,e.target.value)} style={{width:90,padding:'5px 8px',fontSize:12,border:'1px solid #4361EE',borderRadius:7,textAlign:'right',fontFamily:'Inter,sans-serif',background:'#F9FAFB',outline:'none'}}/>):(<span onClick={()=>setEditandoPlan(p.id)} title="Clic para editar" style={{cursor:'pointer',padding:'4px 6px',background:'#F4F5F7',borderRadius:6,fontSize:11,color:'#555',fontWeight:500}}>{fmt(p.planAnual)}</span>)}
             </td>
-          ) : (
-            <td style={{ ...td, width:110 }}>
-              <span style={{ padding:'4px 6px', background:'#F4F5F7', borderRadius:6, fontSize:11, color:'#555', fontWeight:500 }}>
-                {fmt(p.planAnual)}
-              </span>
-            </td>
+          ):(
+            <td style={{...td,width:110}}><span style={{padding:'4px 6px',background:'#F4F5F7',borderRadius:6,fontSize:11,color:'#555',fontWeight:500}}>{fmt(p.planAnual)}</span></td>
           )}
-          {vista === 'anual' ? (() => {
-            const realYTD = MESES_CON_REAL.reduce((a, m) => a + (p.real[m] || 0), 0)
-            const diffA   = realYTD - p.planAnual
-            const isGood  = p.tipo === 'ingreso' ? diffA >= 0 : diffA <= 0
-            return (
-              <>
-                <td style={{ ...td, textAlign:'right' as const, fontWeight:realYTD>0?600:400, color:realYTD>0?'#1a1a1a':'#B0B7C3' }}>
-                  {realYTD > 0 ? fmt(realYTD) : '—'}
-                </td>
-                <td style={{ ...td, textAlign:'right' as const, fontWeight:600, color:realYTD>0?(isGood?'#1a7a3a':'#b91c1c'):'#B0B7C3' }}>
-                  {realYTD > 0 ? (diffA >= 0 ? '+' : '') + fmt(diffA) : '—'}
-                </td>
-                <td style={{ ...td, textAlign:'right' as const }}>
-                  {realYTD > 0 ? <DeltaBadge real={realYTD} plan={p.planAnual} tipo={p.tipo} /> : <span style={{fontSize:11,color:'#B0B7C3'}}>—</span>}
-                </td>
-              </>
-            )
-          })() : vista === 'trimestral' ? (
-            <>
-              {TRIMESTRES.map((q) => {
-                const cv = cellVal(p, q.meses)
-                const isBad  = cv.hayReal && (p.tipo==='ingreso' ? cv.real < cv.plan*0.97 : cv.real > cv.plan*1.03)
-                const isGood = cv.hayReal && (p.tipo==='ingreso' ? cv.real >= cv.plan*0.97 : cv.real <= cv.plan*1.03)
-                return (
-                  <td key={q.label} style={{ ...td, textAlign:'right' as const, background:q.isCurrent?'#F4F6FF':'transparent', fontSize:11, fontWeight:cv.hayReal?600:400,
-                    color: cv.hayReal ? (isBad?'#b91c1c':isGood?'#1a7a3a':'#1a1a1a') : '#C7D2F8' }}>
-                    {cv.hayReal ? fmt(cv.real) : fmt(cv.plan)}
-                  </td>
-                )
-              })}
-              <td style={td}>{hayReal&&realPer>0?<DeltaBadge real={realPer} plan={planPer} tipo={p.tipo}/>:<span style={{fontSize:11,color:'#B0B7C3'}}>—</span>}</td>
-            </>
-          ) : (
-            <>
-              {MESES_SHORT.map((m, mi) => {
-                const hasReal = MESES_CON_REAL.includes(mi) && p.real[mi] > 0
-                const val = hasReal ? p.real[mi] : p.planMensual[mi]
-                const isCur = mi === MES_ACTUAL_IDX
-                return (
-                  <td key={m} style={{ ...td, textAlign:'right' as const, background:isCur?'#F4F6FF':'transparent', fontSize:11,
-                    fontWeight: hasReal ? 600 : 400,
-                    color: hasReal ? '#1a1a1a' : isCur ? '#4361EE' : '#C7D2F8' }}>
-                    {val > 0 ? fmt(val) : <span style={{color:'#E8E8EC'}}>—</span>}
-                  </td>
-                )
-              })}
-              <td style={td}>{hayReal&&realPer>0?<DeltaBadge real={realPer} plan={planPer} tipo={p.tipo}/>:<span style={{fontSize:11,color:'#B0B7C3'}}>—</span>}</td>
-            </>
-          )}
-          <td style={{ textAlign:'center', verticalAlign:'middle' }}>
-            {p.id > 0 && (
-              <button onClick={() => handleDelete(p.id)}
-                style={{ border:'none', background:'transparent', cursor:'pointer', color:'#D0D3DE', fontSize:13, padding:4, borderRadius:5, display:'flex', alignItems:'center' }}
-                onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.color='#EF4444'; (e.currentTarget as HTMLButtonElement).style.background='#FEF2F2' }}
-                onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.color='#D0D3DE'; (e.currentTarget as HTMLButtonElement).style.background='transparent' }}>
-                <i className="ti ti-trash" aria-hidden="true" />
-              </button>
-            )}
+          {vista==='anual'?(()=>{
+            const rYTD=MESES_CON_REAL.reduce((a,m)=>a+(p.real[m]||0),0)
+            const dA=rYTD-p.planAnual, good=p.tipo==='ingreso'?dA>=0:dA<=0
+            return(<><td style={{...td,textAlign:'right' as const,fontWeight:rYTD>0?600:400,color:rYTD>0?'#1a1a1a':'#B0B7C3'}}>{rYTD>0?fmt(rYTD):'—'}</td>
+              <td style={{...td,textAlign:'right' as const,fontWeight:600,color:rYTD>0?(good?'#1a7a3a':'#b91c1c'):'#B0B7C3'}}>{rYTD>0?(dA>=0?'+':'')+fmt(dA):'—'}</td>
+              <td style={{...td,textAlign:'right' as const}}>{rYTD>0?<DeltaBadge real={rYTD} plan={p.planAnual} tipo={p.tipo}/>:<span style={{fontSize:11,color:'#B0B7C3'}}>—</span>}</td></>)
+          })():vista==='trimestral'?(<>
+            {TRIMESTRES.map(q=>{const cv=cellVal(p,q.meses);const bad=cv.hayReal&&(p.tipo==='ingreso'?cv.real<cv.plan*0.97:cv.real>cv.plan*1.03);const good=cv.hayReal&&!bad;return(<td key={q.label} style={{...td,textAlign:'right' as const,background:q.isCurrent?'#F4F6FF':'transparent',fontSize:11,fontWeight:cv.hayReal?600:400,color:cv.hayReal?(bad?'#b91c1c':good?'#1a7a3a':'#1a1a1a'):'#C7D2F8'}}>{cv.hayReal?fmt(cv.real):fmt(cv.plan)}</td>)})}
+            <td style={td}>{hayReal&&realPer>0?<DeltaBadge real={realPer} plan={planPer} tipo={p.tipo}/>:<span style={{fontSize:11,color:'#B0B7C3'}}>—</span>}</td>
+          </>):(<>
+            {MESES_SHORT.map((m,mi)=>{const hr=MESES_CON_REAL.includes(mi)&&p.real[mi]>0;const ic=mi===MES_ACTUAL_IDX;return(<td key={m} style={{...td,textAlign:'right' as const,background:ic?'#F4F6FF':'transparent',fontSize:11,fontWeight:hr?600:400,color:hr?'#1a1a1a':ic?'#4361EE':'#C7D2F8'}}>{hr?fmt(p.real[mi]):p.planMensual[mi]>0?fmt(p.planMensual[mi]):<span style={{color:'#E8E8EC'}}>—</span>}</td>)})}
+            <td style={td}>{hayReal&&realPer>0?<DeltaBadge real={realPer} plan={planPer} tipo={p.tipo}/>:<span style={{fontSize:11,color:'#B0B7C3'}}>—</span>}</td>
+          </>)}
+          <td style={{textAlign:'center',verticalAlign:'middle'}}>
+            {p.id>0&&(<button onClick={()=>handleDelete(p.id)} style={{border:'none',background:'transparent',cursor:'pointer',color:'#D0D3DE',fontSize:13,padding:4,borderRadius:5,display:'flex',alignItems:'center'}} onMouseEnter={e=>{(e.currentTarget as HTMLButtonElement).style.color='#EF4444';(e.currentTarget as HTMLButtonElement).style.background='#FEF2F2'}} onMouseLeave={e=>{(e.currentTarget as HTMLButtonElement).style.color='#D0D3DE';(e.currentTarget as HTMLButtonElement).style.background='transparent'}}><i className="ti ti-trash" aria-hidden="true"/></button>)}
           </td>
         </tr>
       )
-
-      // Margen Bruto: después de la última línea de Aprovisionamientos
-      const isLastAprov = sec === 'Aprovisionamientos' && (nextSec !== 'Aprovisionamientos' || nextTipoVal !== p.tipo)
-      if (!margenMostrado && isLastAprov) {
-        margenMostrado = true
-        rows.push(<SubtotalRow key="mb" label="Margen bruto" plan={mbPlan} real={mbReal} color="#4361EE" />)
-      }
-
-      // EBITDA: antes del primer gasto financiero/amortización, o al final de gastos operativos
-      const isLastGasto = p.tipo === 'gasto' && (!nextP || nextTipoVal !== 'gasto')
-      const nextIsPostEbitda = nextP && nextTipoVal === 'gasto' && POST_EBITDA.has(nextPre)
-      if (!ebitdaMostrado && p.tipo === 'gasto' && (isLastGasto || nextIsPostEbitda)) {
-        ebitdaMostrado = true
-        rows.push(<SubtotalRow key="ebitda" label="EBITDA" plan={ebitdaPlan} real={ebitdaReal} color="#4361EE" />)
-      }
+      const isLastAprov = sec==='Aprovisionamientos'&&(nextSec!=='Aprovisionamientos'||nextTipoVal!==p.tipo)
+      if (!margenMostrado&&isLastAprov) { margenMostrado=true; rows.push(<SubtotalRow key="mb" slabel="Margen bruto" plan={mbPlan} real={mbReal} color="#4361EE"/>) }
+      const isLastGasto=p.tipo==='gasto'&&(!nextP||nextTipoVal!=='gasto')
+      const nextIsPost=nextP&&nextTipoVal==='gasto'&&POST_EBITDA.has(nextPre)
+      if (!ebitdaMostrado&&p.tipo==='gasto'&&(isLastGasto||nextIsPost)) { ebitdaMostrado=true; rows.push(<SubtotalRow key="ebitda" slabel="EBITDA" plan={ebitdaPlan} real={ebitdaReal} color="#4361EE"/>) }
     })
-
-    // Resultado neto al final
-    rows.push(<SubtotalRow key="rneto" label="Resultado neto" plan={rnetoPlan} real={rnetoReal} color="#4361EE" />)
-
+    rows.push(<SubtotalRow key="rneto" slabel="Resultado neto" plan={rnetoPlan} real={rnetoReal} color="#4361EE"/>)
     return (
-      <div style={{ ...card, padding:'20px 22px' }}>
-        <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:14 }}>
+      <div style={{...card,padding:'22px 24px'}}>
+        <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',marginBottom:14}}>
           <div>
-            <div style={{ fontSize:9, fontWeight:600, color:'#1a1a1a', textTransform:'uppercase', letterSpacing:'0.12em' }}>Cuenta de resultados</div>
-            <div style={{ fontSize:11, color:'#B0B7C3', marginTop:2 }}>Estructura de la cuenta de pérdidas y ganancias según el PGC español.</div>
+            <div style={{fontSize:9,fontWeight:600,color:'#1a1a1a',textTransform:'uppercase',letterSpacing:'0.12em'}}>Cuenta de resultados</div>
+            <div style={{fontSize:11,color:'#B0B7C3',marginTop:2}}>Estructura de la cuenta de pérdidas y ganancias según el PGC español.</div>
           </div>
-          <div style={{ display:'flex', alignItems:'center', gap:8 }}>
-            <div style={{ display:'flex', gap:2, background:'#F4F5F7', borderRadius:8, padding:3, flexShrink:0 }}>
-              {([['anual','Año'],['trimestral','Q'],['mensual','Mes']] as const).map(([v, lbl]) => (
-                <button key={v} onClick={() => setVista(v as 'anual'|'trimestral'|'mensual')}
-                  style={{ border:'none', cursor:'pointer', fontFamily:'inherit', fontSize:11, fontWeight:vista===v?600:400, padding:'5px 12px', borderRadius:6,
-                    background:vista===v?'#fff':'transparent', color:vista===v?'#1a1a1a':'#888',
-                    boxShadow:vista===v?'0 1px 4px rgba(0,0,0,0.08)':'none', transition:'all .12s' }}>
-                  {lbl}
-                </button>
+          <div style={{display:'flex',alignItems:'center',gap:8}}>
+            <div style={{display:'flex',gap:2,background:'#F4F5F7',borderRadius:8,padding:3}}>
+              {([['anual','Año'],['trimestral','Q'],['mensual','Mes']] as const).map(([v,lbl])=>(
+                <button key={v} onClick={()=>setVista(v as 'anual'|'trimestral'|'mensual')} style={{border:'none',cursor:'pointer',fontFamily:'inherit',fontSize:11,fontWeight:vista===v?600:400,padding:'5px 12px',borderRadius:6,background:vista===v?'#fff':'transparent',color:vista===v?'#1a1a1a':'#888',boxShadow:vista===v?'0 1px 4px rgba(0,0,0,0.08)':'none'}}>{lbl}</button>
               ))}
             </div>
-            <button onClick={() => setModalPL(true)} title="Ver P&L completa"
-              style={{ display:'inline-flex', alignItems:'center', gap:5, padding:'5px 11px', fontSize:11, fontWeight:500, border:'1px solid #E8E8EC', borderRadius:7, background:'#fff', color:'#555', cursor:'pointer', fontFamily:'inherit' }}>
-              <i className="ti ti-arrows-maximize" style={{ fontSize:12 }} aria-hidden="true" />
-              Expandir
+            <button onClick={()=>setModalPL(true)} style={{display:'inline-flex',alignItems:'center',gap:5,padding:'5px 11px',fontSize:11,fontWeight:500,border:'1px solid #E8E8EC',borderRadius:7,background:'#fff',color:'#555',cursor:'pointer',fontFamily:'inherit'}}>
+              <i className="ti ti-arrows-maximize" style={{fontSize:12}} aria-hidden="true"/>Expandir
             </button>
           </div>
         </div>
-        <div style={{ overflowX:'auto' }}>
-          <table style={{ width:'100%', borderCollapse:'collapse', minWidth:580 }}>
+        <div style={{overflowX:'auto'}}>
+          <table style={{width:'100%',borderCollapse:'collapse',minWidth:580}}>
             <thead>
-              <tr style={{ borderBottom:'2px solid #ECEEF3' }}>
-                <th style={{ ...th, textAlign:'left' as const, paddingLeft:8, width:'28%' }}>Partida · Cuenta PGC</th>
-                {vista === 'anual' ? (
-                  <>
-                    <th style={{ ...th, width:110 }}>Plan anual</th>
-                    <th style={{ ...th, textAlign:'right' as const }}>Real YTD</th>
-                    <th style={{ ...th, textAlign:'right' as const }}>Desv. €</th>
-                    <th style={{ ...th, textAlign:'right' as const }}>Desv. %</th>
-                  </>
-                ) : vista === 'trimestral' ? (
-                  <>
-                    <th style={{ ...th, width:110 }}>Plan anual</th>
-                    {TRIMESTRES.map(q => (
-                      <th key={q.label} style={{ ...th, textAlign:'right' as const, background:q.isCurrent?'#EEF1FD':'transparent', borderRadius:6, minWidth:72 }}>{q.label}</th>
-                    ))}
-                    <th style={th}>Desv.%</th>
-                  </>
-                ) : (
-                  <>
-                    <th style={{ ...th, width:110 }}>Plan anual</th>
-                    {MESES_SHORT.map((m, i) => (
-                      <th key={m} style={{ ...th, textAlign:'right' as const, background:i===MES_ACTUAL_IDX?'#EEF1FD':'transparent', borderRadius:6, minWidth:52, fontSize:9 }}>{m}</th>
-                    ))}
-                    <th style={th}>Desv.%</th>
-                  </>
-                )}
-                <th style={{ width:28 }} />
+              <tr style={{borderBottom:'2px solid #ECEEF3'}}>
+                <th style={{...th,textAlign:'left' as const,paddingLeft:8,width:'28%'}}>Partida · Cuenta PGC</th>
+                {vista==='anual'?(<><th style={{...th,width:110}}>Plan anual</th><th style={{...th,textAlign:'right' as const}}>Real YTD</th><th style={{...th,textAlign:'right' as const}}>Desv. €</th><th style={{...th,textAlign:'right' as const}}>Desv. %</th></>)
+                :vista==='trimestral'?(<><th style={{...th,width:110}}>Plan anual</th>{TRIMESTRES.map(q=>(<th key={q.label} style={{...th,textAlign:'right' as const,background:q.isCurrent?'#EEF1FD':'transparent',borderRadius:6,minWidth:72}}>{q.label}</th>))}<th style={th}>Desv.%</th></>)
+                :(<><th style={{...th,width:110}}>Plan anual</th>{MESES_SHORT.map((m,i)=>(<th key={m} style={{...th,textAlign:'right' as const,background:i===MES_ACTUAL_IDX?'#EEF1FD':'transparent',borderRadius:6,minWidth:52,fontSize:9}}>{m}</th>))}<th style={th}>Desv.%</th></>)}
+                <th style={{width:28}}/>
               </tr>
             </thead>
             <tbody>{rows}</tbody>
           </table>
         </div>
-
-      {/* ── Modal P&L completa (mes a mes) ── */}
-      {modalPL && (
-        <div onClick={e => { if (e.target === e.currentTarget) setModalPL(false) }}
-          style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.35)', zIndex:500, display:'flex', alignItems:'center', justifyContent:'center', padding:20 }}>
-          <div style={{ background:'#F4F5F7', borderRadius:16, width:'95vw', maxWidth:1100, maxHeight:'90vh', overflow:'hidden', display:'flex', flexDirection:'column', boxShadow:'0 16px 48px rgba(0,0,0,0.2)' }}>
-            <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'18px 24px', background:'#fff', borderBottom:'1px solid #E8E8EC' }}>
-              <div>
-                <div style={{ fontSize:14, fontWeight:700, color:'#1a1a1a' }}>Cuenta de resultados · Detalle mensual</div>
-                <div style={{ fontSize:11, color:'#B0B7C3', marginTop:2 }}>Plan vs real por mes · 2026</div>
+        {modalPL&&(
+          <div onClick={e=>{if(e.target===e.currentTarget)setModalPL(false)}} style={{position:'fixed',inset:0,background:'rgba(0,0,0,0.35)',zIndex:500,display:'flex',alignItems:'center',justifyContent:'center',padding:20}}>
+            <div style={{background:'#F4F5F7',borderRadius:16,width:'95vw',maxWidth:1100,maxHeight:'90vh',overflow:'hidden',display:'flex',flexDirection:'column',boxShadow:'0 16px 48px rgba(0,0,0,0.2)'}}>
+              <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'18px 24px',background:'#fff',borderBottom:'1px solid #E8E8EC'}}>
+                <div><div style={{fontSize:14,fontWeight:700,color:'#1a1a1a'}}>Cuenta de resultados · Detalle mensual</div><div style={{fontSize:11,color:'#B0B7C3',marginTop:2}}>Plan vs real por mes · 2026</div></div>
+                <button onClick={()=>setModalPL(false)} style={{border:'none',background:'transparent',cursor:'pointer',color:'#888',fontSize:20,display:'flex',alignItems:'center'}}><i className="ti ti-x" aria-hidden="true"/></button>
               </div>
-              <button onClick={() => setModalPL(false)}
-                style={{ border:'none', background:'transparent', cursor:'pointer', color:'#888', fontSize:20, display:'flex', alignItems:'center' }}>
-                <i className="ti ti-x" aria-hidden="true" />
-              </button>
-            </div>
-            <div style={{ overflow:'auto', padding:'16px 24px' }}>
-              <table style={{ width:'100%', borderCollapse:'collapse', minWidth:900, fontSize:11 }}>
-                <thead>
-                  <tr style={{ borderBottom:'2px solid #ECEEF3' }}>
-                    <th style={{ ...th, textAlign:'left' as const, paddingLeft:0, width:'22%', fontSize:9 }}>Partida</th>
-                    <th style={{ ...th, fontSize:9, width:80 }}>Plan anual</th>
-                    {MESES_SHORT.map((m, i) => (
-                      <th key={m} style={{ ...th, textAlign:'right' as const, fontSize:9, minWidth:58, background:i===MES_ACTUAL_IDX?'#EEF1FD':'transparent', borderRadius:4 }}>{m}</th>
-                    ))}
-                    <th style={{ ...th, fontSize:9, textAlign:'right' as const }}>Real YTD</th>
-                    <th style={{ ...th, fontSize:9, textAlign:'right' as const }}>Desv.%</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {allSorted.map(p => {
-                    const realYTD = MESES_CON_REAL.reduce((a, m) => a + (p.real[m] || 0), 0)
-                    return (
-                      <tr key={p.id} style={{ borderBottom:'1px solid #F4F5F7' }}
-                        onMouseEnter={e => (e.currentTarget.style.background='#FAFAFA')}
-                        onMouseLeave={e => (e.currentTarget.style.background='transparent')}>
-                        <td style={{ ...td, textAlign:'left' as const, paddingLeft:0, fontSize:11 }}>
-                          <div style={{ fontWeight:500 }}>{p.categoria}</div>
-                          {p.cuentaCodigo && <div style={{ fontSize:9, color:'#B0B7C3' }}>{p.cuentaCodigo}</div>}
-                        </td>
-                        <td style={{ ...td, fontSize:11, color:'#888' }}>{p.planAnual > 0 ? fmt(p.planAnual) : '—'}</td>
-                        {MESES_SHORT.map((m, mi) => {
-                          const hasReal = MESES_CON_REAL.includes(mi) && p.real[mi] > 0
-                          const isCur = mi === MES_ACTUAL_IDX
-                          return (
-                            <td key={m} style={{ ...td, textAlign:'right' as const, fontSize:11, background:isCur?'#F4F6FF':'transparent',
-                              fontWeight: hasReal ? 600 : 400,
-                              color: hasReal ? '#1a1a1a' : p.planMensual[mi] > 0 ? '#C7D2F8' : '#E8E8EC' }}>
-                              {hasReal ? fmt(p.real[mi]) : p.planMensual[mi] > 0 ? fmt(p.planMensual[mi]) : '—'}
-                            </td>
-                          )
-                        })}
-                        <td style={{ ...td, textAlign:'right' as const, fontWeight:realYTD>0?600:400, color:realYTD>0?'#1a1a1a':'#B0B7C3', fontSize:11 }}>
-                          {realYTD > 0 ? fmt(realYTD) : '—'}
-                        </td>
-                        <td style={{ ...td, textAlign:'right' as const, fontSize:11 }}>
-                          {realYTD > 0 && p.planAnual > 0
-                            ? <DeltaBadge real={realYTD} plan={p.planAnual} tipo={p.tipo} />
-                            : <span style={{color:'#B0B7C3'}}>—</span>}
-                        </td>
-                      </tr>
-                    )
-                  })}
-                </tbody>
-              </table>
+              <div style={{overflow:'auto',padding:'16px 24px'}}>
+                <table style={{width:'100%',borderCollapse:'collapse',minWidth:900}}>
+                  <thead>
+                    <tr style={{borderBottom:'2px solid #ECEEF3'}}>
+                      <th style={{...th,textAlign:'left' as const,paddingLeft:0,width:'22%',fontSize:9}}>Partida</th>
+                      <th style={{...th,fontSize:9,width:80}}>Plan anual</th>
+                      {MESES_SHORT.map((m,i)=>(<th key={m} style={{...th,textAlign:'right' as const,fontSize:9,minWidth:58,background:i===MES_ACTUAL_IDX?'#EEF1FD':'transparent',borderRadius:4}}>{m}</th>))}
+                      <th style={{...th,fontSize:9,textAlign:'right' as const}}>Real YTD</th>
+                      <th style={{...th,fontSize:9,textAlign:'right' as const}}>Desv.%</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {allSorted.map(p=>{
+                      const rYTD=MESES_CON_REAL.reduce((a,m)=>a+(p.real[m]||0),0)
+                      return(<tr key={`m-${p.id}`} style={{borderBottom:'1px solid #F4F5F7'}} onMouseEnter={e=>(e.currentTarget.style.background='#FAFAFA')} onMouseLeave={e=>(e.currentTarget.style.background='transparent')}>
+                        <td style={{...td,textAlign:'left' as const,paddingLeft:0,fontSize:11}}><div style={{fontWeight:500}}>{p.categoria}</div>{p.cuentaCodigo&&<div style={{fontSize:9,color:'#B0B7C3'}}>{p.cuentaCodigo}</div>}</td>
+                        <td style={{...td,fontSize:11,color:'#888'}}>{p.planAnual>0?fmt(p.planAnual):'—'}</td>
+                        {MESES_SHORT.map((m,mi)=>{const hr=MESES_CON_REAL.includes(mi)&&p.real[mi]>0;const ic=mi===MES_ACTUAL_IDX;return(<td key={m} style={{...td,textAlign:'right' as const,fontSize:11,background:ic?'#F4F6FF':'transparent',fontWeight:hr?600:400,color:hr?'#1a1a1a':p.planMensual[mi]>0?'#C7D2F8':'#E8E8EC'}}>{hr?fmt(p.real[mi]):p.planMensual[mi]>0?fmt(p.planMensual[mi]):'—'}</td>)})}
+                        <td style={{...td,textAlign:'right' as const,fontWeight:rYTD>0?600:400,color:rYTD>0?'#1a1a1a':'#B0B7C3',fontSize:11}}>{rYTD>0?fmt(rYTD):'—'}</td>
+                        <td style={{...td,textAlign:'right' as const,fontSize:11}}>{rYTD>0&&p.planAnual>0?<DeltaBadge real={rYTD} plan={p.planAnual} tipo={p.tipo}/>:<span style={{color:'#B0B7C3'}}>—</span>}</td>
+                      </tr>)
+                    })}
+                  </tbody>
+                </table>
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        )}
+      </div>
     )
   }
+
 
 
   return (
