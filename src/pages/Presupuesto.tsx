@@ -392,6 +392,8 @@ export default function Presupuesto() {
       const nextP   = allSorted[idx + 1]
       const nextPre = nextP ? (nextP.cuentaCodigo||'99').slice(0,2) : ''
       const nextTipoVal = nextP ? nextP.tipo : ''
+      const nextTplEntry = nextP ? PL_TEMPLATE.find(t => t.codigo === nextP.cuentaCodigo) : undefined
+      const nextSec = nextTplEntry?.seccion || (nextP ? plSeccion(nextP.cuentaCodigo||'', nextP.tipo) : '')
       const planPer = sumMeses(p.planMensual, mesesActivos)
       const realPer = sumMeses(p.real, mesesConReal)
       const diff    = realPer - planPer
