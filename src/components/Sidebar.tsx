@@ -3,7 +3,7 @@ import { useAuth } from '@/contexts/AuthContext'
 
 const navGroups = [
   { section:'General', items:[
-    { label:'Resumen',     path:'/',                       icon:<GridIcon/>,    disabled:true  },
+    { label:'Resumen',     path:'/',                       icon:<GridIcon/>,    disabled:false },
     { label:'Cobros',      path:'/cobros',                 icon:<CobrosIcon/>,  disabled:false },
     { label:'Pagos',       path:'/pagos',                  icon:<PagosIcon/>,   disabled:false },
     { label:'Presupuesto', path:'/presupuesto',            icon:<TableIcon/>,   disabled:false },
