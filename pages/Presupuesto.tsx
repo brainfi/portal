@@ -398,11 +398,7 @@ export default function Presupuesto() {
 
       // Cabecera bloque ingresos/gastos
       if (p.tipo !== lastTipo) {
-        // Antes de gastos: insertar Margen bruto si no se mostró
-        if (p.tipo === 'gasto' && !margenMostrado) {
-          margenMostrado = true
-          rows.push(<SubtotalRow key="mb" label="Margen bruto" plan={mbPlan} real={mbReal} color="#4361EE" />)
-        }
+        // Margen bruto se inserta después de Aprovisionamientos (ver lógica abajo)
         rows.push(
           <tr key={`bloque-${p.tipo}`}>
             <td colSpan={colCount} style={{ padding:'14px 0 6px', paddingLeft:0, fontSize:11, fontWeight:700, color:'#1a1a1a' }}>
@@ -496,7 +492,14 @@ export default function Presupuesto() {
         </tr>
       )
 
-      // EBITDA: insertar antes del primer gasto financiero/amortización, o al final de gastos
+      // Margen Bruto: después de la última línea de Aprovisionamientos
+      const isLastAprov = sec === 'Aprovisionamientos' && (nextSec !== 'Aprovisionamientos' || nextTipoVal !== p.tipo)
+      if (!margenMostrado && isLastAprov) {
+        margenMostrado = true
+        rows.push(<SubtotalRow key="mb" label="Margen bruto" plan={mbPlan} real={mbReal} color="#4361EE" />)
+      }
+
+      // EBITDA: antes del primer gasto financiero/amortización, o al final de gastos operativos
       const isLastGasto = p.tipo === 'gasto' && (!nextP || nextTipoVal !== 'gasto')
       const nextIsPostEbitda = nextP && nextTipoVal === 'gasto' && POST_EBITDA.has(nextPre)
       if (!ebitdaMostrado && p.tipo === 'gasto' && (isLastGasto || nextIsPostEbitda)) {
