@@ -79,11 +79,19 @@ export default function Cobros() {
   const [verMasConcentracion, setVerMasConcentracion]   = useState(false)
 
   // ── Totales ──
-  const totalPendiente = facturas.filter(f => f.estado !== 'cobrada').reduce((a, f) => a + (f.importe - f.cobrado), 0)
-  const totalVencido   = facturas.filter(f => f.estado === 'vencida' || (f.estado === 'parcial' && f.diasVencida > 0)).reduce((a, f) => a + (f.importe - f.cobrado), 0)
-  const cobradoMes     = 5000
-  const dsoGlobal      = Math.round(facturas.filter(f => f.estado !== 'cobrada').reduce((a, f) => a + f.diasVencida, 0) / facturas.filter(f => f.estado !== 'cobrada').length)
-  const totalFacturado = facturas.reduce((a, f) => a + f.importe, 0)
+  // Facturas filtradas por periodo
+  const facturasPeriodo = filtro === 'anual'
+    ? facturas
+    : facturas.filter(f => new Date(f.vencimiento).getMonth() === (filtro as number))
+
+  const totalPendiente = facturasPeriodo.filter(f => f.estado !== 'cobrada').reduce((a, f) => a + (f.importe - f.cobrado), 0)
+  const totalVencido   = facturasPeriodo.filter(f => f.estado === 'vencida' || (f.estado === 'parcial' && f.diasVencida > 0)).reduce((a, f) => a + (f.importe - f.cobrado), 0)
+  const cobradoMes     = facturasPeriodo.filter(f => f.estado === 'cobrada').reduce((a, f) => a + f.importe, 0) || (filtro === 4 || filtro === 'anual' ? 5000 : 0)
+  const pendientesConDso = facturasPeriodo.filter(f => f.estado !== 'cobrada')
+  const dsoGlobal      = pendientesConDso.length > 0
+    ? Math.round(pendientesConDso.reduce((a, f) => a + f.diasVencida, 0) / pendientesConDso.length)
+    : 0
+  const totalFacturado = facturasPeriodo.reduce((a, f) => a + f.importe, 0) || 1
   const pctPendiente   = Math.round((totalPendiente / totalFacturado) * 100)
   const pctVencido     = Math.round((totalVencido   / totalFacturado) * 100)
   const pctCobrado     = Math.round((cobradoMes     / totalFacturado) * 100)
