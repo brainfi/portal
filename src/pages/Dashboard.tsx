@@ -177,22 +177,11 @@ export default function Dashboard() {
           </div>
 
           {/* Barra progreso + botón */}
-          <div style={{ display:'flex', alignItems:'center', gap:12, flexShrink:0 }}>
-            <div style={{ width:80 }}>
-              <div style={{ display:'flex', justifyContent:'space-between', marginBottom:4 }}>
-                <span style={{ fontSize:9, color:'#888' }}>jun</span>
-                <span style={{ fontSize:9, color:'#4361EE', fontWeight:600 }}>{pctMes}%</span>
-              </div>
-              <div style={{ height:4, background:'#C7D2F8', borderRadius:99, overflow:'hidden' }}>
-                <div style={{ width:`${pctMes}%`, height:'100%', background:'#4361EE', borderRadius:99 }} />
-              </div>
-            </div>
-            <a href="mailto:hola@brainfi.io"
-              style={{ display:'inline-flex', alignItems:'center', gap:6, padding:'8px 16px', fontSize:12, fontWeight:600, border:'none', borderRadius:8, background:'#4361EE', color:'#fff', cursor:'pointer', fontFamily:'inherit', textDecoration:'none', whiteSpace:'nowrap' }}>
-              <i className="ti ti-mail" style={{ fontSize:13 }} aria-hidden="true" />
-              Contactar
-            </a>
-          </div>
+          <a href="mailto:hola@brainfi.io"
+            style={{ display:'inline-flex', alignItems:'center', gap:6, padding:'8px 16px', fontSize:12, fontWeight:600, border:'none', borderRadius:8, background:'#4361EE', color:'#fff', cursor:'pointer', fontFamily:'inherit', textDecoration:'none', whiteSpace:'nowrap', flexShrink:0 }}>
+            <i className="ti ti-mail" style={{ fontSize:13 }} aria-hidden="true" />
+            Contactar
+          </a>
         </div>
       </div>
 
