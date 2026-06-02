@@ -310,4 +310,5 @@ export default function Dashboard() {
         </div>
       </div>
 
-    </Layout>
+    </Layout>  )
+}
