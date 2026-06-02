@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import Layout from '@/components/Layout'
 import {
   LineChart, Line, XAxis, YAxis,
@@ -60,6 +61,20 @@ function EvolucionTooltip({ active, payload, label }: any) {
 
 // ─── Componente ───────────────────────────────────────────────────────────────
 export default function Dashboard() {
+  const MESES_LABEL = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic']
+  const MES_ACTUAL = 4
+  const [filtroOpen, setFiltroOpen] = useState(false)
+  const [filtro, setFiltro]         = useState<number | 'anual'>(MES_ACTUAL)
+  const filtroLabel = filtro === 'anual' ? 'Este año' : MESES_LABEL[filtro as number]
+  const opcionesFiltro = [
+    ...Array.from({ length: MES_ACTUAL + 1 }, (_, m) => ({
+      key: m as number | 'anual',
+      label: m === MES_ACTUAL ? `${MESES_LABEL[m]} (este mes)` : MESES_LABEL[m],
+      group: '2026',
+    })).reverse(),
+    { key: 'anual' as const, label: 'Este año', group: 'Acumulado' },
+  ]
+
   const dias = diasRestantesMes()
   const card: React.CSSProperties = { background:'#fff', borderRadius:14, border:'1px solid #E8E8EC' }
 
@@ -80,10 +95,46 @@ export default function Dashboard() {
         @media (max-width:480px) { .dash-perf{grid-template-columns:1fr!important} }
       `}</style>
 
+      {filtroOpen && (
+        <div onClick={() => setFiltroOpen(false)} style={{ position:'fixed', inset:0, zIndex:40 }} />
+      )}
+
       {/* ── Encabezado ── */}
-      <div style={{ marginBottom:4 }}>
-        <div style={{ fontSize:22, fontWeight:700, color:'#1a1a1a', letterSpacing:'-0.4px', marginBottom:4 }}>Resumen</div>
-        <div style={{ fontSize:13, color:'#888' }}>Visión consolidada del estado financiero de tu empresa · mayo 2026</div>
+      <div style={{ display:'flex', alignItems:'flex-start', justifyContent:'space-between', gap:12, flexWrap:'wrap', marginBottom:4 }}>
+        <div>
+          <div style={{ fontSize:22, fontWeight:700, color:'#1a1a1a', letterSpacing:'-0.4px', marginBottom:4 }}>Resumen</div>
+          <div style={{ fontSize:13, color:'#888' }}>Visión consolidada del estado financiero de tu empresa</div>
+        </div>
+        <div style={{ position:'relative' }}>
+          <button onClick={() => setFiltroOpen(o => !o)}
+            style={{ display:'inline-flex', alignItems:'center', gap:8, padding:'8px 14px', fontSize:13, fontWeight:500, border:'1px solid #E8E8EC', borderRadius:10, background:'#F4F5F7', color:'#1a1a1a', cursor:'pointer', fontFamily:'inherit' }}>
+            {filtroLabel}
+            <i className="ti ti-chevron-down" style={{ fontSize:14, color:'#888' }} aria-hidden="true" />
+          </button>
+          {filtroOpen && (
+            <div style={{ position:'absolute', top:'calc(100% + 6px)', right:0, zIndex:50, background:'#fff', border:'1px solid #E8E8EC', borderRadius:12, padding:'6px', minWidth:190, boxShadow:'0 4px 20px rgba(0,0,0,0.08)' }}>
+              <div style={{ fontSize:9, fontWeight:700, color:'#B0B7C3', textTransform:'uppercase', letterSpacing:'0.1em', padding:'4px 12px 6px' }}>2026</div>
+              {opcionesFiltro.filter(o => o.group === '2026').map(o => (
+                <button key={String(o.key)} type="button"
+                  onClick={() => { setFiltro(o.key); setFiltroOpen(false) }}
+                  style={{ display:'flex', alignItems:'center', justifyContent:'space-between', width:'100%', padding:'8px 12px', fontSize:13, border:'none', borderRadius:7, cursor:'pointer', fontFamily:'inherit', textAlign:'left', background:filtro===o.key?'#EEF1FD':'transparent', color:filtro===o.key?'#4361EE':'#1a1a1a', fontWeight:filtro===o.key?600:400 }}>
+                  {o.label}
+                  {filtro === o.key && <i className="ti ti-check" style={{ fontSize:13 }} aria-hidden="true" />}
+                </button>
+              ))}
+              <div style={{ height:'1px', background:'#F4F5F7', margin:'4px 0' }} />
+              <div style={{ fontSize:9, fontWeight:700, color:'#B0B7C3', textTransform:'uppercase', letterSpacing:'0.1em', padding:'4px 12px 6px' }}>Acumulado</div>
+              {opcionesFiltro.filter(o => o.group === 'Acumulado').map(o => (
+                <button key={String(o.key)} type="button"
+                  onClick={() => { setFiltro(o.key); setFiltroOpen(false) }}
+                  style={{ display:'flex', alignItems:'center', justifyContent:'space-between', width:'100%', padding:'8px 12px', fontSize:13, border:'none', borderRadius:7, cursor:'pointer', fontFamily:'inherit', textAlign:'left', background:filtro===o.key?'#EEF1FD':'transparent', color:filtro===o.key?'#4361EE':'#1a1a1a', fontWeight:filtro===o.key?600:400 }}>
+                  {o.label}
+                  {filtro === o.key && <i className="ti ti-check" style={{ fontSize:13 }} aria-hidden="true" />}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
 
       {/* ── CFO Brainfi ── */}
