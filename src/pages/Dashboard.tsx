@@ -14,6 +14,9 @@ const evolucionData = [
   { mes:'May', ingresos:68,  ebitda:15,  margenEbitda:22.1, tesoreria:18, dso:38 },
 ]
 
+const planMesual     = [68, 74, 82, 87, 84, 88, 90, 92, 86, 90, 94, 96]
+const planEbitdaMes  = [14, 16, 19, 20, 19, 21, 22, 22, 21, 22, 23, 24]
+
 function diasRestantesMes(): number {
   const hoy    = new Date()
   const finMes = new Date(hoy.getFullYear(), hoy.getMonth() + 1, 0)
@@ -37,16 +40,10 @@ function Badge({ trend, label }: { trend:'up'|'down'|'neutral'; label:string }) 
   )
 }
 
-function CustomTooltip({ active, payload, label, section }: any) {
+function TooltipPYG({ active, payload, label }: any) {
   if (!active || !payload?.length) return null
-  const names: Record<string, string> = {
-    ingresos:'Ingresos', ebitda:'EBITDA', margenEbitda:'Margen EBITDA',
-    tesoreria:'Tesorería neta', dso:'DSO',
-  }
-  const units: Record<string, string> = {
-    ingresos:'k €', ebitda:'k €', margenEbitda:'%',
-    tesoreria:'k €', dso:'d',
-  }
+  const names: Record<string,string> = { ingresos:'Ingresos', ebitda:'EBITDA', margenEbitda:'Margen EBITDA' }
+  const units: Record<string,string> = { ingresos:'k €', ebitda:'k €', margenEbitda:'%' }
   return (
     <div style={{ background:'#fff', border:'1px solid #E8E8EC', borderRadius:10, padding:'10px 14px', fontSize:12 }}>
       <div style={{ fontWeight:600, color:'#1a1a1a', marginBottom:6 }}>{label}</div>
@@ -60,7 +57,23 @@ function CustomTooltip({ active, payload, label, section }: any) {
   )
 }
 
-// ─── KPI Card ─────────────────────────────────────────────────────────────────
+function TooltipTes({ active, payload, label }: any) {
+  if (!active || !payload?.length) return null
+  const names: Record<string,string> = { tesoreria:'Tesorería neta', dso:'DSO' }
+  const units: Record<string,string> = { tesoreria:'k €', dso:'d' }
+  return (
+    <div style={{ background:'#fff', border:'1px solid #E8E8EC', borderRadius:10, padding:'10px 14px', fontSize:12 }}>
+      <div style={{ fontWeight:600, color:'#1a1a1a', marginBottom:6 }}>{label}</div>
+      {payload.map((p: any) => (
+        <div key={p.dataKey} style={{ display:'flex', alignItems:'center', gap:6, marginBottom:3 }}>
+          <div style={{ width:7, height:7, borderRadius:2, background:p.stroke }} />
+          <span style={{ color:'#666' }}>{names[p.dataKey]}: {p.value}{units[p.dataKey]}</span>
+        </div>
+      ))}
+    </div>
+  )
+}
+
 function KPICard({ lbl, val, badge, badgeLbl, sub, icon, iconBg, iconColor, comparacion }:
   { lbl:string; val:string; badge:'up'|'down'|'neutral'; badgeLbl:string; sub:string; icon:string; iconBg:string; iconColor:string; comparacion?:string }) {
   return (
@@ -77,9 +90,7 @@ function KPICard({ lbl, val, badge, badgeLbl, sub, icon, iconBg, iconColor, comp
         <span style={{ fontSize:10, color:'#B0B7C3' }}>{sub}</span>
       </div>
       {comparacion && (
-        <div style={{ marginTop:6, fontSize:10, color:'#B0B7C3', borderTop:'1px solid #F4F5F7', paddingTop:6 }}>
-          {comparacion}
-        </div>
+        <div style={{ marginTop:6, fontSize:10, color:'#B0B7C3', borderTop:'1px solid #F4F5F7', paddingTop:6 }}>{comparacion}</div>
       )}
     </div>
   )
@@ -89,12 +100,9 @@ function KPICard({ lbl, val, badge, badgeLbl, sub, icon, iconBg, iconColor, comp
 export default function Dashboard() {
   const dias = diasRestantesMes()
 
-  const ingPct  = planIngVal > 0 ? ((ingresosVal - planIngVal) / planIngVal * 100).toFixed(1) : '0'
-  const ebitPct = planEbVal  > 0 ? ((ebitdaVal  - planEbVal)  / planEbVal  * 100).toFixed(1) : '0'
-  const ingBadge:  'up'|'down'|'neutral' = parseFloat(ingPct)  >= 0 ? 'up' : 'down'
-  const ebitBadge: 'up'|'down'|'neutral' = parseFloat(ebitPct) >= 0 ? 'up' : 'down'
+  // ── Filtro periodo ──
   const MESES_LABEL = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic']
-  const MES_ACTUAL = 4
+  const MES_ACTUAL  = 4
   const [filtroOpen, setFiltroOpen] = useState(false)
   const [filtro, setFiltro]         = useState<number | 'anual'>(MES_ACTUAL)
   const filtroLabel = filtro === 'anual' ? 'Este año' : MESES_LABEL[filtro as number]
@@ -107,32 +115,26 @@ export default function Dashboard() {
     { key: 'anual' as const, label: 'Este año', group: 'Acumulado' },
   ]
 
-  // KPIs reactivos al filtro
-  const mesIdx  = filtro === 'anual' ? null : (filtro as number)
-  const mesData = mesIdx !== null && mesIdx < evolucionData.length ? evolucionData[mesIdx] : null
+  // ── KPIs reactivos al filtro (siempre después de declarar filtro) ──
+  const mesIdx    = filtro === 'anual' ? null : (filtro as number)
+  const mesData   = mesIdx !== null && mesIdx < evolucionData.length ? evolucionData[mesIdx] : null
   const realMeses = evolucionData.filter(d => d.ingresos != null)
 
-  const planMes   = [68, 74, 82, 87, 84, 88, 90, 92, 86, 90, 94, 96]
-  const planEbitda= [14, 16, 19, 20, 19, 21, 22, 22, 21, 22, 23, 24]
+  const ingresosVal  = mesData ? mesData.ingresos * 1000  : realMeses.reduce((a,d) => a + (d.ingresos||0)*1000, 0)
+  const ebitdaVal    = mesData ? mesData.ebitda * 1000    : realMeses.reduce((a,d) => a + (d.ebitda||0)*1000,   0)
+  const margenVal    = ingresosVal > 0 ? (ebitdaVal/ingresosVal*100).toFixed(1)+'%' : '—'
+  const tesoreriaVal = mesData ? mesData.tesoreria*1000   : evolucionData.filter(d=>d.tesoreria!=null).slice(-1)[0]?.tesoreria*1000 || 0
+  const dsoVal       = mesData ? mesData.dso              : Math.round(realMeses.reduce((a,d)=>a+(d.dso||0),0)/realMeses.length)
 
-  const ingresosVal = mesData
-    ? mesData.ingresos * 1000
-    : realMeses.reduce((a, d) => a + (d.ingresos || 0) * 1000, 0)
-  const ebitdaVal = mesData
-    ? mesData.ebitda * 1000
-    : realMeses.reduce((a, d) => a + (d.ebitda || 0) * 1000, 0)
-  const margenVal = ingresosVal > 0 ? (ebitdaVal / ingresosVal * 100).toFixed(1) + '%' : '—'
-  const tesoreriaVal = mesData
-    ? mesData.tesoreria * 1000
-    : evolucionData.filter(d => d.tesoreria != null).slice(-1)[0]?.tesoreria * 1000 || 0
-  const dsoVal = mesData
-    ? mesData.dso
-    : Math.round(realMeses.reduce((a, d) => a + (d.dso || 0), 0) / realMeses.length)
+  const planIngVal  = mesIdx !== null ? planMesual[mesIdx]*1000    : planMesual.slice(0,5).reduce((a,v)=>a+v*1000,0)
+  const planEbVal   = mesIdx !== null ? planEbitdaMes[mesIdx]*1000 : planEbitdaMes.slice(0,5).reduce((a,v)=>a+v*1000,0)
+  const ingPct      = planIngVal > 0 ? ((ingresosVal-planIngVal)/planIngVal*100).toFixed(1) : '0'
+  const ebitPct     = planEbVal  > 0 ? ((ebitdaVal-planEbVal)/planEbVal*100).toFixed(1)    : '0'
+  const ingBadge:  'up'|'down'|'neutral' = parseFloat(ingPct)  >= 0 ? 'up' : 'down'
+  const ebitBadge: 'up'|'down'|'neutral' = parseFloat(ebitPct) >= 0 ? 'up' : 'down'
 
-  const planIngVal  = mesIdx !== null ? planMes[mesIdx] * 1000   : planMes.slice(0,5).reduce((a,v)=>a+v*1000,0)
-  const planEbVal   = mesIdx !== null ? planEbitda[mesIdx] * 1000 : planEbitda.slice(0,5).reduce((a,v)=>a+v*1000,0)
+  const card: React.CSSProperties = { background:'#fff', borderRadius:14, border:'1px solid #E8E8EC' }
 
-  // Qué métricas muestra el gráfico según sección activa
   return (
     <Layout title="Resumen">
       <style>{`
@@ -185,28 +187,21 @@ export default function Dashboard() {
       {/* ── CFO Brainfi · compacto ── */}
       <div style={{ background:'#EEF1FD', borderRadius:12, border:'1px solid #C7D2F8', padding:'14px 20px' }}>
         <div style={{ display:'flex', alignItems:'center', gap:16, flexWrap:'wrap' }}>
-          {/* Icono + título */}
           <div style={{ display:'flex', alignItems:'center', gap:10, flexShrink:0 }}>
             <div style={{ width:30, height:30, borderRadius:8, background:'#4361EE', display:'flex', alignItems:'center', justifyContent:'center' }}>
               <i className="ti ti-file-analytics" style={{ fontSize:15, color:'#fff' }} aria-hidden="true" />
             </div>
             <div>
-              <div style={{ fontSize:12, fontWeight:700, color:'#1a1a1a', lineHeight:1.2 }}>CFO Brainfi</div>
-              <div style={{ fontSize:10, color:'#4361EE', fontWeight:500 }}>Informe mensual</div>
+              <div style={{ fontSize:12, fontWeight:700, color:'#1a1a1a' }}>CFO Brainfi</div>
+              <div style={{ fontSize:10, color:'#4361EE', fontWeight:500 }}>Informe mensual personalizado</div>
             </div>
           </div>
-
-          {/* Días restantes pill */}
           <div style={{ background:'#4361EE', borderRadius:99, padding:'4px 14px', flexShrink:0 }}>
             <span style={{ fontSize:13, fontWeight:700, color:'#fff' }}>{dias}d</span>
           </div>
-
-          {/* Mensaje */}
           <div style={{ flex:1, minWidth:200, fontSize:12, color:'#1a1a1a', lineHeight:1.5 }}>
             Faltan <strong style={{ color:'#4361EE' }}>{dias} días</strong> para recibir tu informe personalizado basado en tu actividad de este mes en curso. Si tienes alguna duda, puedes contactarnos a través de este botón.
           </div>
-
-          {/* Barra progreso + botón */}
           <a href="mailto:hola@brainfi.io"
             style={{ display:'inline-flex', alignItems:'center', gap:6, padding:'8px 16px', fontSize:12, fontWeight:600, border:'none', borderRadius:8, background:'#4361EE', color:'#fff', cursor:'pointer', fontFamily:'inherit', textDecoration:'none', whiteSpace:'nowrap', flexShrink:0 }}>
             <i className="ti ti-mail" style={{ fontSize:13 }} aria-hidden="true" />
@@ -221,29 +216,30 @@ export default function Dashboard() {
           Cuenta de pérdidas y ganancias
         </div>
         <div className="dash-main" style={{ display:'grid', gridTemplateColumns:'300px 1fr', gap:14 }}>
-          {/* KPIs P&G */}
           <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
-            <KPICard lbl="Ingresos YTD" val="430.000 €" badge="up" badgeLbl="+8.4% vs plan"
-              sub="Plan: 395.000 €" icon="ti-trending-up" iconBg="#F0F9F4" iconColor="#2DC653"
+            <KPICard lbl="Ingresos" val={fmt(ingresosVal)}
+              badge={ingBadge} badgeLbl={`${parseFloat(ingPct)>=0?'+':''}${ingPct}% vs plan`}
+              sub={`Plan: ${fmt(planIngVal)}`} icon="ti-trending-up" iconBg="#F0F9F4" iconColor="#2DC653"
               comparacion="Presupuesto anual: 1.010.000 €" />
-            <KPICard lbl="EBITDA YTD" val="89.400 €" badge="down" badgeLbl="-5.1% vs plan"
-              sub="Plan: 94.200 €" icon="ti-chart-pie" iconBg="#FEF2F2" iconColor="#EF4444"
+            <KPICard lbl="EBITDA" val={fmt(ebitdaVal)}
+              badge={ebitBadge} badgeLbl={`${parseFloat(ebitPct)>=0?'+':''}${ebitPct}% vs plan`}
+              sub={`Plan: ${fmt(planEbVal)}`} icon="ti-chart-pie" iconBg="#FEF2F2" iconColor="#EF4444"
               comparacion="Presupuesto anual: 231.000 €" />
-            <KPICard lbl="Margen EBITDA" val="20.8%" badge="neutral" badgeLbl="→ 23.9% plan"
+            <KPICard lbl="Margen EBITDA" val={margenVal}
+              badge="neutral" badgeLbl="→ 23.9% plan"
               sub="EBITDA / Ingresos" icon="ti-percentage" iconBg="#FFF8E6" iconColor="#F4A100"
               comparacion="Objetivo anual: 22.9%" />
           </div>
-          {/* Gráfico P&G */}
-          <div style={{ background:'#fff', borderRadius:14, border:'1px solid #E8E8EC', padding:'20px 24px', display:'flex', flexDirection:'column' }}>
+          <div style={{ ...card, padding:'20px 24px', display:'flex', flexDirection:'column' }}>
             <div style={{ marginBottom:14 }}>
               <div style={{ fontSize:9, fontWeight:700, color:'#B0B7C3', textTransform:'uppercase', letterSpacing:'0.12em', marginBottom:2 }}>Evolución</div>
               <div style={{ fontSize:12, color:'#888' }}>Ingresos · EBITDA · Margen EBITDA · 2026</div>
             </div>
             <div style={{ display:'flex', gap:14, marginBottom:14, flexWrap:'wrap' }}>
               {[
-                { color:'#4361EE', lbl:'Ingresos (k €)' },
-                { color:'#F4A100', lbl:'EBITDA (k €)' },
-                { color:'#2DC653', lbl:'Margen EBITDA (%)', dash:true },
+                { color:'#4361EE', lbl:'Ingresos (k €)',     dash:false },
+                { color:'#F4A100', lbl:'EBITDA (k €)',        dash:false },
+                { color:'#2DC653', lbl:'Margen EBITDA (%)',   dash:true  },
               ].map((l, i) => (
                 <div key={i} style={{ display:'flex', alignItems:'center', gap:5 }}>
                   <svg width="16" height="6"><line x1="0" y1="3" x2="16" y2="3" stroke={l.color} strokeWidth="2" strokeDasharray={l.dash?'4 2':undefined}/></svg>
@@ -256,17 +252,11 @@ export default function Dashboard() {
                 <LineChart data={evolucionData} margin={{ top:4, right:8, left:0, bottom:0 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#F0F0F2" vertical={false} />
                   <XAxis dataKey="mes" tick={{ fontSize:11, fill:'#B0B7C3' }} axisLine={false} tickLine={false} />
-                  <YAxis tick={{ fontSize:11, fill:'#B0B7C3' }} axisLine={false} tickLine={false} tickFormatter={v => `${v}k`} width={36} />
-                  <Tooltip content={<CustomTooltip />} cursor={{ stroke:'#E8E8EC', strokeWidth:1 }} />
-                  <Line type="monotone" dataKey="ingresos" stroke="#4361EE" strokeWidth={2.5}
-                    dot={{ r:4, fill:'#4361EE', stroke:'#fff', strokeWidth:2 }}
-                    activeDot={{ r:6, fill:'#4361EE', stroke:'#fff', strokeWidth:2 }} />
-                  <Line type="monotone" dataKey="ebitda" stroke="#F4A100" strokeWidth={2.5}
-                    dot={{ r:4, fill:'#F4A100', stroke:'#fff', strokeWidth:2 }}
-                    activeDot={{ r:6, fill:'#F4A100', stroke:'#fff', strokeWidth:2 }} />
-                  <Line type="monotone" dataKey="margenEbitda" stroke="#2DC653" strokeWidth={2} strokeDasharray="5 3"
-                    dot={{ r:4, fill:'#2DC653', stroke:'#fff', strokeWidth:2 }}
-                    activeDot={{ r:6, fill:'#2DC653', stroke:'#fff', strokeWidth:2 }} />
+                  <YAxis tick={{ fontSize:11, fill:'#B0B7C3' }} axisLine={false} tickLine={false} tickFormatter={v=>`${v}k`} width={36} />
+                  <Tooltip content={<TooltipPYG />} cursor={{ stroke:'#E8E8EC', strokeWidth:1 }} />
+                  <Line type="monotone" dataKey="ingresos"     stroke="#4361EE" strokeWidth={2.5} dot={{ r:4, fill:'#4361EE', stroke:'#fff', strokeWidth:2 }} activeDot={{ r:6 }} />
+                  <Line type="monotone" dataKey="ebitda"       stroke="#F4A100" strokeWidth={2.5} dot={{ r:4, fill:'#F4A100', stroke:'#fff', strokeWidth:2 }} activeDot={{ r:6 }} />
+                  <Line type="monotone" dataKey="margenEbitda" stroke="#2DC653" strokeWidth={2}   dot={{ r:4, fill:'#2DC653', stroke:'#fff', strokeWidth:2 }} strokeDasharray="5 3" activeDot={{ r:6 }} />
                 </LineChart>
               </ResponsiveContainer>
             </div>
@@ -280,20 +270,21 @@ export default function Dashboard() {
           Tesorería
         </div>
         <div className="dash-main" style={{ display:'grid', gridTemplateColumns:'300px 1fr', gap:14 }}>
-          {/* KPIs Tesorería */}
           <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
-            <KPICard lbl="Tesorería neta" val="17.760 €" badge="neutral" badgeLbl="→ ajustada"
+            <KPICard lbl="Tesorería neta" val={fmt(tesoreriaVal)}
+              badge="neutral" badgeLbl="→ ajustada"
               sub="Banco − obligaciones 30d" icon="ti-building-bank" iconBg="#EEF1FD" iconColor="#4361EE"
               comparacion="Saldo banco: 65.000 € · Obligaciones: 47.240 €" />
-            <KPICard lbl="DSO medio" val="38 días" badge="down" badgeLbl="↘ sector: 30d"
+            <KPICard lbl="DSO medio" val={`${dsoVal} días`}
+              badge="down" badgeLbl="↘ sector: 30d"
               sub="Días medios de cobro" icon="ti-clock" iconBg="#FEF2F2" iconColor="#EF4444"
               comparacion="Reducir 8d liberaría ~12.400 € de caja" />
-            <KPICard lbl="Runway" val="47 días" badge="neutral" badgeLbl="→ estable"
+            <KPICard lbl="Runway" val="47 días"
+              badge="neutral" badgeLbl="→ estable"
               sub="Sin nuevas ventas" icon="ti-shield" iconBg="#FFF8E6" iconColor="#F4A100"
               comparacion="Burn rate mensual: 26.060 €" />
           </div>
-          {/* Gráfico Tesorería */}
-          <div style={{ background:'#fff', borderRadius:14, border:'1px solid #E8E8EC', padding:'20px 24px', display:'flex', flexDirection:'column' }}>
+          <div style={{ ...card, padding:'20px 24px', display:'flex', flexDirection:'column' }}>
             <div style={{ marginBottom:14 }}>
               <div style={{ fontSize:9, fontWeight:700, color:'#B0B7C3', textTransform:'uppercase', letterSpacing:'0.12em', marginBottom:2 }}>Evolución</div>
               <div style={{ fontSize:12, color:'#888' }}>Tesorería neta · DSO · 2026</div>
@@ -315,19 +306,15 @@ export default function Dashboard() {
                   <CartesianGrid strokeDasharray="3 3" stroke="#F0F0F2" vertical={false} />
                   <XAxis dataKey="mes" tick={{ fontSize:11, fill:'#B0B7C3' }} axisLine={false} tickLine={false} />
                   <YAxis tick={{ fontSize:11, fill:'#B0B7C3' }} axisLine={false} tickLine={false} width={36} />
-                  <Tooltip content={<CustomTooltip />} cursor={{ stroke:'#E8E8EC', strokeWidth:1 }} />
-                  <Line type="monotone" dataKey="tesoreria" stroke="#4361EE" strokeWidth={2.5}
-                    dot={{ r:4, fill:'#4361EE', stroke:'#fff', strokeWidth:2 }}
-                    activeDot={{ r:6, fill:'#4361EE', stroke:'#fff', strokeWidth:2 }} />
-                  <Line type="monotone" dataKey="dso" stroke="#EF4444" strokeWidth={2.5}
-                    dot={{ r:4, fill:'#EF4444', stroke:'#fff', strokeWidth:2 }}
-                    activeDot={{ r:6, fill:'#EF4444', stroke:'#fff', strokeWidth:2 }} />
+                  <Tooltip content={<TooltipTes />} cursor={{ stroke:'#E8E8EC', strokeWidth:1 }} />
+                  <Line type="monotone" dataKey="tesoreria" stroke="#4361EE" strokeWidth={2.5} dot={{ r:4, fill:'#4361EE', stroke:'#fff', strokeWidth:2 }} activeDot={{ r:6 }} />
+                  <Line type="monotone" dataKey="dso"       stroke="#EF4444" strokeWidth={2.5} dot={{ r:4, fill:'#EF4444', stroke:'#fff', strokeWidth:2 }} activeDot={{ r:6 }} />
                 </LineChart>
               </ResponsiveContainer>
             </div>
           </div>
         </div>
       </div>
-
-    </Layout>  )
+    </Layout>
+  )
 }
