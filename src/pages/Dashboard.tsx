@@ -88,8 +88,6 @@ function KPICard({ lbl, val, badge, badgeLbl, sub, icon, iconBg, iconColor, comp
 // ─── Componente principal ─────────────────────────────────────────────────────
 export default function Dashboard() {
   const dias = diasRestantesMes()
-  const pctMes = Math.round((new Date().getDate() / 30) * 100)
-
   const MESES_LABEL = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic']
   const MES_ACTUAL = 4
   const [filtroOpen, setFiltroOpen] = useState(false)
@@ -105,8 +103,6 @@ export default function Dashboard() {
   ]
 
   // Qué métricas muestra el gráfico según sección activa
-  const [seccionActiva, setSeccionActiva] = useState<'pyg'|'tesoreria'>('pyg')
-
   return (
     <Layout title="Resumen">
       <style>{`
@@ -200,181 +196,118 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* ── Main grid: KPIs izquierda / Gráfico derecha ── */}
-      <div className="dash-main" style={{ display:'grid', gridTemplateColumns:'320px 1fr', gap:14 }}>
-
-        {/* ── Columna izquierda: KPIs ── */}
-        <div style={{ display:'flex', flexDirection:'column', gap:10 }}>
-
-          {/* Sección P&G */}
-          <div>
-            <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:8, cursor:'pointer' }}
-              onClick={() => setSeccionActiva('pyg')}>
-              <div style={{ width:6, height:6, borderRadius:'50%', background:'#4361EE', flexShrink:0 }} />
-              <span style={{ fontSize:9, fontWeight:700, color: seccionActiva==='pyg'?'#4361EE':'#B0B7C3', textTransform:'uppercase', letterSpacing:'0.12em', transition:'color .15s' }}>
-                Cuenta de pérdidas y ganancias
-              </span>
-            </div>
-            <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
-              <KPICard
-                lbl="Ingresos YTD"
-                val="430.000 €"
-                badge="up"
-                badgeLbl="+8.4% vs plan"
-                sub="Plan: 395.000 €"
-                icon="ti-trending-up"
-                iconBg="#F0F9F4"
-                iconColor="#2DC653"
-                comparacion="Presupuesto anual: 1.010.000 €"
-              />
-              <KPICard
-                lbl="EBITDA YTD"
-                val="89.400 €"
-                badge="down"
-                badgeLbl="-5.1% vs plan"
-                sub="Plan: 94.200 €"
-                icon="ti-chart-pie"
-                iconBg="#FEF2F2"
-                iconColor="#EF4444"
-                comparacion="Presupuesto anual: 231.000 €"
-              />
-              <KPICard
-                lbl="Margen EBITDA"
-                val="20.8%"
-                badge="neutral"
-                badgeLbl="→ 23.9% plan"
-                sub="EBITDA / Ingresos"
-                icon="ti-percentage"
-                iconBg="#FFF8E6"
-                iconColor="#F4A100"
-                comparacion="Objetivo anual: 22.9%"
-              />
-            </div>
-          </div>
-
-          {/* Separador */}
-          <div style={{ height:'0.5px', background:'#E8E8EC' }} />
-
-          {/* Sección Tesorería */}
-          <div>
-            <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:8, cursor:'pointer' }}
-              onClick={() => setSeccionActiva('tesoreria')}>
-              <div style={{ width:6, height:6, borderRadius:'50%', background:'#2DC653', flexShrink:0 }} />
-              <span style={{ fontSize:9, fontWeight:700, color: seccionActiva==='tesoreria'?'#2DC653':'#B0B7C3', textTransform:'uppercase', letterSpacing:'0.12em', transition:'color .15s' }}>
-                Tesorería
-              </span>
-            </div>
-            <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
-              <KPICard
-                lbl="Tesorería neta"
-                val="17.760 €"
-                badge="neutral"
-                badgeLbl="→ ajustada"
-                sub="Banco − obligaciones 30d"
-                icon="ti-building-bank"
-                iconBg="#EEF1FD"
-                iconColor="#4361EE"
-                comparacion="Saldo banco: 65.000 € · Obligaciones: 47.240 €"
-              />
-              <KPICard
-                lbl="DSO medio"
-                val="38 días"
-                badge="down"
-                badgeLbl="↘ sector: 30d"
-                sub="Días medios de cobro"
-                icon="ti-clock"
-                iconBg="#FEF2F2"
-                iconColor="#EF4444"
-                comparacion="Reducir 8d liberaría ~12.400 € de caja"
-              />
-              <KPICard
-                lbl="Runway"
-                val="47 días"
-                badge="neutral"
-                badgeLbl="→ estable"
-                sub="Sin nuevas ventas"
-                icon="ti-shield"
-                iconBg="#FFF8E6"
-                iconColor="#F4A100"
-                comparacion="Burn rate mensual: 26.060 €"
-              />
-            </div>
-          </div>
+      {/* ── Sección 1: Cuenta de P&G ── */}
+      <div>
+        <div style={{ fontSize:9, fontWeight:700, color:'#B0B7C3', textTransform:'uppercase', letterSpacing:'0.12em', marginBottom:10 }}>
+          Cuenta de pérdidas y ganancias
         </div>
-
-        {/* ── Columna derecha: Gráfico ── */}
-        <div style={{ background:'#fff', borderRadius:14, border:'1px solid #E8E8EC', padding:'22px 24px', display:'flex', flexDirection:'column' }}>
-          <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:16, flexWrap:'wrap', gap:10 }}>
-            <div>
-              <div style={{ fontSize:9, fontWeight:700, color:'#B0B7C3', textTransform:'uppercase', letterSpacing:'0.12em', marginBottom:3 }}>Evolución</div>
-              <div style={{ fontSize:13, color:'#888' }}>
-                {seccionActiva === 'pyg'
-                  ? 'Ingresos · EBITDA · Margen EBITDA · 2026'
-                  : 'Tesorería neta · DSO · 2026'}
-              </div>
+        <div className="dash-main" style={{ display:'grid', gridTemplateColumns:'300px 1fr', gap:14 }}>
+          {/* KPIs P&G */}
+          <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
+            <KPICard lbl="Ingresos YTD" val="430.000 €" badge="up" badgeLbl="+8.4% vs plan"
+              sub="Plan: 395.000 €" icon="ti-trending-up" iconBg="#F0F9F4" iconColor="#2DC653"
+              comparacion="Presupuesto anual: 1.010.000 €" />
+            <KPICard lbl="EBITDA YTD" val="89.400 €" badge="down" badgeLbl="-5.1% vs plan"
+              sub="Plan: 94.200 €" icon="ti-chart-pie" iconBg="#FEF2F2" iconColor="#EF4444"
+              comparacion="Presupuesto anual: 231.000 €" />
+            <KPICard lbl="Margen EBITDA" val="20.8%" badge="neutral" badgeLbl="→ 23.9% plan"
+              sub="EBITDA / Ingresos" icon="ti-percentage" iconBg="#FFF8E6" iconColor="#F4A100"
+              comparacion="Objetivo anual: 22.9%" />
+          </div>
+          {/* Gráfico P&G */}
+          <div style={{ background:'#fff', borderRadius:14, border:'1px solid #E8E8EC', padding:'20px 24px', display:'flex', flexDirection:'column' }}>
+            <div style={{ marginBottom:14 }}>
+              <div style={{ fontSize:9, fontWeight:700, color:'#B0B7C3', textTransform:'uppercase', letterSpacing:'0.12em', marginBottom:2 }}>Evolución</div>
+              <div style={{ fontSize:12, color:'#888' }}>Ingresos · EBITDA · Margen EBITDA · 2026</div>
             </div>
-            {/* Toggle sección */}
-            <div style={{ display:'flex', gap:2, background:'#F4F5F7', borderRadius:8, padding:3 }}>
-              {([['pyg','P&G'],['tesoreria','Tesorería']] as const).map(([v, lbl]) => (
-                <button key={v} className="dash-sec-btn"
-                  onClick={() => setSeccionActiva(v)}
-                  style={{ background:seccionActiva===v?'#fff':'transparent', color:seccionActiva===v?'#1a1a1a':'#888', fontWeight:seccionActiva===v?600:400, boxShadow:seccionActiva===v?'0 1px 4px rgba(0,0,0,0.08)':'none' }}>
-                  {lbl}
-                </button>
+            <div style={{ display:'flex', gap:14, marginBottom:14, flexWrap:'wrap' }}>
+              {[
+                { color:'#4361EE', lbl:'Ingresos (k €)' },
+                { color:'#F4A100', lbl:'EBITDA (k €)' },
+                { color:'#2DC653', lbl:'Margen EBITDA (%)', dash:true },
+              ].map((l, i) => (
+                <div key={i} style={{ display:'flex', alignItems:'center', gap:5 }}>
+                  <svg width="16" height="6"><line x1="0" y1="3" x2="16" y2="3" stroke={l.color} strokeWidth="2" strokeDasharray={l.dash?'4 2':undefined}/></svg>
+                  <span style={{ fontSize:10, color:'#888' }}>{l.lbl}</span>
+                </div>
               ))}
             </div>
-          </div>
-
-          {/* Leyenda */}
-          <div style={{ display:'flex', gap:14, marginBottom:12, flexWrap:'wrap' }}>
-            {(seccionActiva === 'pyg' ? [
-              { color:'#4361EE', lbl:'Ingresos (k €)' },
-              { color:'#F4A100', lbl:'EBITDA (k €)' },
-              { color:'#2DC653', lbl:'Margen EBITDA (%)' },
-            ] : [
-              { color:'#4361EE', lbl:'Tesorería neta (k €)' },
-              { color:'#EF4444', lbl:'DSO (días)' },
-            ]).map((l, i) => (
-              <div key={i} style={{ display:'flex', alignItems:'center', gap:5 }}>
-                <svg width="16" height="6"><line x1="0" y1="3" x2="16" y2="3" stroke={l.color} strokeWidth="2"/></svg>
-                <span style={{ fontSize:10, color:'#888' }}>{l.lbl}</span>
-              </div>
-            ))}
-          </div>
-
-          <div style={{ flex:1, minHeight:300 }}>
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={evolucionData} margin={{ top:4, right:8, left:0, bottom:0 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#F0F0F2" vertical={false} />
-                <XAxis dataKey="mes" tick={{ fontSize:11, fill:'#B0B7C3' }} axisLine={false} tickLine={false} />
-                <YAxis tick={{ fontSize:11, fill:'#B0B7C3' }} axisLine={false} tickLine={false}
-                  tickFormatter={v => seccionActiva==='pyg' ? `${v}k` : String(v)} width={38} />
-                <Tooltip content={<CustomTooltip section={seccionActiva} />} cursor={{ stroke:'#E8E8EC', strokeWidth:1 }} />
-
-                {seccionActiva === 'pyg' ? <>
-                  <Line type="monotone" dataKey="ingresos"    stroke="#4361EE" strokeWidth={2.5}
+            <div style={{ flex:1, minHeight:220 }}>
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={evolucionData} margin={{ top:4, right:8, left:0, bottom:0 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#F0F0F2" vertical={false} />
+                  <XAxis dataKey="mes" tick={{ fontSize:11, fill:'#B0B7C3' }} axisLine={false} tickLine={false} />
+                  <YAxis tick={{ fontSize:11, fill:'#B0B7C3' }} axisLine={false} tickLine={false} tickFormatter={v => `${v}k`} width={36} />
+                  <Tooltip content={<CustomTooltip />} cursor={{ stroke:'#E8E8EC', strokeWidth:1 }} />
+                  <Line type="monotone" dataKey="ingresos" stroke="#4361EE" strokeWidth={2.5}
                     dot={{ r:4, fill:'#4361EE', stroke:'#fff', strokeWidth:2 }}
                     activeDot={{ r:6, fill:'#4361EE', stroke:'#fff', strokeWidth:2 }} />
-                  <Line type="monotone" dataKey="ebitda"      stroke="#F4A100" strokeWidth={2.5}
+                  <Line type="monotone" dataKey="ebitda" stroke="#F4A100" strokeWidth={2.5}
                     dot={{ r:4, fill:'#F4A100', stroke:'#fff', strokeWidth:2 }}
                     activeDot={{ r:6, fill:'#F4A100', stroke:'#fff', strokeWidth:2 }} />
-                  <Line type="monotone" dataKey="margenEbitda" stroke="#2DC653" strokeWidth={2}
-                    strokeDasharray="5 3"
+                  <Line type="monotone" dataKey="margenEbitda" stroke="#2DC653" strokeWidth={2} strokeDasharray="5 3"
                     dot={{ r:4, fill:'#2DC653', stroke:'#fff', strokeWidth:2 }}
                     activeDot={{ r:6, fill:'#2DC653', stroke:'#fff', strokeWidth:2 }} />
-                </> : <>
-                  <Line type="monotone" dataKey="tesoreria" stroke="#4361EE" strokeWidth={2.5}
-                    dot={{ r:4, fill:'#4361EE', stroke:'#fff', strokeWidth:2 }}
-                    activeDot={{ r:6, fill:'#4361EE', stroke:'#fff', strokeWidth:2 }} />
-                  <Line type="monotone" dataKey="dso"       stroke="#EF4444" strokeWidth={2.5}
-                    dot={{ r:4, fill:'#EF4444', stroke:'#fff', strokeWidth:2 }}
-                    activeDot={{ r:6, fill:'#EF4444', stroke:'#fff', strokeWidth:2 }} />
-                </>}
-              </LineChart>
-            </ResponsiveContainer>
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
           </div>
         </div>
       </div>
+
+      {/* ── Sección 2: Tesorería ── */}
+      <div>
+        <div style={{ fontSize:9, fontWeight:700, color:'#B0B7C3', textTransform:'uppercase', letterSpacing:'0.12em', marginBottom:10 }}>
+          Tesorería
+        </div>
+        <div className="dash-main" style={{ display:'grid', gridTemplateColumns:'300px 1fr', gap:14 }}>
+          {/* KPIs Tesorería */}
+          <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
+            <KPICard lbl="Tesorería neta" val="17.760 €" badge="neutral" badgeLbl="→ ajustada"
+              sub="Banco − obligaciones 30d" icon="ti-building-bank" iconBg="#EEF1FD" iconColor="#4361EE"
+              comparacion="Saldo banco: 65.000 € · Obligaciones: 47.240 €" />
+            <KPICard lbl="DSO medio" val="38 días" badge="down" badgeLbl="↘ sector: 30d"
+              sub="Días medios de cobro" icon="ti-clock" iconBg="#FEF2F2" iconColor="#EF4444"
+              comparacion="Reducir 8d liberaría ~12.400 € de caja" />
+            <KPICard lbl="Runway" val="47 días" badge="neutral" badgeLbl="→ estable"
+              sub="Sin nuevas ventas" icon="ti-shield" iconBg="#FFF8E6" iconColor="#F4A100"
+              comparacion="Burn rate mensual: 26.060 €" />
+          </div>
+          {/* Gráfico Tesorería */}
+          <div style={{ background:'#fff', borderRadius:14, border:'1px solid #E8E8EC', padding:'20px 24px', display:'flex', flexDirection:'column' }}>
+            <div style={{ marginBottom:14 }}>
+              <div style={{ fontSize:9, fontWeight:700, color:'#B0B7C3', textTransform:'uppercase', letterSpacing:'0.12em', marginBottom:2 }}>Evolución</div>
+              <div style={{ fontSize:12, color:'#888' }}>Tesorería neta · DSO · 2026</div>
+            </div>
+            <div style={{ display:'flex', gap:14, marginBottom:14, flexWrap:'wrap' }}>
+              {[
+                { color:'#4361EE', lbl:'Tesorería neta (k €)' },
+                { color:'#EF4444', lbl:'DSO (días)' },
+              ].map((l, i) => (
+                <div key={i} style={{ display:'flex', alignItems:'center', gap:5 }}>
+                  <svg width="16" height="6"><line x1="0" y1="3" x2="16" y2="3" stroke={l.color} strokeWidth="2"/></svg>
+                  <span style={{ fontSize:10, color:'#888' }}>{l.lbl}</span>
+                </div>
+              ))}
+            </div>
+            <div style={{ flex:1, minHeight:220 }}>
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={evolucionData} margin={{ top:4, right:8, left:0, bottom:0 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#F0F0F2" vertical={false} />
+                  <XAxis dataKey="mes" tick={{ fontSize:11, fill:'#B0B7C3' }} axisLine={false} tickLine={false} />
+                  <YAxis tick={{ fontSize:11, fill:'#B0B7C3' }} axisLine={false} tickLine={false} width={36} />
+                  <Tooltip content={<CustomTooltip />} cursor={{ stroke:'#E8E8EC', strokeWidth:1 }} />
+                  <Line type="monotone" dataKey="tesoreria" stroke="#4361EE" strokeWidth={2.5}
+                    dot={{ r:4, fill:'#4361EE', stroke:'#fff', strokeWidth:2 }}
+                    activeDot={{ r:6, fill:'#4361EE', stroke:'#fff', strokeWidth:2 }} />
+                  <Line type="monotone" dataKey="dso" stroke="#EF4444" strokeWidth={2.5}
+                    dot={{ r:4, fill:'#EF4444', stroke:'#fff', strokeWidth:2 }}
+                    activeDot={{ r:6, fill:'#EF4444', stroke:'#fff', strokeWidth:2 }} />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+        </div>
+      </div>
+
     </Layout>
-  )
-}
