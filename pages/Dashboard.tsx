@@ -89,6 +89,24 @@ function KPICard({ lbl, val, badge, badgeLbl, sub, icon, iconBg, iconColor, comp
 export default function Dashboard() {
   const dias = diasRestantesMes()
 
+  const ingPct  = planIngVal > 0 ? ((ingresosVal - planIngVal) / planIngVal * 100).toFixed(1) : '0'
+  const ebitPct = planEbVal  > 0 ? ((ebitdaVal  - planEbVal)  / planEbVal  * 100).toFixed(1) : '0'
+  const ingBadge:  'up'|'down'|'neutral' = parseFloat(ingPct)  >= 0 ? 'up' : 'down'
+  const ebitBadge: 'up'|'down'|'neutral' = parseFloat(ebitPct) >= 0 ? 'up' : 'down'
+  const MESES_LABEL = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic']
+  const MES_ACTUAL = 4
+  const [filtroOpen, setFiltroOpen] = useState(false)
+  const [filtro, setFiltro]         = useState<number | 'anual'>(MES_ACTUAL)
+  const filtroLabel = filtro === 'anual' ? 'Este año' : MESES_LABEL[filtro as number]
+  const opcionesFiltro = [
+    ...Array.from({ length: MES_ACTUAL + 1 }, (_, m) => ({
+      key: m as number | 'anual',
+      label: m === MES_ACTUAL ? `${MESES_LABEL[m]} (este mes)` : MESES_LABEL[m],
+      group: '2026',
+    })).reverse(),
+    { key: 'anual' as const, label: 'Este año', group: 'Acumulado' },
+  ]
+
   // KPIs reactivos al filtro
   const mesIdx  = filtro === 'anual' ? null : (filtro as number)
   const mesData = mesIdx !== null && mesIdx < evolucionData.length ? evolucionData[mesIdx] : null
@@ -113,23 +131,32 @@ export default function Dashboard() {
 
   const planIngVal  = mesIdx !== null ? planMes[mesIdx] * 1000   : planMes.slice(0,5).reduce((a,v)=>a+v*1000,0)
   const planEbVal   = mesIdx !== null ? planEbitda[mesIdx] * 1000 : planEbitda.slice(0,5).reduce((a,v)=>a+v*1000,0)
+  // KPIs reactivos al filtro
+  const mesIdx  = filtro === 'anual' ? null : (filtro as number)
+  const mesData = mesIdx !== null && mesIdx < evolucionData.length ? evolucionData[mesIdx] : null
+  const realMeses = evolucionData.filter(d => d.ingresos != null)
+  const planMes   = [68, 74, 82, 87, 84, 88, 90, 92, 86, 90, 94, 96]
+  const planEbitda= [14, 16, 19, 20, 19, 21, 22, 22, 21, 22, 23, 24]
+  const ingresosVal = mesData
+    ? mesData.ingresos * 1000
+    : realMeses.reduce((a, d) => a + (d.ingresos || 0) * 1000, 0)
+  const ebitdaVal = mesData
+    ? mesData.ebitda * 1000
+    : realMeses.reduce((a, d) => a + (d.ebitda || 0) * 1000, 0)
+  const margenVal = ingresosVal > 0 ? (ebitdaVal / ingresosVal * 100).toFixed(1) + '%' : '—'
+  const tesoreriaVal = mesData
+    ? mesData.tesoreria * 1000
+    : evolucionData.filter(d => d.tesoreria != null).slice(-1)[0]?.tesoreria * 1000 || 0
+  const dsoVal = mesData
+    ? mesData.dso
+    : Math.round(realMeses.reduce((a, d) => a + (d.dso || 0), 0) / realMeses.length)
+  const planIngVal  = mesIdx !== null ? planMes[mesIdx] * 1000   : planMes.slice(0,5).reduce((a,v)=>a+v*1000,0)
+  const planEbVal   = mesIdx !== null ? planEbitda[mesIdx] * 1000 : planEbitda.slice(0,5).reduce((a,v)=>a+v*1000,0)
   const ingPct  = planIngVal > 0 ? ((ingresosVal - planIngVal) / planIngVal * 100).toFixed(1) : '0'
   const ebitPct = planEbVal  > 0 ? ((ebitdaVal  - planEbVal)  / planEbVal  * 100).toFixed(1) : '0'
   const ingBadge:  'up'|'down'|'neutral' = parseFloat(ingPct)  >= 0 ? 'up' : 'down'
   const ebitBadge: 'up'|'down'|'neutral' = parseFloat(ebitPct) >= 0 ? 'up' : 'down'
-  const MESES_LABEL = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic']
-  const MES_ACTUAL = 4
-  const [filtroOpen, setFiltroOpen] = useState(false)
-  const [filtro, setFiltro]         = useState<number | 'anual'>(MES_ACTUAL)
-  const filtroLabel = filtro === 'anual' ? 'Este año' : MESES_LABEL[filtro as number]
-  const opcionesFiltro = [
-    ...Array.from({ length: MES_ACTUAL + 1 }, (_, m) => ({
-      key: m as number | 'anual',
-      label: m === MES_ACTUAL ? `${MESES_LABEL[m]} (este mes)` : MESES_LABEL[m],
-      group: '2026',
-    })).reverse(),
-    { key: 'anual' as const, label: 'Este año', group: 'Acumulado' },
-  ]
+
 
   // Qué métricas muestra el gráfico según sección activa
   return (
