@@ -327,14 +327,14 @@ export default function Dashboard() {
 
           {/* Leyenda */}
           <div style={{ display:'flex', gap:14, marginBottom:12, flexWrap:'wrap' }}>
-            {seccionActiva === 'pyg' ? [
+            {(seccionActiva === 'pyg' ? [
               { color:'#4361EE', lbl:'Ingresos (k €)' },
               { color:'#F4A100', lbl:'EBITDA (k €)' },
               { color:'#2DC653', lbl:'Margen EBITDA (%)' },
             ] : [
               { color:'#4361EE', lbl:'Tesorería neta (k €)' },
               { color:'#EF4444', lbl:'DSO (días)' },
-            ].map((l, i) => (
+            ]).map((l, i) => (
               <div key={i} style={{ display:'flex', alignItems:'center', gap:5 }}>
                 <svg width="16" height="6"><line x1="0" y1="3" x2="16" y2="3" stroke={l.color} strokeWidth="2"/></svg>
                 <span style={{ fontSize:10, color:'#888' }}>{l.lbl}</span>
