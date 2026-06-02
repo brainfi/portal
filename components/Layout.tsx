@@ -25,6 +25,36 @@ const SEARCH_INDEX = [
 export default function Layout({ children, title = 'Resumen' }: LayoutProps) {
   const { user } = useAuth()
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  const navigate     = useNavigate()
+  const [searchQuery,  setSearchQuery]  = useState('')
+  const [searchOpen,   setSearchOpen]   = useState(false)
+  const [notifOpen,    setNotifOpen]    = useState(false)
+  const searchWrap = useRef<HTMLDivElement>(null)
+  const notifWrap  = useRef<HTMLDivElement>(null)
+
+  const searchResults = searchQuery.trim().length >= 1
+    ? SEARCH_INDEX.filter(item =>
+        item.label.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        item.desc.toLowerCase().includes(searchQuery.toLowerCase())
+      ).slice(0, 6)
+    : []
+
+  useEffect(() => {
+    function handle(e: MouseEvent) {
+      if (searchWrap.current && !searchWrap.current.contains(e.target as Node)) setSearchOpen(false)
+      if (notifWrap.current && !notifWrap.current.contains(e.target as Node)) setNotifOpen(false)
+    }
+    document.addEventListener('mousedown', handle)
+    return () => document.removeEventListener('mousedown', handle)
+  }, [])
+
+  function handleSearchSelect(path: string) {
+    navigate(path); setSearchQuery(''); setSearchOpen(false)
+  }
+  function handleSearchKey(e: React.KeyboardEvent) {
+    if (e.key === 'Escape') { setSearchOpen(false); setSearchQuery('') }
+    if (e.key === 'Enter' && searchResults.length > 0) handleSearchSelect(searchResults[0].path)
+  }
   const name = user?.email?.split('@')[0] ?? 'Usuario'
   const displayName = name.charAt(0).toUpperCase() + name.slice(1)
   const initials = displayName.slice(0,2).toUpperCase()
