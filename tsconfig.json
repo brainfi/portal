@@ -12,9 +12,16 @@
     "noEmit": true,
     "jsx": "react-jsx",
     "strict": false,
-    "baseUrl": ".",
-    "paths": { "@/*": ["src/*"] }
+    "paths": { "@/*": ["./src/*"] }
   },
-  "include": ["src/**/*"],
-  "exclude": ["node_modules"]
+  "include": [
+    "src/**/*",
+    "App.tsx",
+    "main.tsx",
+    "components/**/*",
+    "pages/**/*",
+    "contexts/**/*",
+    "lib/**/*"
+  ],
+  "exclude": ["node_modules", "dist"]
 }
