@@ -68,7 +68,9 @@ export default function Layout({ children, title = 'Resumen' }: LayoutProps) {
         @media (max-width: 768px) {
           .sidebar-wrap { position: fixed !important; left: ${sidebarOpen ? '0' : '-210px'} !important; top: 0; height: 100vh; z-index: 50; transition: left 0.25s ease; box-shadow: ${sidebarOpen ? '4px 0 24px rgba(0,0,0,0.1)' : 'none'}; }
           .hamburger { display: flex !important; }
-          .tb-actions { display: none !important; }
+          .tb-search { display: none !important; }
+          .tb-header { padding: 12px 16px 16px !important; }
+          .tb-main { padding: 0 16px 20px !important; }
           .row2 { grid-template-columns: 1fr !important; }
           .kpi-grid { grid-template-columns: 1fr 1fr !important; }
         }
@@ -83,20 +85,18 @@ export default function Layout({ children, title = 'Resumen' }: LayoutProps) {
       </div>
 
       <div style={{ flex:1, display:'flex', flexDirection:'column', overflow:'hidden', minWidth:0 }}>
-        <div style={{ padding:'14px 28px 28px', background:'#F4F5F7', flexShrink:0, display:'flex', alignItems:'center', justifyContent:'space-between', gap:16 }}>
+        <div className="tb-header" style={{ padding:'14px 28px 28px', background:'#F4F5F7', flexShrink:0, display:'flex', alignItems:'center', justifyContent:'space-between', gap:16 }}>
           <div style={{ display:'flex', alignItems:'center', gap:12, flexShrink:0 }}>
             <button className="hamburger" onClick={() => setSidebarOpen(!sidebarOpen)} style={{ display:'none', alignItems:'center', justifyContent:'center', width:32, height:32, border:'1px solid #E8E8EC', borderRadius:7, background:'#fff', cursor:'pointer' }}>
               <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="#888" strokeWidth="1.5"><path d="M2 4h12M2 8h12M2 12h12"/></svg>
             </button>
             <span style={{ fontSize:10, fontWeight:600, color:'#B0B7C3', textTransform:'uppercase', letterSpacing:'0.12em' }}>
-              {['Resumen','Dashboard'].includes(title) ? 'General' :
-               ['Cashflow','Análisis','Impuestos'].includes(title) ? 'General' :
-               ['Ajustes','Integraciones'].includes(title) ? 'Admin' : 'General'}
+              {(title.includes('Ajustes') || title.includes('Configurar')) ? 'Admin' : 'General'}
               {' / '}{title.toUpperCase()}
             </span>
           </div>
           <div style={{ display:'flex', alignItems:'center', gap:10, flexShrink:0 }}>
-            <div ref={searchWrap} style={{ position:'relative' }}>
+            <div ref={searchWrap} className="tb-search" style={{ position:'relative' }}>
               <div style={{ display:'flex', alignItems:'center', gap:8, background:'#fff', border:`1px solid ${searchOpen?'#4361EE':'#E8E8EC'}`, borderRadius:8, padding:'7px 14px', width:220, transition:'border-color .15s' }}>
                 <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="#bbb" strokeWidth="1.5"><circle cx="7" cy="7" r="5"/><path d="M11 11l3 3"/></svg>
                 <input type="text" value={searchQuery}
@@ -161,7 +161,7 @@ export default function Layout({ children, title = 'Resumen' }: LayoutProps) {
             <div style={{ width:34, height:34, borderRadius:8, background:'#4361EE', display:'flex', alignItems:'center', justifyContent:'center', fontSize:11, fontWeight:700, color:'#fff', cursor:'pointer', flexShrink:0 }}>{initials}</div>
           </div>
         </div>
-        <main style={{ flex:1, overflow:'auto', padding:'0 28px 28px', background:'#F4F5F7', display:'flex', flexDirection:'column', gap:14 }}>
+        <main className="tb-main" style={{ flex:1, overflow:'auto', padding:'0 28px 28px', background:'#F4F5F7', display:'flex', flexDirection:'column', gap:14 }}>
           {children}
         </main>
       </div>
