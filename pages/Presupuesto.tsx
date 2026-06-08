@@ -337,7 +337,7 @@ export default function Presupuesto() {
           <td style={{ ...td, textAlign:'left' as const, paddingLeft:8, fontWeight:700, fontSize:13, color }}>{slabel}</td>
           <td style={{ ...td, fontWeight:700, color:'#888' }}>{fmt(plan)}</td>
           <td style={{ ...td, textAlign:'right' as const, fontWeight:700, color }}>{real!==0?fmt(real):'—'}</td>
-          <td style={{ ...td, textAlign:'right' as const, fontWeight:700, color:diff>=0?'#1a7a3a':'#b91c1c' }}>{real!==0?(diff>=0?'+':'')+fmt(diff):'—'}</td>
+          <td className="pres-hide" style={{ ...td, textAlign:'right' as const, fontWeight:700, color:diff>=0?'#1a7a3a':'#b91c1c' }}>{real!==0?(diff>=0?'+':'')+fmt(diff):'—'}</td>
           <td style={td}>{real!==0&&<DeltaBadge real={Math.abs(real)} plan={Math.abs(plan)} tipo="ingreso"/>}</td>
           <td />
         </tr>
@@ -369,7 +369,7 @@ export default function Presupuesto() {
                 <i className={`ti ${p.icono}`} style={{fontSize:11,color:p.color}} aria-hidden="true"/>
               </div>
               <div><span style={{fontWeight:500}}>{p.categoria}</span>
-                {p.cuentaCodigo&&<div style={{fontSize:10,color:'#B0B7C3',marginTop:1}}>{p.cuentaCodigo} · {p.cuentaNombre}</div>}
+                {p.cuentaCodigo&&<div className="pres-hide" style={{fontSize:10,color:'#B0B7C3',marginTop:1}}>{p.cuentaCodigo} · {p.cuentaNombre}</div>}
               </div>
             </div>
           </td>
@@ -387,7 +387,7 @@ export default function Presupuesto() {
             const good = p.tipo==='ingreso'?dV>=0:dV<=0
             return(<>
               <td style={{...td,textAlign:'right' as const,fontWeight:rV>0?600:400,color:rV>0?'#1a1a1a':'#B0B7C3'}}>{rV>0?fmt(rV):'—'}</td>
-              <td style={{...td,textAlign:'right' as const,fontWeight:600,color:rV>0?(good?'#1a7a3a':'#b91c1c'):'#B0B7C3'}}>{rV>0?(dV>=0?'+':'')+fmt(dV):'—'}</td>
+              <td className="pres-hide" style={{...td,textAlign:'right' as const,fontWeight:600,color:rV>0?(good?'#1a7a3a':'#b91c1c'):'#B0B7C3'}}>{rV>0?(dV>=0?'+':'')+fmt(dV):'—'}</td>
               <td style={{...td,textAlign:'right' as const}}>{rV>0?<DeltaBadge real={rV} plan={pV} tipo={p.tipo}/>:<span style={{fontSize:11,color:'#B0B7C3'}}>—</span>}</td>
             </>)
           })()}
@@ -422,13 +422,13 @@ export default function Presupuesto() {
           </div>
         </div>
         <div style={{overflowX:'auto'}}>
-          <table style={{width:'100%',borderCollapse:'collapse',minWidth:580}}>
+          <table className="pres-pl-table" style={{width:'100%',borderCollapse:'collapse',minWidth:580}}>
             <thead>
               <tr style={{borderBottom:'2px solid #ECEEF3'}}>
                 <th style={{...th,textAlign:'left' as const,paddingLeft:8,width:'28%'}}>Partida · Cuenta PGC</th>
                 <th style={{...th,width:110}}>Plan anual</th>
                 <th style={{...th,textAlign:'right' as const}}>{labelVista}</th>
-                <th style={{...th,textAlign:'right' as const}}>Desv. €</th>
+                <th className="pres-hide" style={{...th,textAlign:'right' as const}}>Desv. €</th>
                 <th style={{...th,textAlign:'right' as const}}>Desv. %</th>
                 <th style={{width:28}}/>
               </tr>
@@ -515,9 +515,9 @@ export default function Presupuesto() {
   return (
     <Layout title="Presupuesto">
       <style>{`
-        @media (max-width: 900px) { .pres-kgrid { grid-template-columns: 1fr 1fr !important; }
-        @media (max-width: 1100px) { .pres-kgrid { grid-template-columns: 1fr 1fr !important; } } }
-        @media (max-width: 600px) { .pres-kgrid { grid-template-columns: 1fr !important; } }
+        @media (max-width: 1100px) { .pres-kgrid { grid-template-columns: 1fr 1fr !important; } }
+        @media (max-width: 600px)  { .pres-kgrid { grid-template-columns: 1fr !important; } }
+        @media (max-width: 640px)  { .pres-hide { display: none !important; } .pres-pl-table { min-width: 0 !important; } }
         .pres-dd-item { display:flex; align-items:center; justify-content:space-between; width:100%; padding:8px 12px; font-size:13px; border:none; background:transparent; cursor:pointer; font-family:inherit; text-align:left; color:#1a1a1a; border-radius:7px; }
         .pres-dd-item:hover { background:#F4F5F7; }
         .pres-dd-item.active { color:#4361EE; font-weight:600; }
