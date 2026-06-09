@@ -1,6 +1,9 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import Layout from '@/components/Layout'
+import { useDatos } from '@/contexts/DataContext'
+import { getPlan } from '@/lib/presupuesto'
+import { buildReal } from '@/lib/contabilidad'
 import {
   AreaChart, Area, Line, XAxis, YAxis, CartesianGrid,
   Tooltip, ResponsiveContainer, ComposedChart,
@@ -25,7 +28,6 @@ interface Partida {
 
 const MESES = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic']
 const MES_ACTUAL = 4
-const MESES_CON_REAL = [0,1,2,3,4]
 
 const initialPartidas: Partida[] = [
   { id:1, categoria:'Ventas directas', cuentaCodigo:'700', cuentaNombre:'Ventas de mercaderías',       tipo:'ingreso', planAnual:840000, planMensual:[65000,65000,68000,70000,70200,72000,72000,68000,74000,76000,78000,80000], real:[63200,66800,74000,88000,68000,0,0,0,0,0,0,0], icono:'ti-trending-up',      color:'#4361EE' },
@@ -86,7 +88,27 @@ function DeltaBadge({ real, plan, tipo }: { real: number; plan: number; tipo: Ti
 
 export default function Presupuesto() {
   const navigate = useNavigate()
-  const [partidas, setPartidas] = useState<Partida[]>(initialPartidas)
+  const { data, loading, error } = useDatos()
+  const [partidas, setPartidas] = useState<Partida[]>([])
+  const [mesesReal, setMesesReal] = useState<number[]>([])
+  const [cargandoPlan, setCargandoPlan] = useState(true)
+  const MESES_CON_REAL = mesesReal
+
+  useEffect(() => {
+    let cancel = false
+    getPlan().then(plan => {
+      if (cancel) return
+      const base = (plan ?? []) as Partida[]
+      const { real, mesesConReal } = buildReal(
+        data?.diario ?? [],
+        base.map(p => ({ id: p.id, cuentaCodigo: p.cuentaCodigo ?? '', tipo: p.tipo })),
+      )
+      setPartidas(base.map(p => ({ ...p, real: real[p.id] ?? Array(12).fill(0) })))
+      setMesesReal(mesesConReal)
+    }).catch(() => { if (!cancel) { setPartidas([]); setMesesReal([]) } })
+      .finally(() => { if (!cancel) setCargandoPlan(false) })
+    return () => { cancel = true }
+  }, [data])
   const [filtro, setFiltro] = useState<FiltroPeriodo>(MES_ACTUAL)
   const [filtroOpen, setFiltroOpen] = useState(false)
   const [editandoPlan, setEditandoPlan] = useState<number | null>(null)
@@ -337,7 +359,7 @@ export default function Presupuesto() {
           <td style={{ ...td, textAlign:'left' as const, paddingLeft:8, fontWeight:700, fontSize:13, color }}>{slabel}</td>
           <td style={{ ...td, fontWeight:700, color:'#888' }}>{fmt(plan)}</td>
           <td style={{ ...td, textAlign:'right' as const, fontWeight:700, color }}>{real!==0?fmt(real):'—'}</td>
-          <td className="pres-hide" style={{ ...td, textAlign:'right' as const, fontWeight:700, color:diff>=0?'#1a7a3a':'#b91c1c' }}>{real!==0?(diff>=0?'+':'')+fmt(diff):'—'}</td>
+          <td style={{ ...td, textAlign:'right' as const, fontWeight:700, color:diff>=0?'#1a7a3a':'#b91c1c' }}>{real!==0?(diff>=0?'+':'')+fmt(diff):'—'}</td>
           <td style={td}>{real!==0&&<DeltaBadge real={Math.abs(real)} plan={Math.abs(plan)} tipo="ingreso"/>}</td>
           <td />
         </tr>
@@ -369,7 +391,7 @@ export default function Presupuesto() {
                 <i className={`ti ${p.icono}`} style={{fontSize:11,color:p.color}} aria-hidden="true"/>
               </div>
               <div><span style={{fontWeight:500}}>{p.categoria}</span>
-                {p.cuentaCodigo&&<div className="pres-hide" style={{fontSize:10,color:'#B0B7C3',marginTop:1}}>{p.cuentaCodigo} · {p.cuentaNombre}</div>}
+                {p.cuentaCodigo&&<div style={{fontSize:10,color:'#B0B7C3',marginTop:1}}>{p.cuentaCodigo} · {p.cuentaNombre}</div>}
               </div>
             </div>
           </td>
@@ -387,7 +409,7 @@ export default function Presupuesto() {
             const good = p.tipo==='ingreso'?dV>=0:dV<=0
             return(<>
               <td style={{...td,textAlign:'right' as const,fontWeight:rV>0?600:400,color:rV>0?'#1a1a1a':'#B0B7C3'}}>{rV>0?fmt(rV):'—'}</td>
-              <td className="pres-hide" style={{...td,textAlign:'right' as const,fontWeight:600,color:rV>0?(good?'#1a7a3a':'#b91c1c'):'#B0B7C3'}}>{rV>0?(dV>=0?'+':'')+fmt(dV):'—'}</td>
+              <td style={{...td,textAlign:'right' as const,fontWeight:600,color:rV>0?(good?'#1a7a3a':'#b91c1c'):'#B0B7C3'}}>{rV>0?(dV>=0?'+':'')+fmt(dV):'—'}</td>
               <td style={{...td,textAlign:'right' as const}}>{rV>0?<DeltaBadge real={rV} plan={pV} tipo={p.tipo}/>:<span style={{fontSize:11,color:'#B0B7C3'}}>—</span>}</td>
             </>)
           })()}
@@ -422,13 +444,13 @@ export default function Presupuesto() {
           </div>
         </div>
         <div style={{overflowX:'auto'}}>
-          <table className="pres-pl-table" style={{width:'100%',borderCollapse:'collapse',minWidth:580}}>
+          <table style={{width:'100%',borderCollapse:'collapse',minWidth:580}}>
             <thead>
               <tr style={{borderBottom:'2px solid #ECEEF3'}}>
                 <th style={{...th,textAlign:'left' as const,paddingLeft:8,width:'28%'}}>Partida · Cuenta PGC</th>
                 <th style={{...th,width:110}}>Plan anual</th>
                 <th style={{...th,textAlign:'right' as const}}>{labelVista}</th>
-                <th className="pres-hide" style={{...th,textAlign:'right' as const}}>Desv. €</th>
+                <th style={{...th,textAlign:'right' as const}}>Desv. €</th>
                 <th style={{...th,textAlign:'right' as const}}>Desv. %</th>
                 <th style={{width:28}}/>
               </tr>
@@ -512,12 +534,17 @@ export default function Presupuesto() {
 
 
 
+  const avisoBox: React.CSSProperties = { display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', gap:10, padding:'80px 24px', textAlign:'center', fontSize:14, color:'#555' }
+  if (loading && !data) return <Layout title="Presupuesto"><div style={avisoBox}>Cargando tus datos…</div></Layout>
+  if (error?.code === 'no_sheet') return <Layout title="Presupuesto"><div style={avisoBox}>Conecta tu hoja de Google en Ajustes para comparar tu plan con lo real.</div></Layout>
+  if (!cargandoPlan && partidas.length === 0) return <Layout title="Presupuesto"><div style={avisoBox}>Todavía no has definido tu plan.<span onClick={() => navigate('/presupuesto/configurar')} style={{ color:'#4361EE', cursor:'pointer', fontWeight:600 }}>Configurar presupuesto →</span></div></Layout>
+
   return (
     <Layout title="Presupuesto">
       <style>{`
-        @media (max-width: 1100px) { .pres-kgrid { grid-template-columns: 1fr 1fr !important; } }
-        @media (max-width: 600px)  { .pres-kgrid { grid-template-columns: 1fr !important; } }
-        @media (max-width: 640px)  { .pres-hide { display: none !important; } .pres-pl-table { min-width: 0 !important; } }
+        @media (max-width: 900px) { .pres-kgrid { grid-template-columns: 1fr 1fr !important; }
+        @media (max-width: 1100px) { .pres-kgrid { grid-template-columns: 1fr 1fr !important; } } }
+        @media (max-width: 600px) { .pres-kgrid { grid-template-columns: 1fr !important; } }
         .pres-dd-item { display:flex; align-items:center; justify-content:space-between; width:100%; padding:8px 12px; font-size:13px; border:none; background:transparent; cursor:pointer; font-family:inherit; text-align:left; color:#1a1a1a; border-radius:7px; }
         .pres-dd-item:hover { background:#F4F5F7; }
         .pres-dd-item.active { color:#4361EE; font-weight:600; }

@@ -288,3 +288,34 @@ export function buildPagos(rows: Record<string, string>[]): { obligaciones: Obli
 
   return { obligaciones, prestamos }
 }
+
+// ─── Real por partida del plan (derivado del mayor) ────────────────────────────
+// Para cada partida (con su código PGC y tipo), suma por mes los apuntes del
+// mayor cuya subcuenta empieza por ese código. Ingresos = haber−debe (cuentas 7x),
+// gastos = debe−haber (cuentas 6x). Devuelve real[idPartida] = number[12] y la
+// lista de meses (0-11) que tienen algún dato real.
+export function buildReal(
+  rows: Record<string, string>[],
+  partidas: { id: number; cuentaCodigo: string; tipo: 'ingreso' | 'gasto' }[],
+): { real: Record<number, number[]>; mesesConReal: number[] } {
+  const ap = parseDiario(rows)
+  // prefijo más largo primero, para que 640 gane a 64 si ambos existen
+  const orden = [...partidas]
+    .filter(p => p.cuentaCodigo)
+    .sort((a, b) => b.cuentaCodigo.length - a.cuentaCodigo.length)
+
+  const real: Record<number, number[]> = {}
+  partidas.forEach(p => { real[p.id] = Array(12).fill(0) })
+  const meses = new Set<number>()
+
+  for (const a of ap) {
+    if (!a.fechaReg || !a.cuenta) continue
+    const p = orden.find(pp => a.cuenta.startsWith(pp.cuentaCodigo))
+    if (!p) continue
+    const val = p.tipo === 'ingreso' ? (a.haber - a.debe) : (a.debe - a.haber)
+    if (val === 0) continue
+    real[p.id][a.fechaReg.getMonth()] += val
+    meses.add(a.fechaReg.getMonth())
+  }
+  return { real, mesesConReal: Array.from(meses).sort((x, y) => x - y) }
+}
