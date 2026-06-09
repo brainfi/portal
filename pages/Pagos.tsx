@@ -1,5 +1,6 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect, useRef } from 'react'
 import Layout from '@/components/Layout'
+import { useDatos, DatosRaw } from '@/contexts/DataContext'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts'
 
 // ─── Tipos ───────────────────────────────────────────────────────────────────
@@ -22,35 +23,89 @@ interface Prestamo {
   proximaFecha: string; mesesRestantes: number
 }
 
-// ─── Mock data ────────────────────────────────────────────────────────────────
-const obligaciones: ObligacionOp[] = [
-  { id:1,  concepto:'IVA Q2 · Mod. 303',         detalle:'AEAT · Autoliquidación trimestral',  categoria:'fiscal',      vencimiento:'2026-07-20', importe:21850, estado:'programada', diasRestantes:50,  cuentaPGC:'477'  },
-  { id:2,  concepto:'IRPF · Mod. 111',            detalle:'AEAT · Retenciones trabajadores',    categoria:'fiscal',      vencimiento:'2026-07-20', importe:4200,  estado:'programada', diasRestantes:50,  cuentaPGC:'4751' },
-  { id:3,  concepto:'Ret. Alquileres · Mod. 115', detalle:'AEAT · Retenciones arrendamientos',  categoria:'fiscal',      vencimiento:'2026-07-20', importe:630,   estado:'programada', diasRestantes:50,  cuentaPGC:'4751' },
-  { id:4,  concepto:'Nóminas · junio 2026',       detalle:'8 empleados · SS incluida',          categoria:'nominas',     vencimiento:'2026-06-30', importe:18400, estado:'programada', diasRestantes:30,  cuentaPGC:'640'  },
-  { id:5,  concepto:'Seguridad Social · mayo',    detalle:'TGSS · cuota empresarial',           categoria:'ss',          vencimiento:'2026-06-10', importe:6200,  estado:'urgente',    diasRestantes:10,  cuentaPGC:'476'  },
-  { id:6,  concepto:'Alquiler oficina · junio',   detalle:'Proveedor · contrato anual',         categoria:'alquiler',    vencimiento:'2026-06-01', importe:2100,  estado:'vencida',    diasRestantes:-1,  cuentaPGC:'621'  },
-  { id:7,  concepto:'Adobe Creative Cloud',       detalle:'Suscripción · 5 licencias',          categoria:'suscripcion', vencimiento:'2026-06-05', importe:290,   estado:'urgente',    diasRestantes:5,   cuentaPGC:'629'  },
-  { id:8,  concepto:'HubSpot CRM · Pro',          detalle:'Suscripción mensual',                categoria:'suscripcion', vencimiento:'2026-06-10', importe:450,   estado:'urgente',    diasRestantes:10,  cuentaPGC:'629'  },
-  { id:9,  concepto:'Proveedor suministros A',    detalle:'Factura #2026-0341 · 30 días',       categoria:'proveedor',   vencimiento:'2026-06-15', importe:3800,  estado:'urgente',    diasRestantes:15,  cuentaPGC:'400'  },
-  { id:10, concepto:'Proveedor logística B',      detalle:'Factura #2026-0287 · vencida',       categoria:'proveedor',   vencimiento:'2026-05-20', importe:4600,  estado:'vencida',    diasRestantes:-11, cuentaPGC:'400'  },
-]
+// \u2500\u2500\u2500 Datos desde la hoja (Google Sheets) \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
+const DAY = 86400000
 
-const prestamos: Prestamo[] = [
-  { id:1, nombre:'Préstamo ICO Digitalización', entidad:'Santander',  tipo:'prestamo', clasificacion:'financiera',    plazo:'largo',  capitalInicial:150000, capitalPendiente:120000, cuotaMensual:2340, tipoInteres:4.5, fechaInicio:'2024-01-01', fechaFin:'2029-01-01', proximaFecha:'2026-06-01', mesesRestantes:55 },
-  { id:2, nombre:'Línea de crédito',            entidad:'BBVA',        tipo:'credito',  clasificacion:'financiera',    plazo:'corto',  capitalInicial:40000,  capitalPendiente:25000,  cuotaMensual:0,    tipoInteres:6.5, fechaInicio:'2025-06-01', fechaFin:'2026-12-01', proximaFecha:'2026-12-01', mesesRestantes:7  },
-  { id:3, nombre:'Leasing vehículo comercial',  entidad:'CaixaBank',   tipo:'leasing',  clasificacion:'financiera',    plazo:'largo',  capitalInicial:28000,  capitalPendiente:19600,  cuotaMensual:520,  tipoInteres:3.9, fechaInicio:'2023-07-01', fechaFin:'2027-07-01', proximaFecha:'2026-06-01', mesesRestantes:25 },
-  { id:4, nombre:'Facturas proveedores',         entidad:'Varios',      tipo:'pagare',   clasificacion:'no_financiera', plazo:'corto',  capitalInicial:8400,   capitalPendiente:8400,   cuotaMensual:0,    tipoInteres:0,   fechaInicio:'2026-05-01', fechaFin:'2026-06-30', proximaFecha:'2026-06-30', mesesRestantes:1  },
-  { id:5, nombre:'SS pendiente · mayo',          entidad:'TGSS',        tipo:'pagare',   clasificacion:'no_financiera', plazo:'corto',  capitalInicial:6200,   capitalPendiente:6200,   cuotaMensual:0,    tipoInteres:0,   fechaInicio:'2026-05-01', fechaFin:'2026-06-10', proximaFecha:'2026-06-10', mesesRestantes:1  },
-  { id:6, nombre:'Retenciones IRPF pendientes',  entidad:'AEAT',        tipo:'pagare',   clasificacion:'no_financiera', plazo:'corto',  capitalInicial:4830,   capitalPendiente:4830,   cuotaMensual:0,    tipoInteres:0,   fechaInicio:'2026-04-01', fechaFin:'2026-07-20', proximaFecha:'2026-07-20', mesesRestantes:2  },
-]
+function toNum(v?: string): number {
+  if (v == null) return 0
+  let s = String(v).trim().replace(/[\u20ac\s]/g, '')
+  if (s === '') return 0
+  const hasComma = s.includes(','), hasDot = s.includes('.')
+  if (hasComma && hasDot) s = s.replace(/\./g, '').replace(',', '.')
+  else if (hasComma) s = s.replace(',', '.')
+  const n = parseFloat(s)
+  return isNaN(n) ? 0 : n
+}
+
+function parseFecha(v?: string): Date | null {
+  if (!v) return null
+  const s = String(v).trim()
+  if (!s) return null
+  let m = s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/)
+  if (m) { const d = new Date(+m[1], +m[2] - 1, +m[3]); return isNaN(d.getTime()) ? null : d }
+  m = s.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})$/)
+  if (m) { let yr = +m[3]; if (yr < 100) yr += 2000; const d = new Date(yr, +m[2] - 1, +m[1]); return isNaN(d.getTime()) ? null : d }
+  const d = new Date(s)
+  return isNaN(d.getTime()) ? null : d
+}
+
+function toISO(v?: string): string {
+  const d = parseFecha(v)
+  return d ? `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}` : ''
+}
+
+// Convierte las filas crudas de las pestanas Pagos y Prestamos a los tipos de
+// la pagina, derivando estado, dias, clasificacion, plazo y meses restantes.
+function mapPagos(raw: DatosRaw | null): { obligaciones: ObligacionOp[]; prestamos: Prestamo[] } {
+  if (!raw) return { obligaciones: [], prestamos: [] }
+  const hoy = new Date()
+
+  const CATS: CategoriaOp[] = ['nominas', 'fiscal', 'proveedor', 'alquiler', 'suscripcion', 'ss']
+  const obligaciones: ObligacionOp[] = (raw.pagos ?? []).map((p, i) => {
+    const venc = parseFecha(p.vencimiento)
+    const diasRestantes = venc ? Math.floor((venc.getTime() - hoy.getTime()) / DAY) : 0
+    const estado: EstadoOp = diasRestantes < 0 ? 'vencida' : diasRestantes <= 10 ? 'urgente' : 'programada'
+    const catRaw = (p.categoria ?? '').toLowerCase()
+    const categoria = (CATS.includes(catRaw as CategoriaOp) ? catRaw : 'proveedor') as CategoriaOp
+    return {
+      id: i + 1, concepto: p.concepto ?? '', detalle: p.detalle ?? '',
+      categoria, vencimiento: toISO(p.vencimiento), importe: toNum(p.importe),
+      estado, diasRestantes, cuentaPGC: p.cuentaPGC ?? p.cuenta ?? '',
+    }
+  })
+
+  const TIPOS: TipoPrestamo[] = ['prestamo', 'leasing', 'credito', 'pagare']
+  const prestamos: Prestamo[] = (raw.prestamos ?? []).map((p, i) => {
+    const tipoRaw = (p.tipo ?? '').toLowerCase()
+    const tipo = (TIPOS.includes(tipoRaw as TipoPrestamo) ? tipoRaw : 'prestamo') as TipoPrestamo
+    const clasificacion: TipoDeuda = tipo === 'pagare' ? 'no_financiera' : 'financiera'
+    const capitalPendiente = toNum(p.capitalPendiente)
+    const capitalInicial = toNum(p.capitalInicial) || capitalPendiente
+    const fin = parseFecha(p.fechaFin)
+    const mesesRestantes = fin ? Math.max(0, Math.round((fin.getTime() - hoy.getTime()) / (DAY * 30.44))) : 0
+    const plazo: PlazoDeuda = mesesRestantes <= 12 ? 'corto' : 'largo'
+    const prox = new Date(hoy.getFullYear(), hoy.getMonth() + 1, 1)
+    return {
+      id: i + 1, nombre: p.nombre ?? '', entidad: p.entidad ?? '',
+      tipo, clasificacion, plazo, capitalInicial, capitalPendiente,
+      cuotaMensual: toNum(p.cuotaMensual), tipoInteres: toNum(p.tipoInteres),
+      fechaInicio: toISO(p.fechaInicio), fechaFin: toISO(p.fechaFin),
+      proximaFecha: `${prox.getFullYear()}-${String(prox.getMonth() + 1).padStart(2, '0')}-01`,
+      mesesRestantes,
+    }
+  })
+
+  return { obligaciones, prestamos }
+}
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 function fmt(n: number) {
   return new Intl.NumberFormat('es-ES', { style:'currency', currency:'EUR', maximumFractionDigits:0 }).format(n)
 }
 function fmtFecha(iso: string) {
-  return new Intl.DateTimeFormat('es-ES', { day:'numeric', month:'short', year:'numeric' }).format(new Date(iso))
+  const d = parseFecha(iso)
+  if (!d) return '—'
+  return new Intl.DateTimeFormat('es-ES', { day:'numeric', month:'short', year:'numeric' }).format(d)
 }
 
 const CAT_CONFIG: Record<CategoriaOp, { label:string; icon:string; color:string; bg:string }> = {
@@ -99,6 +154,17 @@ function calcAmortizacion(capital: number, tasaAnual: number, meses: number) {
   return rows
 }
 
+function Aviso({ icon, texto }: { icon: string; texto: string }) {
+  return (
+    <div style={{ display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', gap:12, padding:'80px 24px', textAlign:'center' }}>
+      <div style={{ width:48, height:48, borderRadius:12, background:'#EEF1FD', display:'flex', alignItems:'center', justifyContent:'center' }}>
+        <i className={`ti ${icon}`} style={{ fontSize:24, color:'#4361EE' }} aria-hidden="true" />
+      </div>
+      <div style={{ fontSize:14, color:'#555', maxWidth:380, lineHeight:1.5 }}>{texto}</div>
+    </div>
+  )
+}
+
 // ─── Componente principal ─────────────────────────────────────────────────────
 export default function Pagos() {
   // Filtro periodo — igual que Presupuesto y Cobros
@@ -120,9 +186,17 @@ export default function Pagos() {
   const [filtroEstado,    setFiltroEstado]    = useState<string>('todos')
   const [filtroCategoria, setFiltroCategoria] = useState<string>('todos')
 
+  // Datos reales desde la hoja conectada (proveedor global)
+  const { data, loading, error } = useDatos()
+  const { obligaciones, prestamos } = useMemo(() => mapPagos(data), [data])
+
   // Tabla amortización
-  const [prestamoSel,         setPrestamoSel]         = useState<Prestamo | null>(prestamos.find(p => p.tipo === 'prestamo') || null)
+  const [prestamoSel,         setPrestamoSel]         = useState<Prestamo | null>(null)
   const [mostrarTodasCuotas,  setMostrarTodasCuotas]  = useState(false)
+  const autoSel = useRef(false)
+  useEffect(() => {
+    if (!autoSel.current && prestamos.length) { setPrestamoSel(prestamos.find(p => p.tipo === 'prestamo') ?? prestamos[0]); autoSel.current = true }
+  }, [prestamos])
 
   // ── Totales ──
   const totalOp    = obligaciones.reduce((a, o) => a + o.importe, 0)
@@ -150,7 +224,7 @@ export default function Pagos() {
     .filter(o => (filtroEstado    === 'todos' || o.estado    === filtroEstado)
               && (filtroCategoria === 'todos' || o.categoria === filtroCategoria))
     .sort((a, b) => a.diasRestantes - b.diasRestantes)
-  , [filtroEstado, filtroCategoria])
+  , [obligaciones, filtroEstado, filtroCategoria])
 
   // ── Amortización ──
   const cuotasAm       = useMemo(() => prestamoSel ? calcAmortizacion(prestamoSel.capitalPendiente, prestamoSel.tipoInteres, prestamoSel.mesesRestantes) : [], [prestamoSel])
@@ -159,6 +233,11 @@ export default function Pagos() {
   const card: React.CSSProperties = { background:'#fff', borderRadius:14, border:'1px solid #E8E8EC' }
   const th: React.CSSProperties   = { fontSize:9, fontWeight:700, color:'#B0B7C3', textTransform:'uppercase', letterSpacing:'0.1em', padding:'0 10px 10px', textAlign:'left' as const }
   const td: React.CSSProperties   = { padding:'11px 10px', fontSize:12, color:'#1a1a1a', verticalAlign:'middle' as const }
+
+  if (loading && !data) return <Layout title="Pagos"><Aviso icon="ti-loader-2" texto="Cargando tus datos…" /></Layout>
+  if (error?.code === 'no_sheet') return <Layout title="Pagos"><Aviso icon="ti-table" texto="Conecta tu hoja de Google en Ajustes para ver tus pagos." /></Layout>
+  if (error) return <Layout title="Pagos"><Aviso icon="ti-alert-triangle" texto={`No se pudieron cargar los datos: ${error.message}`} /></Layout>
+  if (!obligaciones.length && !prestamos.length) return <Layout title="Pagos"><Aviso icon="ti-inbox" texto="Tu hoja no tiene filas en Pagos/Prestamos todavía." /></Layout>
 
   return (
     <Layout title="Pagos">

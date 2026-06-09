@@ -38,9 +38,12 @@ export async function saveConnection(url: string): Promise<string> {
   return sheet_id
 }
 
-export interface CobrosPayload {
+export interface DatosPayload {
   clientes: Record<string, string>[]
   facturas: Record<string, string>[]
+  pagos: Record<string, string>[]
+  prestamos: Record<string, string>[]
+  presupuesto: Record<string, string>[]
   syncedAt?: string
 }
 
@@ -50,7 +53,7 @@ export class SheetError extends Error {
 }
 
 // Llama a la edge function con la sesión del usuario y devuelve los datos.
-export async function fetchCobros(): Promise<CobrosPayload> {
+export async function fetchDatos(): Promise<DatosPayload> {
   const { data: { session } } = await supabase.auth.getSession()
   if (!session) throw new SheetError('no_session', 'No hay sesión activa.')
 
@@ -72,5 +75,5 @@ export async function fetchCobros(): Promise<CobrosPayload> {
     const message = body?.message ?? `Error ${res.status}`
     throw new SheetError(code, message)
   }
-  return body as CobrosPayload
+  return body as DatosPayload
 }

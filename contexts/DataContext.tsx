@@ -1,10 +1,13 @@
 import { createContext, useContext, useEffect, useState, useCallback } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
-import { fetchCobros, SheetError } from '@/lib/sheets'
+import { fetchDatos, SheetError } from '@/lib/sheets'
 
 export interface DatosRaw {
   clientes: Record<string, string>[]
   facturas: Record<string, string>[]
+  pagos: Record<string, string>[]
+  prestamos: Record<string, string>[]
+  presupuesto: Record<string, string>[]
 }
 
 interface DatosState {
@@ -33,8 +36,11 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     setLoading(true)
     setError(null)
     try {
-      const r = await fetchCobros()
-      setData({ clientes: r.clientes ?? [], facturas: r.facturas ?? [] })
+      const r = await fetchDatos()
+      setData({
+        clientes: r.clientes ?? [], facturas: r.facturas ?? [],
+        pagos: r.pagos ?? [], prestamos: r.prestamos ?? [], presupuesto: r.presupuesto ?? [],
+      })
       setSyncedAt(r.syncedAt ?? new Date().toISOString())
     } catch (e) {
       const code = e instanceof SheetError ? e.code : 'error'
