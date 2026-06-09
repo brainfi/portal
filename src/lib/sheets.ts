@@ -54,12 +54,12 @@ export async function fetchCobros(): Promise<CobrosPayload> {
   const { data: { session } } = await supabase.auth.getSession()
   if (!session) throw new SheetError('no_session', 'No hay sesión activa.')
 
-  const base = import.meta.env.VITE_SUPABASE_URL
+  const base = (import.meta as any).env.VITE_SUPABASE_URL
   const res = await fetch(`${base}/functions/v1/sheets-cobros`, {
     method: 'POST',
     headers: {
       Authorization: `Bearer ${session.access_token}`,
-      apikey: import.meta.env.VITE_SUPABASE_ANON_KEY,
+      apikey: (import.meta as any).env.VITE_SUPABASE_ANON_KEY,
       'Content-Type': 'application/json',
     },
   })
