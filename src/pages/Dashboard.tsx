@@ -1,7 +1,8 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import Layout from '@/components/Layout'
 import { useDatos } from '@/contexts/DataContext'
 import { buildResumen } from '@/lib/contabilidad'
+import { getPlan } from '@/lib/presupuesto'
 import {
   LineChart, Line, XAxis, YAxis,
   CartesianGrid, Tooltip, ResponsiveContainer,
@@ -102,6 +103,8 @@ export default function Dashboard() {
   const { data, loading, error } = useDatos()
   const resumen = useMemo(() => buildResumen(data?.diario ?? []), [data])
   const evol = resumen.evolucion
+  const [planPartidas, setPlanPartidas] = useState<{ tipo: 'ingreso' | 'gasto'; planMensual: number[] }[]>([])
+  useEffect(() => { getPlan().then(p => setPlanPartidas((p as any) ?? [])).catch(() => {}) }, [])
 
   const dias = diasRestantesMes()
   const [filtroOpen, setFiltroOpen] = useState(false)
@@ -121,6 +124,23 @@ export default function Dashboard() {
   const conGasto = evol.filter(e => e.gastos > 0)
   const burn = conGasto.length ? conGasto.reduce((a, e) => a + e.gastos, 0) / conGasto.length : 0
   const runway = burn > 0 ? Math.round(resumen.tesoreria / (burn / 30)) : null
+
+  // ── Comparativa vs plan (plan guardado en Supabase) ──
+  const hayPlan = planPartidas.length > 0
+  const mesesData = evol.filter(e => e.ingresos > 0 || e.gastos > 0).map(e => parseInt(e.ym.slice(5, 7), 10) - 1)
+  const idxPeriodo = mes ? [parseInt(mes.ym.slice(5, 7), 10) - 1] : mesesData
+  const planDe = (tipo: 'ingreso' | 'gasto') => planPartidas
+    .filter(p => p.tipo === tipo)
+    .reduce((a, p) => a + idxPeriodo.reduce((sm, mi) => sm + (p.planMensual[mi] ?? 0), 0), 0)
+  const ingresosPlan = planDe('ingreso')
+  const ebitdaPlan = ingresosPlan - planDe('gasto')
+  const deltaVsPlan = (real: number, plan: number): { badge: 'up' | 'down' | 'neutral'; lbl: string } => {
+    if (!hayPlan || plan === 0) return { badge: 'neutral', lbl: 'sin plan' }
+    const d = ((real - plan) / Math.abs(plan)) * 100
+    return { badge: d >= 0 ? 'up' : 'down', lbl: `${d >= 0 ? '+' : ''}${d.toFixed(0)}% vs plan` }
+  }
+  const ingDelta = deltaVsPlan(ingresosVal, ingresosPlan)
+  const ebDelta = deltaVsPlan(ebitdaVal, ebitdaPlan)
 
   const card: React.CSSProperties = { background: '#fff', borderRadius: 14, border: '1px solid #E8E8EC' }
 
@@ -199,12 +219,13 @@ export default function Dashboard() {
         <div className="dash-main" style={{ display: 'grid', gridTemplateColumns: '300px 1fr', gap: 14 }}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
             <KPICard lbl="Ingresos" val={fmt(ingresosVal)}
-              badge="neutral" badgeLbl="sin plan" sub={filtroLabel}
+              badge={ingDelta.badge} badgeLbl={ingDelta.lbl} sub={filtroLabel}
               icon="ti-trending-up" iconBg="#F0F9F4" iconColor="#2DC653"
-              comparacion="Define tu plan en Presupuesto para comparar" />
+              comparacion={hayPlan ? `Plan ${fmt(ingresosPlan)} · real ${fmt(ingresosVal)}` : 'Define tu plan en Presupuesto para comparar'} />
             <KPICard lbl="EBITDA" val={fmt(ebitdaVal)}
-              badge="neutral" badgeLbl="sin plan" sub={`Margen ${margenVal}`}
-              icon="ti-chart-pie" iconBg="#FEF2F2" iconColor="#EF4444" />
+              badge={ebDelta.badge} badgeLbl={ebDelta.lbl} sub={`Margen ${margenVal}`}
+              icon="ti-chart-pie" iconBg="#FEF2F2" iconColor="#EF4444"
+              comparacion={hayPlan ? `Plan ${fmt(ebitdaPlan)} · real ${fmt(ebitdaVal)}` : undefined} />
             <KPICard lbl="Margen EBITDA" val={margenVal}
               badge="neutral" badgeLbl="EBITDA / Ingresos" sub="Explotación"
               icon="ti-percentage" iconBg="#FFF8E6" iconColor="#F4A100" />
