@@ -31,8 +31,23 @@ function toNum(v?: string): number {
 
 function parseFecha(v?: string): Date | null {
   if (!v) return null
-  const d = new Date(String(v).trim())
+  const s = String(v).trim()
+  if (!s) return null
+  // ISO: 2026-05-20 (con o sin hora)
+  let m = s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/)
+  if (m) { const d = new Date(+m[1], +m[2] - 1, +m[3]); return isNaN(d.getTime()) ? null : d }
+  // Espanol: 20/05/2026 o 20-05-2026 (dia primero)
+  m = s.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})$/)
+  if (m) { let yr = +m[3]; if (yr < 100) yr += 2000; const d = new Date(yr, +m[2] - 1, +m[1]); return isNaN(d.getTime()) ? null : d }
+  // ultimo intento: que lo resuelva el motor
+  const d = new Date(s)
   return isNaN(d.getTime()) ? null : d
+}
+
+// Normaliza cualquier fecha reconocible a ISO (YYYY-MM-DD); '' si no se entiende.
+function toISO(v?: string): string {
+  const d = parseFecha(v)
+  return d ? `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}` : ''
 }
 
 // Convierte las filas crudas de la hoja en los tipos de la pagina, derivando
@@ -66,7 +81,7 @@ function mapData(raw: DatosRaw | null): { clientes: Cliente[]; facturas: Factura
     const nombre = (fila.cliente ?? '').trim()
     return {
       id: `f${i}`, cliente: nombre, clienteId: nameToId.get(nombre) ?? nombre,
-      numero: fila.numero ?? '', emision: fila.emision ?? '', vencimiento: fila.vencimiento ?? '',
+      numero: fila.numero ?? '', emision: toISO(fila.emision), vencimiento: toISO(fila.vencimiento),
       importe, cobrado, estado, diasVencida,
     }
   })
@@ -90,7 +105,9 @@ function fmt(n: number) {
   return new Intl.NumberFormat('es-ES', { style:'currency', currency:'EUR', maximumFractionDigits:0 }).format(n)
 }
 function fmtFecha(iso: string) {
-  return new Intl.DateTimeFormat('es-ES', { day:'numeric', month:'short', year:'numeric' }).format(new Date(iso))
+  const d = parseFecha(iso)
+  if (!d) return '\u2014'
+  return new Intl.DateTimeFormat('es-ES', { day:'numeric', month:'short', year:'numeric' }).format(d)
 }
 
 const ESTADO_STYLE: Record<string, { bg:string; color:string; label:string }> = {
@@ -147,7 +164,7 @@ export default function Cobros() {
   // Facturas filtradas por periodo
   const facturasPeriodo = filtro === 'anual'
     ? facturas
-    : facturas.filter(f => new Date(f.vencimiento).getMonth() === (filtro as number))
+    : facturas.filter(f => parseFecha(f.vencimiento)?.getMonth() === (filtro as number))
 
   const totalPendiente = facturasPeriodo.filter(f => f.estado !== 'cobrada').reduce((a, f) => a + (f.importe - f.cobrado), 0)
   const totalVencido   = facturasPeriodo.filter(f => f.estado === 'vencida' || (f.estado === 'parcial' && f.diasVencida > 0)).reduce((a, f) => a + (f.importe - f.cobrado), 0)
