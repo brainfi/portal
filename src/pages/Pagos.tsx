@@ -1,6 +1,7 @@
 import { useState, useMemo, useEffect, useRef } from 'react'
 import Layout from '@/components/Layout'
-import { useDatos, DatosRaw } from '@/contexts/DataContext'
+import { useDatos } from '@/contexts/DataContext'
+import { buildPagos } from '@/lib/contabilidad'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts'
 
 // ─── Tipos ───────────────────────────────────────────────────────────────────
@@ -23,20 +24,7 @@ interface Prestamo {
   proximaFecha: string; mesesRestantes: number
 }
 
-// \u2500\u2500\u2500 Datos desde la hoja (Google Sheets) \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
-const DAY = 86400000
-
-function toNum(v?: string): number {
-  if (v == null) return 0
-  let s = String(v).trim().replace(/[\u20ac\s]/g, '')
-  if (s === '') return 0
-  const hasComma = s.includes(','), hasDot = s.includes('.')
-  if (hasComma && hasDot) s = s.replace(/\./g, '').replace(',', '.')
-  else if (hasComma) s = s.replace(',', '.')
-  const n = parseFloat(s)
-  return isNaN(n) ? 0 : n
-}
-
+// \u2500\u2500\u2500 Fechas (para render) \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
 function parseFecha(v?: string): Date | null {
   if (!v) return null
   const s = String(v).trim()
@@ -47,55 +35,6 @@ function parseFecha(v?: string): Date | null {
   if (m) { let yr = +m[3]; if (yr < 100) yr += 2000; const d = new Date(yr, +m[2] - 1, +m[1]); return isNaN(d.getTime()) ? null : d }
   const d = new Date(s)
   return isNaN(d.getTime()) ? null : d
-}
-
-function toISO(v?: string): string {
-  const d = parseFecha(v)
-  return d ? `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}` : ''
-}
-
-// Convierte las filas crudas de las pestanas Pagos y Prestamos a los tipos de
-// la pagina, derivando estado, dias, clasificacion, plazo y meses restantes.
-function mapPagos(raw: DatosRaw | null): { obligaciones: ObligacionOp[]; prestamos: Prestamo[] } {
-  if (!raw) return { obligaciones: [], prestamos: [] }
-  const hoy = new Date()
-
-  const CATS: CategoriaOp[] = ['nominas', 'fiscal', 'proveedor', 'alquiler', 'suscripcion', 'ss']
-  const obligaciones: ObligacionOp[] = (raw.pagos ?? []).map((p, i) => {
-    const venc = parseFecha(p.vencimiento)
-    const diasRestantes = venc ? Math.floor((venc.getTime() - hoy.getTime()) / DAY) : 0
-    const estado: EstadoOp = diasRestantes < 0 ? 'vencida' : diasRestantes <= 10 ? 'urgente' : 'programada'
-    const catRaw = (p.categoria ?? '').toLowerCase()
-    const categoria = (CATS.includes(catRaw as CategoriaOp) ? catRaw : 'proveedor') as CategoriaOp
-    return {
-      id: i + 1, concepto: p.concepto ?? '', detalle: p.detalle ?? '',
-      categoria, vencimiento: toISO(p.vencimiento), importe: toNum(p.importe),
-      estado, diasRestantes, cuentaPGC: p.cuentaPGC ?? p.cuenta ?? '',
-    }
-  })
-
-  const TIPOS: TipoPrestamo[] = ['prestamo', 'leasing', 'credito', 'pagare']
-  const prestamos: Prestamo[] = (raw.prestamos ?? []).map((p, i) => {
-    const tipoRaw = (p.tipo ?? '').toLowerCase()
-    const tipo = (TIPOS.includes(tipoRaw as TipoPrestamo) ? tipoRaw : 'prestamo') as TipoPrestamo
-    const clasificacion: TipoDeuda = tipo === 'pagare' ? 'no_financiera' : 'financiera'
-    const capitalPendiente = toNum(p.capitalPendiente)
-    const capitalInicial = toNum(p.capitalInicial) || capitalPendiente
-    const fin = parseFecha(p.fechaFin)
-    const mesesRestantes = fin ? Math.max(0, Math.round((fin.getTime() - hoy.getTime()) / (DAY * 30.44))) : 0
-    const plazo: PlazoDeuda = mesesRestantes <= 12 ? 'corto' : 'largo'
-    const prox = new Date(hoy.getFullYear(), hoy.getMonth() + 1, 1)
-    return {
-      id: i + 1, nombre: p.nombre ?? '', entidad: p.entidad ?? '',
-      tipo, clasificacion, plazo, capitalInicial, capitalPendiente,
-      cuotaMensual: toNum(p.cuotaMensual), tipoInteres: toNum(p.tipoInteres),
-      fechaInicio: toISO(p.fechaInicio), fechaFin: toISO(p.fechaFin),
-      proximaFecha: `${prox.getFullYear()}-${String(prox.getMonth() + 1).padStart(2, '0')}-01`,
-      mesesRestantes,
-    }
-  })
-
-  return { obligaciones, prestamos }
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -188,7 +127,7 @@ export default function Pagos() {
 
   // Datos reales desde la hoja conectada (proveedor global)
   const { data, loading, error } = useDatos()
-  const { obligaciones, prestamos } = useMemo(() => mapPagos(data), [data])
+  const { obligaciones, prestamos } = useMemo(() => buildPagos(data?.diario ?? []), [data])
 
   // Tabla amortización
   const [prestamoSel,         setPrestamoSel]         = useState<Prestamo | null>(null)

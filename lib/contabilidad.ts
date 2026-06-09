@@ -129,3 +129,162 @@ export function buildResumen(rows: Record<string, string>[]): Resumen {
 
   return { ingresos, gastos, ebitda, margen, tesoreria, pendienteCobro, pendientePago, deuda, dso, evolucion }
 }
+
+// ─── Cobros (reconstruido desde cuentas de cliente 43x) ────────────────────────
+function iso(d: Date | null): string {
+  return d ? `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}` : ''
+}
+
+export interface FacturaCobro {
+  id: string; cliente: string; clienteId: string; numero: string
+  emision: string; vencimiento: string; importe: number; cobrado: number
+  estado: 'cobrada' | 'parcial' | 'vencida' | 'pendiente'; diasVencida: number
+}
+export interface ClienteCobro {
+  id: string; nombre: string; sector: string; telefono: string; email: string
+  riesgo: 'bajo' | 'medio' | 'alto'; totalPendiente: number; facturas: number; dsoMedio: number
+}
+
+export function buildCobros(rows: Record<string, string>[]): { clientes: ClienteCobro[]; facturas: FacturaCobro[] } {
+  const ap = parseDiario(rows)
+  const hoy = new Date()
+  const porCuenta = new Map<string, Apunte[]>()
+  ap.filter(a => esCliente(a.cuenta)).forEach(a => {
+    if (!porCuenta.has(a.cuenta)) porCuenta.set(a.cuenta, [])
+    porCuenta.get(a.cuenta)!.push(a)
+  })
+
+  const facturas: FacturaCobro[] = []
+  const clientes: ClienteCobro[] = []
+
+  for (const [cuenta, movs] of porCuenta) {
+    // Cargos (debe) = facturas emitidas; abonos (haber) = cobros recibidos.
+    const cargos = movs.filter(m => m.debe > 0)
+      .sort((a, b) => (a.fechaReg?.getTime() ?? 0) - (b.fechaReg?.getTime() ?? 0))
+    let pool = movs.reduce((s, m) => s + m.haber, 0)   // total cobrado del cliente
+
+    const fcli: FacturaCobro[] = cargos.map((m, k) => {
+      const importe = m.debe
+      const cobrado = Math.min(importe, Math.max(0, pool))   // FIFO: lo más antiguo se cobra primero
+      pool -= cobrado
+      const diasVencida = m.fechaVto ? Math.floor((hoy.getTime() - m.fechaVto.getTime()) / DAY) : 0
+      let estado: FacturaCobro['estado']
+      if (cobrado >= importe) estado = 'cobrada'
+      else if (cobrado > 0) estado = 'parcial'
+      else if (diasVencida > 0) estado = 'vencida'
+      else estado = 'pendiente'
+      return {
+        id: `${cuenta}-${k}`, cliente: `Cliente ${cuenta}`, clienteId: cuenta, numero: m.documento,
+        emision: iso(m.fechaReg), vencimiento: iso(m.fechaVto), importe, cobrado, estado, diasVencida,
+      }
+    })
+    facturas.push(...fcli)
+
+    const abiertas = fcli.filter(f => f.estado !== 'cobrada')
+    const totalPendiente = abiertas.reduce((s, f) => s + (f.importe - f.cobrado), 0)
+    const edades = abiertas.map(f => {
+      const e = parseFecha(f.emision)
+      return e ? Math.max(0, Math.floor((hoy.getTime() - e.getTime()) / DAY)) : 0
+    })
+    const dsoMedio = edades.length ? Math.round(edades.reduce((a, b) => a + b, 0) / edades.length) : 0
+    const vencido = abiertas.filter(f => f.diasVencida > 0).reduce((s, f) => s + (f.importe - f.cobrado), 0)
+    const riesgo: ClienteCobro['riesgo'] =
+      totalPendiente > 0 && vencido > totalPendiente * 0.5 ? 'alto' : vencido > 0 ? 'medio' : 'bajo'
+
+    clientes.push({
+      id: cuenta, nombre: `Cliente ${cuenta}`, sector: '—', telefono: '', email: '',
+      riesgo, totalPendiente, facturas: abiertas.length, dsoMedio,
+    })
+  }
+  return { clientes, facturas }
+}
+
+// ─── Pagos (reconstruido desde cuentas a pagar y de deuda) ─────────────────────
+function categoriaPago(cuenta: string): 'nominas' | 'fiscal' | 'proveedor' | 'ss' | null {
+  if (/^465/.test(cuenta)) return 'nominas'
+  if (/^476/.test(cuenta)) return 'ss'
+  if (/^475/.test(cuenta)) return 'fiscal'
+  if (/^4[01]/.test(cuenta)) return 'proveedor'   // 400/401/410/411 acreedores
+  return null
+}
+const LBL_PAGO: Record<string, string> = {
+  nominas: 'Nóminas', ss: 'Seguridad Social', fiscal: 'Hacienda Pública', proveedor: 'Proveedor',
+}
+
+export interface ObligacionPago {
+  id: number; concepto: string; detalle: string
+  categoria: 'nominas' | 'fiscal' | 'proveedor' | 'alquiler' | 'suscripcion' | 'ss'
+  vencimiento: string; importe: number
+  estado: 'vencida' | 'urgente' | 'programada'; diasRestantes: number; cuentaPGC: string
+}
+export interface PrestamoPago {
+  id: number; nombre: string; entidad: string
+  tipo: 'prestamo' | 'leasing' | 'credito' | 'pagare'
+  clasificacion: 'financiera' | 'no_financiera'; plazo: 'corto' | 'largo'
+  capitalInicial: number; capitalPendiente: number; cuotaMensual: number
+  tipoInteres: number; fechaInicio: string; fechaFin: string
+  proximaFecha: string; mesesRestantes: number
+}
+
+export function buildPagos(rows: Record<string, string>[]): { obligaciones: ObligacionPago[]; prestamos: PrestamoPago[] } {
+  const ap = parseDiario(rows)
+  const hoy = new Date()
+  const prox = new Date(hoy.getFullYear(), hoy.getMonth() + 1, 1)
+  const proximaFecha = `${prox.getFullYear()}-${String(prox.getMonth() + 1).padStart(2, '0')}-01`
+
+  // ── Obligaciones: saldo acreedor pendiente por subcuenta a pagar ──
+  const porPago = new Map<string, Apunte[]>()
+  ap.forEach(a => {
+    if (categoriaPago(a.cuenta)) {
+      if (!porPago.has(a.cuenta)) porPago.set(a.cuenta, [])
+      porPago.get(a.cuenta)!.push(a)
+    }
+  })
+
+  const obligaciones: ObligacionPago[] = []
+  let oid = 0
+  for (const [cuenta, movs] of porPago) {
+    const pendiente = movs.reduce((s, m) => s + m.haber - m.debe, 0)   // acreedor − pagado
+    if (pendiente <= 0.005) continue
+    const cat = categoriaPago(cuenta)!
+    // vencimiento más próximo entre los abonos pendientes
+    const vtos = movs.filter(m => m.haber > 0 && m.fechaVto).map(m => m.fechaVto!.getTime())
+    const venc = vtos.length ? new Date(Math.min(...vtos)) : null
+    const diasRestantes = venc ? Math.floor((venc.getTime() - hoy.getTime()) / DAY) : 0
+    const estado: ObligacionPago['estado'] = diasRestantes < 0 ? 'vencida' : diasRestantes <= 10 ? 'urgente' : 'programada'
+    const ult = movs.filter(m => m.concepto).slice(-1)[0]
+    obligaciones.push({
+      id: ++oid,
+      concepto: cat === 'proveedor' ? `Proveedor ${cuenta}` : LBL_PAGO[cat],
+      detalle: ult?.concepto || `Subcuenta ${cuenta}`,
+      categoria: cat, vencimiento: iso(venc), importe: pendiente,
+      estado, diasRestantes, cuentaPGC: cuenta,
+    })
+  }
+
+  // ── Préstamos / deuda: saldo acreedor por subcuenta 17x (largo) / 52x (corto) ──
+  const porDeuda = new Map<string, Apunte[]>()
+  ap.filter(a => esDeuda(a.cuenta)).forEach(a => {
+    if (!porDeuda.has(a.cuenta)) porDeuda.set(a.cuenta, [])
+    porDeuda.get(a.cuenta)!.push(a)
+  })
+
+  const prestamos: PrestamoPago[] = []
+  let pid = 0
+  for (const [cuenta, movs] of porDeuda) {
+    const capitalPendiente = movs.reduce((s, m) => s + m.haber - m.debe, 0)
+    if (capitalPendiente <= 0.005) continue
+    const capitalInicial = movs.reduce((s, m) => s + m.haber, 0) || capitalPendiente
+    const inicio = movs.map(m => m.fechaReg?.getTime() ?? 0).filter(Boolean).sort()[0]
+    prestamos.push({
+      id: ++pid, nombre: `Deuda ${cuenta}`, entidad: '',
+      tipo: 'prestamo', clasificacion: 'financiera',
+      plazo: /^52/.test(cuenta) ? 'corto' : 'largo',
+      capitalInicial, capitalPendiente, cuotaMensual: 0,
+      tipoInteres: 0, fechaInicio: inicio ? iso(new Date(inicio)) : '', fechaFin: '',
+      proximaFecha, mesesRestantes: 0,
+    })
+  }
+
+  return { obligaciones, prestamos }
+}

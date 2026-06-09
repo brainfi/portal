@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react'
 import Layout from '@/components/Layout'
-import { useDatos, DatosRaw } from '@/contexts/DataContext'
+import { useDatos } from '@/contexts/DataContext'
+import { buildCobros } from '@/lib/contabilidad'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts'
 
 // ─── Tipos ───────────────────────────────────────────────────────────────────
@@ -15,89 +16,17 @@ interface Cliente {
   riesgo: 'bajo' | 'medio' | 'alto'
 }
 
-// \u2500\u2500\u2500 Datos desde la hoja (Google Sheets) \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
-const DAY = 86400000
-
-function toNum(v?: string): number {
-  if (v == null) return 0
-  let s = String(v).trim().replace(/[\u20ac\s]/g, '')
-  if (s === '') return 0
-  const hasComma = s.includes(','), hasDot = s.includes('.')
-  if (hasComma && hasDot) s = s.replace(/\./g, '').replace(',', '.') // 1.234,56 -> 1234.56
-  else if (hasComma) s = s.replace(',', '.')                          // 1234,56 -> 1234.56
-  const n = parseFloat(s)
-  return isNaN(n) ? 0 : n
-}
-
+// \u2500\u2500\u2500 Fechas (render y filtro por mes) \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
 function parseFecha(v?: string): Date | null {
   if (!v) return null
   const s = String(v).trim()
   if (!s) return null
-  // ISO: 2026-05-20 (con o sin hora)
   let m = s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/)
   if (m) { const d = new Date(+m[1], +m[2] - 1, +m[3]); return isNaN(d.getTime()) ? null : d }
-  // Espanol: 20/05/2026 o 20-05-2026 (dia primero)
   m = s.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})$/)
   if (m) { let yr = +m[3]; if (yr < 100) yr += 2000; const d = new Date(yr, +m[2] - 1, +m[1]); return isNaN(d.getTime()) ? null : d }
-  // ultimo intento: que lo resuelva el motor
   const d = new Date(s)
   return isNaN(d.getTime()) ? null : d
-}
-
-// Normaliza cualquier fecha reconocible a ISO (YYYY-MM-DD); '' si no se entiende.
-function toISO(v?: string): string {
-  const d = parseFecha(v)
-  return d ? `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}` : ''
-}
-
-// Convierte las filas crudas de la hoja en los tipos de la pagina, derivando
-// estado, dias vencidos y los agregados por cliente.
-function mapData(raw: DatosRaw | null): { clientes: Cliente[]; facturas: Factura[] } {
-  if (!raw) return { clientes: [], facturas: [] }
-  const hoy = new Date()
-
-  const nameToId = new Map<string, string>()
-  const clientesBase = (raw.clientes ?? []).map((c, i) => {
-    const id = `c${i}`
-    nameToId.set((c.nombre ?? '').trim(), id)
-    const riesgo = (c.riesgo ?? 'bajo').toLowerCase()
-    return {
-      id, nombre: c.nombre ?? '', sector: c.sector ?? '',
-      telefono: c.telefono ?? '', email: c.email ?? '',
-      riesgo: (riesgo === 'alto' || riesgo === 'medio' ? riesgo : 'bajo') as 'bajo' | 'medio' | 'alto',
-    }
-  })
-
-  const facturas: Factura[] = (raw.facturas ?? []).map((fila, i) => {
-    const importe = toNum(fila.importe)
-    const cobrado = toNum(fila.cobrado)
-    const venc = parseFecha(fila.vencimiento)
-    const diasVencida = venc ? Math.floor((hoy.getTime() - venc.getTime()) / DAY) : 0
-    let estado: Factura['estado']
-    if (importe > 0 && cobrado >= importe) estado = 'cobrada'
-    else if (cobrado > 0) estado = 'parcial'
-    else if (diasVencida > 0) estado = 'vencida'
-    else estado = 'pendiente'
-    const nombre = (fila.cliente ?? '').trim()
-    return {
-      id: `f${i}`, cliente: nombre, clienteId: nameToId.get(nombre) ?? nombre,
-      numero: fila.numero ?? '', emision: toISO(fila.emision), vencimiento: toISO(fila.vencimiento),
-      importe, cobrado, estado, diasVencida,
-    }
-  })
-
-  const clientes: Cliente[] = clientesBase.map(c => {
-    const abiertas = facturas.filter(fa => fa.clienteId === c.id && fa.estado !== 'cobrada')
-    const totalPendiente = abiertas.reduce((a, fa) => a + (fa.importe - fa.cobrado), 0)
-    const edades = abiertas.map(fa => {
-      const e = parseFecha(fa.emision)
-      return e ? Math.max(0, Math.floor((hoy.getTime() - e.getTime()) / DAY)) : 0
-    })
-    const dsoMedio = edades.length ? Math.round(edades.reduce((a, b) => a + b, 0) / edades.length) : 0
-    return { ...c, totalPendiente, facturas: abiertas.length, dsoMedio }
-  })
-
-  return { clientes, facturas }
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -158,7 +87,7 @@ export default function Cobros() {
 
   // Datos reales desde la hoja conectada (proveedor global)
   const { data, loading, error } = useDatos()
-  const { clientes, facturas } = useMemo(() => mapData(data), [data])
+  const { clientes, facturas } = useMemo(() => buildCobros(data?.diario ?? []), [data])
 
   // ── Totales ──
   // Facturas filtradas por periodo
