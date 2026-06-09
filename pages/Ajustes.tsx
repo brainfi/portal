@@ -1,6 +1,8 @@
 import Layout from '@/components/Layout'
 import { useAuth } from '@/contexts/AuthContext'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { useDatos } from '@/contexts/DataContext'
+import { getConnection, saveConnection } from '@/lib/sheets'
 
 const card: React.CSSProperties = { background:'#fff', borderRadius:14, border:'1px solid #E8E8EC', padding:'20px 24px', marginBottom:14 }
 const row: React.CSSProperties = { display:'flex', alignItems:'center', justifyContent:'space-between', padding:'14px 0', borderBottom:'1px solid #F4F5F7' }
@@ -20,6 +22,28 @@ function Toggle({ on, onToggle }: { on: boolean; onToggle: () => void }) {
 
 export default function Ajustes() {
   const { user, signOut } = useAuth()
+  const { data, loading: dsLoading, error: dsError, syncedAt, refresh } = useDatos()
+  const [sheetUrl, setSheetUrl] = useState('')
+  const [conectando, setConectando] = useState(false)
+  const [connErr, setConnErr] = useState('')
+
+  useEffect(() => {
+    getConnection().then(c => { if (c?.sheet_url) setSheetUrl(c.sheet_url) }).catch(() => {})
+  }, [])
+
+  const handleConnect = async () => {
+    setConectando(true); setConnErr('')
+    try { await saveConnection(sheetUrl); await refresh() }
+    catch (e: any) { setConnErr(e?.message ?? String(e)) }
+    finally { setConectando(false) }
+  }
+
+  const conectada = !!data && !dsError
+  const estadoTexto = (conectando || dsLoading) ? 'Sincronizando…'
+    : dsError?.code === 'no_sheet' ? 'Sin hoja conectada todavía'
+    : dsError ? `Error: ${dsError.message}`
+    : data ? `Conectada · ${data.clientes.length} clientes, ${data.facturas.length} facturas${syncedAt ? ' · ' + new Date(syncedAt).toLocaleString('es-ES') : ''}`
+    : 'Sin conectar'
   const [nombre, setNombre] = useState('')
   const [empresa, setEmpresa] = useState('')
   const [nif, setNif] = useState('')
@@ -44,6 +68,25 @@ export default function Ajustes() {
       `}</style>
 
       <div style={{ maxWidth:680 }}>
+
+        {/* FUENTE DE DATOS */}
+        <div style={sectionTitle}>Fuente de datos</div>
+        <div style={card}>
+          <div className="aj-row" style={row}>
+            <div><div style={lbl}>Hoja de Google</div><div style={sub}>Pega el enlace de tu hoja privada. Todo el portal lee sus datos de aquí.</div></div>
+            <input className="aj-input" type="text" value={sheetUrl} onChange={e => setSheetUrl(e.target.value)} placeholder="https://docs.google.com/spreadsheets/d/..." style={{ ...inputStyle, width:300 }}/>
+          </div>
+          <div className="aj-row" style={connErr ? row : rowLast}>
+            <div><div style={lbl}>Estado</div><div style={{ ...sub, color: conectada ? '#1a7a3a' : (dsError && dsError.code !== 'no_sheet') ? '#b91c1c' : '#B0B7C3' }}>{estadoTexto}</div></div>
+            <button onClick={handleConnect} disabled={conectando || dsLoading || !sheetUrl}
+              style={{ display:'inline-flex', alignItems:'center', gap:6, padding:'8px 16px', fontSize:13, fontWeight:500, borderRadius:8, border:'none', background:(conectando||dsLoading||!sheetUrl)?'#B0B7C3':'#4361EE', color:'#fff', cursor:(conectando||dsLoading||!sheetUrl)?'not-allowed':'pointer', fontFamily:'Inter, sans-serif' }}>
+              {(conectando||dsLoading) ? 'Sincronizando…' : conectada ? 'Sincronizar' : 'Conectar'}
+            </button>
+          </div>
+          {connErr && (
+            <div style={{ background:'#FEF2F2', border:'1px solid #FECACA', borderRadius:8, padding:'10px 12px', fontSize:12, color:'#DC2626' }}>{connErr}</div>
+          )}
+        </div>
 
         {/* CUENTA */}
         <div style={sectionTitle}>Cuenta</div>
