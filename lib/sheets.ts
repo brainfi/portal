@@ -39,6 +39,7 @@ export async function saveConnection(url: string): Promise<string> {
 }
 
 export interface DatosPayload {
+  diario: Record<string, string>[]
   clientes: Record<string, string>[]
   facturas: Record<string, string>[]
   pagos: Record<string, string>[]

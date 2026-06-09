@@ -3,6 +3,7 @@ import { useAuth } from '@/contexts/AuthContext'
 import { fetchDatos, SheetError } from '@/lib/sheets'
 
 export interface DatosRaw {
+  diario: Record<string, string>[]
   clientes: Record<string, string>[]
   facturas: Record<string, string>[]
   pagos: Record<string, string>[]
@@ -38,6 +39,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     try {
       const r = await fetchDatos()
       setData({
+        diario: r.diario ?? [],
         clientes: r.clientes ?? [], facturas: r.facturas ?? [],
         pagos: r.pagos ?? [], prestamos: r.prestamos ?? [], presupuesto: r.presupuesto ?? [],
       })
