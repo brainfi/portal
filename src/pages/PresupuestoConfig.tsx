@@ -1,10 +1,11 @@
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import Layout from '@/components/Layout'
 import {
   CUENTAS_INGRESOS, CUENTAS_GASTOS, TODAS_CUENTAS,
   type CuentaContable,
 } from '@/lib/cuentasContables'
+import { getPlan, savePlan } from '@/lib/presupuesto'
 
 // ─── Tipos ───────────────────────────────────────────────────────────────────
 type TipoPartida = 'ingreso' | 'gasto'
@@ -152,6 +153,14 @@ function SelectorCuenta({
 export default function PresupuestoConfig() {
   const navigate = useNavigate()
   const [partidas, setPartidas] = useState<Partida[]>(initialPartidas)
+  const [cargando, setCargando] = useState(true)
+  const [guardando, setGuardando] = useState(false)
+  useEffect(() => {
+    getPlan()
+      .then(p => { if (p) setPartidas(p as Partida[]) })
+      .catch(() => {})
+      .finally(() => setCargando(false))
+  }, [])
   const [expandida, setExpandida] = useState<number | null>(null)
   const [saved, setSaved] = useState(false)
   const [toastMsg, setToastMsg] = useState('')
@@ -170,10 +179,18 @@ export default function PresupuestoConfig() {
     setTimeout(() => setToastMsg(''), 3000)
   }
 
-  function handleSaveAll() {
-    setSaved(true)
-    showToast('Cambios guardados correctamente')
-    setTimeout(() => setSaved(false), 2000)
+  async function handleSaveAll() {
+    setGuardando(true)
+    try {
+      await savePlan(partidas)
+      setSaved(true)
+      showToast('Plan guardado correctamente')
+      setTimeout(() => setSaved(false), 2000)
+    } catch (e: any) {
+      showToast(`No se pudo guardar: ${e?.message ?? 'error'}`)
+    } finally {
+      setGuardando(false)
+    }
   }
 
   function handleDelete(id: number) {
@@ -389,10 +406,10 @@ export default function PresupuestoConfig() {
             <i className="ti ti-plus" style={{ fontSize:13 }} aria-hidden="true" />
             Nueva partida
           </button>
-          <button onClick={handleSaveAll}
-            style={{ display:'inline-flex', alignItems:'center', gap:6, padding:'8px 16px', fontSize:12, fontWeight:600, border:'none', borderRadius:8, background:saved?'#2DC653':'#4361EE', color:'#fff', cursor:'pointer', fontFamily:'inherit' }}>
-            <i className={`ti ${saved?'ti-check':'ti-device-floppy'}`} style={{ fontSize:13 }} aria-hidden="true" />
-            {saved ? 'Guardado' : 'Guardar cambios'}
+          <button onClick={handleSaveAll} disabled={guardando || cargando}
+            style={{ display:'inline-flex', alignItems:'center', gap:6, padding:'8px 16px', fontSize:12, fontWeight:600, border:'none', borderRadius:8, background:saved?'#2DC653':(guardando||cargando)?'#C8CFDA':'#4361EE', color:'#fff', cursor:(guardando||cargando)?'not-allowed':'pointer', fontFamily:'inherit' }}>
+            <i className={`ti ${saved?'ti-check':guardando?'ti-loader-2':'ti-device-floppy'}`} style={{ fontSize:13 }} aria-hidden="true" />
+            {cargando ? 'Cargando…' : guardando ? 'Guardando…' : saved ? 'Guardado' : 'Guardar cambios'}
           </button>
         </div>
       </div>
