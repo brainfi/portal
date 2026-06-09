@@ -1,5 +1,6 @@
 import { useState, useMemo } from 'react'
 import Layout from '@/components/Layout'
+import { useDatos, DatosRaw } from '@/contexts/DataContext'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts'
 
 // ─── Tipos ───────────────────────────────────────────────────────────────────
@@ -14,26 +15,75 @@ interface Cliente {
   riesgo: 'bajo' | 'medio' | 'alto'
 }
 
-// ─── Mock data ────────────────────────────────────────────────────────────────
-const clientes: Cliente[] = [
-  { id:'c1', nombre:'Acme Foundry S.L.',   sector:'Industria',    telefono:'+34 91 234 5678', email:'contabilidad@acme.es',         totalPendiente:28400, facturas:3, dsoMedio:42, riesgo:'medio' },
-  { id:'c2', nombre:'Northwind Studios',   sector:'Diseño',       telefono:'+34 93 456 7890', email:'pagos@northwind.es',            totalPendiente:14750, facturas:2, dsoMedio:28, riesgo:'bajo'  },
-  { id:'c3', nombre:'TechCore Systems',    sector:'Tecnología',   telefono:'+34 91 678 9012', email:'admin@techcore.io',             totalPendiente:9200,  facturas:1, dsoMedio:67, riesgo:'alto'  },
-  { id:'c4', nombre:'Grupo Mediterráneo', sector:'Distribución', telefono:'+34 96 890 1234', email:'gestion@grupomediterraneo.es',  totalPendiente:5820,  facturas:2, dsoMedio:35, riesgo:'bajo'  },
-  { id:'c5', nombre:'Innovatech Partners', sector:'Consultoría',  telefono:'+34 94 012 3456', email:'finanzas@innovatech.es',        totalPendiente:3211,  facturas:1, dsoMedio:18, riesgo:'bajo'  },
-]
+// \u2500\u2500\u2500 Datos desde la hoja (Google Sheets) \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
+const DAY = 86400000
 
-const facturas: Factura[] = [
-  { id:'f1',  clienteId:'c1', cliente:'Acme Foundry S.L.',   numero:'FV-2026-0142', emision:'2026-02-10', vencimiento:'2026-03-12', importe:12400, cobrado:0,    estado:'vencida',   diasVencida:79 },
-  { id:'f2',  clienteId:'c1', cliente:'Acme Foundry S.L.',   numero:'FV-2026-0198', emision:'2026-03-15', vencimiento:'2026-04-14', importe:8200,  cobrado:0,    estado:'vencida',   diasVencida:46 },
-  { id:'f3',  clienteId:'c1', cliente:'Acme Foundry S.L.',   numero:'FV-2026-0241', emision:'2026-04-20', vencimiento:'2026-05-20', importe:7800,  cobrado:0,    estado:'pendiente', diasVencida:10 },
-  { id:'f4',  clienteId:'c2', cliente:'Northwind Studios',   numero:'FV-2026-0189', emision:'2026-03-01', vencimiento:'2026-04-01', importe:9750,  cobrado:5000, estado:'parcial',   diasVencida:59 },
-  { id:'f5',  clienteId:'c2', cliente:'Northwind Studios',   numero:'FV-2026-0230', emision:'2026-04-15', vencimiento:'2026-05-15', importe:5000,  cobrado:0,    estado:'pendiente', diasVencida:15 },
-  { id:'f6',  clienteId:'c3', cliente:'TechCore Systems',    numero:'FV-2026-0101', emision:'2026-01-20', vencimiento:'2026-02-20', importe:9200,  cobrado:0,    estado:'vencida',   diasVencida:99 },
-  { id:'f7',  clienteId:'c4', cliente:'Grupo Mediterráneo', numero:'FV-2026-0215', emision:'2026-04-01', vencimiento:'2026-05-01', importe:3200,  cobrado:0,    estado:'vencida',   diasVencida:29 },
-  { id:'f8',  clienteId:'c4', cliente:'Grupo Mediterráneo', numero:'FV-2026-0238', emision:'2026-04-25', vencimiento:'2026-05-25', importe:2620,  cobrado:0,    estado:'pendiente', diasVencida:5  },
-  { id:'f9',  clienteId:'c5', cliente:'Innovatech Partners', numero:'FV-2026-0244', emision:'2026-05-01', vencimiento:'2026-05-31', importe:3211,  cobrado:0,    estado:'pendiente', diasVencida:0  },
-]
+function toNum(v?: string): number {
+  if (v == null) return 0
+  let s = String(v).trim().replace(/[\u20ac\s]/g, '')
+  if (s === '') return 0
+  const hasComma = s.includes(','), hasDot = s.includes('.')
+  if (hasComma && hasDot) s = s.replace(/\./g, '').replace(',', '.') // 1.234,56 -> 1234.56
+  else if (hasComma) s = s.replace(',', '.')                          // 1234,56 -> 1234.56
+  const n = parseFloat(s)
+  return isNaN(n) ? 0 : n
+}
+
+function parseFecha(v?: string): Date | null {
+  if (!v) return null
+  const d = new Date(String(v).trim())
+  return isNaN(d.getTime()) ? null : d
+}
+
+// Convierte las filas crudas de la hoja en los tipos de la pagina, derivando
+// estado, dias vencidos y los agregados por cliente.
+function mapData(raw: DatosRaw | null): { clientes: Cliente[]; facturas: Factura[] } {
+  if (!raw) return { clientes: [], facturas: [] }
+  const hoy = new Date()
+
+  const nameToId = new Map<string, string>()
+  const clientesBase = (raw.clientes ?? []).map((c, i) => {
+    const id = `c${i}`
+    nameToId.set((c.nombre ?? '').trim(), id)
+    const riesgo = (c.riesgo ?? 'bajo').toLowerCase()
+    return {
+      id, nombre: c.nombre ?? '', sector: c.sector ?? '',
+      telefono: c.telefono ?? '', email: c.email ?? '',
+      riesgo: (riesgo === 'alto' || riesgo === 'medio' ? riesgo : 'bajo') as 'bajo' | 'medio' | 'alto',
+    }
+  })
+
+  const facturas: Factura[] = (raw.facturas ?? []).map((fila, i) => {
+    const importe = toNum(fila.importe)
+    const cobrado = toNum(fila.cobrado)
+    const venc = parseFecha(fila.vencimiento)
+    const diasVencida = venc ? Math.floor((hoy.getTime() - venc.getTime()) / DAY) : 0
+    let estado: Factura['estado']
+    if (importe > 0 && cobrado >= importe) estado = 'cobrada'
+    else if (cobrado > 0) estado = 'parcial'
+    else if (diasVencida > 0) estado = 'vencida'
+    else estado = 'pendiente'
+    const nombre = (fila.cliente ?? '').trim()
+    return {
+      id: `f${i}`, cliente: nombre, clienteId: nameToId.get(nombre) ?? nombre,
+      numero: fila.numero ?? '', emision: fila.emision ?? '', vencimiento: fila.vencimiento ?? '',
+      importe, cobrado, estado, diasVencida,
+    }
+  })
+
+  const clientes: Cliente[] = clientesBase.map(c => {
+    const abiertas = facturas.filter(fa => fa.clienteId === c.id && fa.estado !== 'cobrada')
+    const totalPendiente = abiertas.reduce((a, fa) => a + (fa.importe - fa.cobrado), 0)
+    const edades = abiertas.map(fa => {
+      const e = parseFecha(fa.emision)
+      return e ? Math.max(0, Math.floor((hoy.getTime() - e.getTime()) / DAY)) : 0
+    })
+    const dsoMedio = edades.length ? Math.round(edades.reduce((a, b) => a + b, 0) / edades.length) : 0
+    return { ...c, totalPendiente, facturas: abiertas.length, dsoMedio }
+  })
+
+  return { clientes, facturas }
+}
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 function fmt(n: number) {
@@ -53,6 +103,17 @@ const RIESGO_STYLE: Record<string, { color:string; label:string }> = {
   bajo:  { color:'#1a7a3a', label:'Riesgo bajo'  },
   medio: { color:'#92400E', label:'Riesgo medio' },
   alto:  { color:'#b91c1c', label:'Riesgo alto'  },
+}
+
+function Aviso({ icon, texto }: { icon: string; texto: string }) {
+  return (
+    <div style={{ display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', gap:12, padding:'80px 24px', textAlign:'center' }}>
+      <div style={{ width:48, height:48, borderRadius:12, background:'#EEF1FD', display:'flex', alignItems:'center', justifyContent:'center' }}>
+        <i className={`ti ${icon}`} style={{ fontSize:24, color:'#4361EE' }} aria-hidden="true" />
+      </div>
+      <div style={{ fontSize:14, color:'#555', maxWidth:360, lineHeight:1.5 }}>{texto}</div>
+    </div>
+  )
 }
 
 // ─── Componente principal ─────────────────────────────────────────────────────
@@ -78,6 +139,10 @@ export default function Cobros() {
   const [verMasPrevision,     setVerMasPrevision]       = useState(false)
   const [verMasConcentracion, setVerMasConcentracion]   = useState(false)
 
+  // Datos reales desde la hoja conectada (proveedor global)
+  const { data, loading, error } = useDatos()
+  const { clientes, facturas } = useMemo(() => mapData(data), [data])
+
   // ── Totales ──
   // Facturas filtradas por periodo
   const facturasPeriodo = filtro === 'anual'
@@ -86,7 +151,7 @@ export default function Cobros() {
 
   const totalPendiente = facturasPeriodo.filter(f => f.estado !== 'cobrada').reduce((a, f) => a + (f.importe - f.cobrado), 0)
   const totalVencido   = facturasPeriodo.filter(f => f.estado === 'vencida' || (f.estado === 'parcial' && f.diasVencida > 0)).reduce((a, f) => a + (f.importe - f.cobrado), 0)
-  const cobradoMes     = facturasPeriodo.filter(f => f.estado === 'cobrada').reduce((a, f) => a + f.importe, 0) || (filtro === 4 || filtro === 'anual' ? 5000 : 0)
+  const cobradoMes     = facturasPeriodo.filter(f => f.estado === 'cobrada').reduce((a, f) => a + f.importe, 0)
   const pendientesConDso = facturasPeriodo.filter(f => f.estado !== 'cobrada')
   const dsoGlobal      = pendientesConDso.length > 0
     ? Math.round(pendientesConDso.reduce((a, f) => a + f.diasVencida, 0) / pendientesConDso.length)
@@ -103,7 +168,7 @@ export default function Cobros() {
     { label:'30–60d',    importe: facturas.filter(f=>f.diasVencida>30&&f.diasVencida<=60&&f.estado!=='cobrada').reduce((a,f)=>a+(f.importe-f.cobrado),0), color:'#60A5FA' },
     { label:'60–90d',    importe: facturas.filter(f=>f.diasVencida>60&&f.diasVencida<=90&&f.estado!=='cobrada').reduce((a,f)=>a+(f.importe-f.cobrado),0), color:'#4361EE' },
     { label:'+90 días',  importe: facturas.filter(f=>f.diasVencida>90&&f.estado!=='cobrada').reduce((a,f)=>a+(f.importe-f.cobrado),0), color:'#1E3A8A' },
-  ], [])
+  ], [facturas])
 
   // ── Previsión ──
   const prevision = [
@@ -116,13 +181,18 @@ export default function Cobros() {
   const facturasFiltradas = useMemo(() => facturas.filter(f =>
     (filtroEstado  === 'todos' || f.estado     === filtroEstado) &&
     (filtroCliente === 'todos' || f.clienteId  === filtroCliente)
-  ), [filtroEstado, filtroCliente])
+  ), [facturas, filtroEstado, filtroCliente])
 
   const facturasCliente = clienteSeleccionado ? facturas.filter(f => f.clienteId === clienteSeleccionado.id) : []
 
   const card: React.CSSProperties = { background:'#fff', borderRadius:14, border:'1px solid #E8E8EC' }
   const th: React.CSSProperties   = { fontSize:9, fontWeight:700, color:'#B0B7C3', textTransform:'uppercase', letterSpacing:'0.1em', padding:'0 12px 10px', textAlign:'left' as const }
   const td: React.CSSProperties   = { padding:'12px', fontSize:12, color:'#1a1a1a', verticalAlign:'middle' as const }
+
+  if (loading && !data) return <Layout title="Cobros"><Aviso icon="ti-loader-2" texto="Cargando tus datos…" /></Layout>
+  if (error?.code === 'no_sheet') return <Layout title="Cobros"><Aviso icon="ti-table" texto="Conecta tu hoja de Google en Ajustes para ver tus cobros." /></Layout>
+  if (error) return <Layout title="Cobros"><Aviso icon="ti-alert-triangle" texto={`No se pudieron cargar los datos: ${error.message}`} /></Layout>
+  if (!facturas.length && !clientes.length) return <Layout title="Cobros"><Aviso icon="ti-inbox" texto="Tu hoja no tiene filas en Clientes/Facturas todavía." /></Layout>
 
   return (
     <Layout title="Cobros">
