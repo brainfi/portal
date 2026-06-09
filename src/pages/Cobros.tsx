@@ -293,7 +293,7 @@ export default function Cobros() {
               </button>
             </div>
             {[...clientes].sort((a,b)=>b.totalPendiente-a.totalPendiente).map((c, i) => {
-              const pct = Math.round((c.totalPendiente / totalPendiente) * 100)
+              const pct = totalPendiente > 0 ? Math.round((c.totalPendiente / totalPendiente) * 100) : 0
               return (
                 <div key={i} style={{ marginBottom:12 }}>
                   <div style={{ display:'flex', justifyContent:'space-between', marginBottom:5 }}>

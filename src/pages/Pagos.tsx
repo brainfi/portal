@@ -176,7 +176,7 @@ export default function Pagos() {
   if (loading && !data) return <Layout title="Pagos"><Aviso icon="ti-loader-2" texto="Cargando tus datos…" /></Layout>
   if (error?.code === 'no_sheet') return <Layout title="Pagos"><Aviso icon="ti-table" texto="Conecta tu hoja de Google en Ajustes para ver tus pagos." /></Layout>
   if (error) return <Layout title="Pagos"><Aviso icon="ti-alert-triangle" texto={`No se pudieron cargar los datos: ${error.message}`} /></Layout>
-  if (!obligaciones.length && !prestamos.length) return <Layout title="Pagos"><Aviso icon="ti-inbox" texto="Tu hoja no tiene filas en Pagos/Prestamos todavía." /></Layout>
+  if (!obligaciones.length && !prestamos.length) return <Layout title="Pagos"><Aviso icon="ti-inbox" texto="Tu libro mayor no tiene pagos pendientes ni deuda todavía. Aquí verás facturas de proveedor por pagar, impuestos y nóminas pendientes, y préstamos." /></Layout>
 
   return (
     <Layout title="Pagos">
