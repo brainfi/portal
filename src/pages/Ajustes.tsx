@@ -26,6 +26,9 @@ export default function Ajustes() {
   const [sheetUrl, setSheetUrl] = useState('')
   const [conectando, setConectando] = useState(false)
   const [connErr, setConnErr] = useState('')
+  const [copiado, setCopiado] = useState(false)
+  const SA_EMAIL = 'brainfi-sheets@brainfi.iam.gserviceaccount.com'
+  const copiarEmail = () => { navigator.clipboard?.writeText(SA_EMAIL).then(() => { setCopiado(true); setTimeout(() => setCopiado(false), 1500) }).catch(() => {}) }
 
   useEffect(() => {
     getConnection().then(c => { if (c?.sheet_url) setSheetUrl(c.sheet_url) }).catch(() => {})
@@ -41,6 +44,8 @@ export default function Ajustes() {
   const conectada = !!data && !dsError
   const estadoTexto = (conectando || dsLoading) ? 'Sincronizando…'
     : dsError?.code === 'no_sheet' ? 'Sin hoja conectada todavía'
+    : dsError?.code === 'no_access' ? 'Sin acceso · comparte tu hoja con el email de abajo'
+    : dsError?.code === 'not_found' ? 'No encontramos la hoja · revisa la URL'
     : dsError ? `Error: ${dsError.message}`
     : data ? `Conectada · ${data.clientes.length} clientes, ${data.facturas.length} facturas${syncedAt ? ' · ' + new Date(syncedAt).toLocaleString('es-ES') : ''}`
     : 'Sin conectar'
@@ -75,6 +80,21 @@ export default function Ajustes() {
           <div className="aj-row" style={row}>
             <div><div style={lbl}>Hoja de Google</div><div style={sub}>Pega el enlace de tu hoja privada. Todo el portal lee sus datos de aquí.</div></div>
             <input className="aj-input" type="text" value={sheetUrl} onChange={e => setSheetUrl(e.target.value)} placeholder="https://docs.google.com/spreadsheets/d/..." style={{ ...inputStyle, width:300 }}/>
+          </div>
+          <div style={{ background:'#EEF1FD', border:'1px solid #C7D2F8', borderRadius:10, padding:'12px 14px', margin:'4px 0 14px' }}>
+            <div style={{ fontSize:12, color:'#185FA5', lineHeight:1.6, marginBottom:8 }}>
+              Para que el portal pueda leer tu hoja, <strong>compártela como Lector</strong> con este email:
+            </div>
+            <div style={{ display:'flex', alignItems:'center', gap:8, flexWrap:'wrap' }}>
+              <code style={{ background:'#fff', border:'1px solid #C7D2F8', borderRadius:6, padding:'6px 10px', fontSize:12, color:'#1a1a1a' }}>{SA_EMAIL}</code>
+              <button onClick={copiarEmail} style={{ display:'inline-flex', alignItems:'center', gap:5, padding:'6px 12px', fontSize:12, fontWeight:500, borderRadius:7, border:'1px solid #C7D2F8', background:'#fff', color:'#4361EE', cursor:'pointer', fontFamily:'inherit' }}>
+                <i className={`ti ${copiado ? 'ti-check' : 'ti-copy'}`} style={{ fontSize:13 }} aria-hidden="true" />
+                {copiado ? 'Copiado' : 'Copiar'}
+              </button>
+            </div>
+            <div style={{ fontSize:11, color:'#5B6B8C', marginTop:8, lineHeight:1.6 }}>
+              En tu hoja: <strong>Compartir</strong> → pega este email → permiso <strong>Lector</strong> → Enviar. Luego pega la URL arriba y pulsa Conectar.
+            </div>
           </div>
           <div className="aj-row" style={connErr ? row : rowLast}>
             <div><div style={lbl}>Estado</div><div style={{ ...sub, color: conectada ? '#1a7a3a' : (dsError && dsError.code !== 'no_sheet') ? '#b91c1c' : '#B0B7C3' }}>{estadoTexto}</div></div>
