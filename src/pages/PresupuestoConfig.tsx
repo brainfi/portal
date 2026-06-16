@@ -164,7 +164,6 @@ export default function PresupuestoConfig() {
   const [expandida, setExpandida] = useState<number | null>(null)
   const [saved, setSaved] = useState(false)
   const [toastMsg, setToastMsg] = useState('')
-  const csvRef = useRef<HTMLInputElement>(null)
 
   const emptyPartida = (): Partida => ({
     id: Date.now(), categoria: '', cuentaCodigo: '', cuentaNombre: '',
@@ -228,36 +227,6 @@ export default function PresupuestoConfig() {
     setNueva(emptyPartida())
     setAdding(false)
     showToast('Partida añadida')
-  }
-
-  function handleCSV(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0]
-    if (!file) return
-    const reader = new FileReader()
-    reader.onload = ev => {
-      const lines = (ev.target?.result as string).split('\n').filter(Boolean)
-      const imported: Partida[] = []
-      lines.slice(1).forEach(line => {
-        const cols = line.split(',').map(c => c.trim().replace(/"/g,''))
-        if (cols.length < 3) return
-        const [categoria, tipo, anual, codigo] = cols
-        const planAnual = parseFloat(anual) || 0
-        const cuenta = TODAS_CUENTAS.find(c => c.codigo === codigo?.trim())
-        imported.push({
-          id: Date.now() + Math.random(), categoria,
-          cuentaCodigo: cuenta?.codigo || '', cuentaNombre: cuenta?.nombre || '',
-          tipo: tipo === 'ingreso' ? 'ingreso' : 'gasto',
-          planAnual, distribucion: 'lineal',
-          planMensual: Array(12).fill(Math.round(planAnual/12)),
-          icono: tipo === 'ingreso' ? 'ti-trending-up' : 'ti-receipt',
-          color: tipo === 'ingreso' ? '#4361EE' : '#EF4444',
-        })
-      })
-      setPartidas(prev => [...prev, ...imported])
-      showToast(`${imported.length} partidas importadas`)
-    }
-    reader.readAsText(file)
-    e.target.value = ''
   }
 
   const card: React.CSSProperties = { background:'#fff', borderRadius:14, border:'1px solid #E8E8EC' }
@@ -389,18 +358,6 @@ export default function PresupuestoConfig() {
           <div style={{ fontSize:12, color:'#888' }}>Gestiona partidas, cuentas contables e importes anuales</div>
         </div>
         <div style={{ display:'flex', gap:8, alignItems:'center', flexWrap:'wrap' }}>
-          <input ref={csvRef} type="file" accept=".csv" onChange={handleCSV} style={{ display:'none' }} />
-          <button onClick={() => csvRef.current?.click()}
-            style={{ display:'inline-flex', alignItems:'center', gap:6, padding:'8px 14px', fontSize:12, fontWeight:500, border:'1px solid #E8E8EC', borderRadius:8, background:'#fff', color:'#555', cursor:'pointer', fontFamily:'inherit' }}>
-            <i className="ti ti-file-import" style={{ fontSize:13 }} aria-hidden="true" />
-            Importar CSV
-          </button>
-          <button disabled title="Disponible cuando conectes Holded"
-            style={{ display:'inline-flex', alignItems:'center', gap:6, padding:'8px 14px', fontSize:12, fontWeight:500, border:'1px solid #E8E8EC', borderRadius:8, background:'#F4F5F7', color:'#B0B7C3', cursor:'not-allowed', fontFamily:'inherit' }}>
-            <i className="ti ti-plug" style={{ fontSize:13 }} aria-hidden="true" />
-            Importar Holded
-            <span style={{ fontSize:9, fontWeight:700, padding:'1px 5px', borderRadius:4, background:'#EEF1FD', color:'#4361EE' }}>PRONTO</span>
-          </button>
           <button onClick={() => { setAdding(true); setNueva(emptyPartida()) }}
             style={{ display:'inline-flex', alignItems:'center', gap:6, padding:'8px 14px', fontSize:12, fontWeight:500, border:'1px solid #E8E8EC', borderRadius:8, background:'#fff', color:'#1a1a1a', cursor:'pointer', fontFamily:'inherit' }}>
             <i className="ti ti-plus" style={{ fontSize:13 }} aria-hidden="true" />
@@ -412,14 +369,6 @@ export default function PresupuestoConfig() {
             {cargando ? 'Cargando…' : guardando ? 'Guardando…' : saved ? 'Guardado' : 'Guardar cambios'}
           </button>
         </div>
-      </div>
-
-      {/* ── Hint CSV ── */}
-      <div style={{ background:'#EEF1FD', border:'1px solid #C7D2F8', borderRadius:10, padding:'10px 16px', display:'flex', alignItems:'center', gap:10, fontSize:12 }}>
-        <i className="ti ti-info-circle" style={{ fontSize:16, color:'#4361EE', flexShrink:0 }} aria-hidden="true" />
-        <span style={{ color:'#185FA5' }}>
-          CSV: columnas <strong>categoria, tipo (ingreso/gasto), plan_anual, cuenta_pgc</strong>. Ej: <code style={{ background:'rgba(67,97,238,0.1)', padding:'1px 6px', borderRadius:4 }}>Ventas online,ingreso,120000,700</code>
-        </span>
       </div>
 
       {/* ── Header columnas ── */}
@@ -470,7 +419,7 @@ export default function PresupuestoConfig() {
             <SelectorCuenta tipo={nueva.tipo} valor={nueva.cuentaCodigo}
               onChange={c => setNueva(p=>({...p,cuentaCodigo:c.codigo,cuentaNombre:c.nombre,tipo:c.tipo}))} />
             <div style={{ fontSize:11, color:'#B0B7C3', marginTop:4 }}>
-              Necesario para sincronizar con Holded cuando se conecte.
+              Se usa para comparar esta partida con lo real de tu libro mayor.
             </div>
           </div>
 
