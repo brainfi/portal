@@ -144,6 +144,7 @@ export default function Cobros() {
     <Layout title="Cobros">
       <style>{`
         @media (max-width:900px){ .cobros-kgrid{grid-template-columns:1fr 1fr!important} .cobros-aging{grid-template-columns:1fr!important} }
+        @media (max-width:600px){ .cobros-kgrid{grid-template-columns:1fr!important} }
         .cobros-tr:hover{background:#FAFAFA;cursor:pointer}
         .cobros-filtro{border:none;cursor:pointer;font-family:inherit;font-size:12px;padding:5px 12px;border-radius:6px;transition:background .12s}
         .cdd-item{display:flex;align-items:center;justify-content:space-between;width:100%;padding:8px 12px;font-size:13px;border:none;background:transparent;cursor:pointer;font-family:inherit;text-align:left;color:#1a1a1a;border-radius:7px}
