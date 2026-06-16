@@ -28,6 +28,13 @@ export default function Ajustes() {
   const [connErr, setConnErr] = useState('')
   const [copiado, setCopiado] = useState(false)
   const SA_EMAIL = 'brainfi-sheets@brainfi.iam.gserviceaccount.com'
+  // Pega aquí la URL de tu hoja-plantilla maestra (compartida como «cualquiera con el enlace: Lector»).
+  // El botón "Crear copia" aparece solo cuando esto tenga una URL válida.
+  const PLANTILLA_URL = 'https://docs.google.com/spreadsheets/d/1H3CZUKIVljA3j5bJLg6Z3oyMZlZ8mUZJ2uusxs1XS0s/edit?usp=sharing'
+  const plantillaCopyUrl = (() => {
+    const m = PLANTILLA_URL.match(/\/spreadsheets\/d\/([a-zA-Z0-9-_]+)/)
+    return m ? `https://docs.google.com/spreadsheets/d/${m[1]}/copy` : ''
+  })()
   const copiarEmail = () => { navigator.clipboard?.writeText(SA_EMAIL).then(() => { setCopiado(true); setTimeout(() => setCopiado(false), 1500) }).catch(() => {}) }
 
   useEffect(() => {
@@ -82,6 +89,17 @@ export default function Ajustes() {
             <input className="aj-input" type="text" value={sheetUrl} onChange={e => setSheetUrl(e.target.value)} placeholder="https://docs.google.com/spreadsheets/d/..." style={{ ...inputStyle, width:300 }}/>
           </div>
           <div style={{ background:'#EEF1FD', border:'1px solid #C7D2F8', borderRadius:10, padding:'12px 14px', margin:'4px 0 14px' }}>
+            {plantillaCopyUrl && (
+              <div style={{ display:'flex', alignItems:'center', gap:10, flexWrap:'wrap', paddingBottom:10, marginBottom:10, borderBottom:'1px solid #C7D2F8' }}>
+                <span style={{ fontSize:12, color:'#185FA5' }}>¿Empiezas de cero?</span>
+                <a href={plantillaCopyUrl} target="_blank" rel="noopener noreferrer"
+                  style={{ display:'inline-flex', alignItems:'center', gap:6, padding:'7px 13px', fontSize:12, fontWeight:600, borderRadius:7, background:'#4361EE', color:'#fff', textDecoration:'none', fontFamily:'inherit' }}>
+                  <i className="ti ti-table-plus" style={{ fontSize:14 }} aria-hidden="true" />
+                  Crear copia de la plantilla
+                </a>
+                <span style={{ fontSize:11, color:'#5B6B8C' }}>se crea en tu cuenta de Google</span>
+              </div>
+            )}
             <div style={{ fontSize:12, color:'#185FA5', lineHeight:1.6, marginBottom:8 }}>
               Para que el portal pueda leer tu hoja, <strong>compártela como Lector</strong> con este email:
             </div>
