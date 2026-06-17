@@ -89,6 +89,7 @@ export default function Cobros() {
   // Datos reales desde la hoja conectada (proveedor global)
   const { data, loading, error } = useDatos()
   const { clientes, facturas } = useMemo(() => buildCobros(data?.diario ?? []), [data])
+  const clientesPend = useMemo(() => clientes.filter(c => c.totalPendiente > 0.5).sort((a,b) => b.totalPendiente - a.totalPendiente), [clientes])
 
   // ── Totales ──
   // Facturas filtradas por periodo
@@ -295,15 +296,18 @@ export default function Cobros() {
                 <div style={{ fontSize:9, fontWeight:600, color:'#1a1a1a', textTransform:'uppercase', letterSpacing:'0.12em' }}>Concentración</div>
                 <div style={{ fontSize:11, color:'#B0B7C3', marginTop:2 }}>Top clientes por saldo pendiente.</div>
               </div>
-              {clientes.length > 10 && (
+              {clientesPend.length > 10 && (
                 <button onClick={() => setVerMasConcentracion(v => !v)}
                   style={{ fontSize:11, fontWeight:600, color:'#4361EE', border:'none', background:'transparent', cursor:'pointer', fontFamily:'inherit', padding:0, flexShrink:0 }}>
                   {verMasConcentracion ? 'Ver menos ↑' : 'Ver más ↓'}
                 </button>
               )}
             </div>
+            {clientesPend.length === 0 && (
+              <div style={{ fontSize:12, color:'#B0B7C3', padding:'8px 0' }}>No hay saldos pendientes de clientes.</div>
+            )}
             {(() => {
-              const ordenados = [...clientes].sort((a,b)=>b.totalPendiente-a.totalPendiente)
+              const ordenados = clientesPend
               const totalConc = ordenados.reduce((a,c)=>a+c.totalPendiente,0)
               const mostrados = verMasConcentracion ? ordenados.slice(0,25) : ordenados.slice(0,10)
               return mostrados.map((c, i) => {
@@ -325,8 +329,8 @@ export default function Cobros() {
                 )
               })
             })()}
-            {!verMasConcentracion && clientes.length > 10 && (
-              <div style={{ fontSize:10, color:'#B0B7C3', marginTop:2 }}>Mostrando los 10 mayores de {clientes.length} clientes.</div>
+            {!verMasConcentracion && clientesPend.length > 10 && (
+              <div style={{ fontSize:10, color:'#B0B7C3', marginTop:2 }}>Mostrando los 10 mayores de {clientesPend.length} clientes con saldo.</div>
             )}
           </div>
         </div>

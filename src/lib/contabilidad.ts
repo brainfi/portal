@@ -168,9 +168,10 @@ export function buildCobros(rows: Record<string, string>[]): { clientes: Cliente
       const cobrado = Math.min(importe, Math.max(0, pool))   // FIFO: lo más antiguo se cobra primero
       pool -= cobrado
       const diasVencida = m.fechaVto ? Math.floor((hoy.getTime() - m.fechaVto.getTime()) / DAY) : 0
+      const EPS = 0.01   // tolerancia para evitar falsos 'parcial' por coma flotante
       let estado: FacturaCobro['estado']
-      if (cobrado >= importe) estado = 'cobrada'
-      else if (cobrado > 0) estado = 'parcial'
+      if (cobrado >= importe - EPS) estado = 'cobrada'
+      else if (cobrado > EPS) estado = 'parcial'
       else if (diasVencida > 0) estado = 'vencida'
       else estado = 'pendiente'
       return {
