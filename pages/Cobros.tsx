@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import Layout from '@/components/Layout'
 import { useDatos } from '@/contexts/DataContext'
 import { buildCobros } from '@/lib/contabilidad'
@@ -84,6 +84,7 @@ export default function Cobros() {
   const [filtroCliente,       setFiltroCliente]         = useState<string>('todos')
   const [verMasPrevision,     setVerMasPrevision]       = useState(false)
   const [verMasConcentracion, setVerMasConcentracion]   = useState(false)
+  const [pagina,              setPagina]                = useState(1)
 
   // Datos reales desde la hoja conectada (proveedor global)
   const { data, loading, error } = useDatos()
@@ -128,6 +129,12 @@ export default function Cobros() {
     (filtroEstado  === 'todos' || f.estado     === filtroEstado) &&
     (filtroCliente === 'todos' || f.clienteId  === filtroCliente)
   ), [facturas, filtroEstado, filtroCliente])
+
+  const PAGE_SIZE = 15
+  useEffect(() => { setPagina(1) }, [filtroEstado, filtroCliente])
+  const totalPaginas   = Math.max(1, Math.ceil(facturasFiltradas.length / PAGE_SIZE))
+  const paginaSafe     = Math.min(pagina, totalPaginas)
+  const facturasPagina = facturasFiltradas.slice((paginaSafe - 1) * PAGE_SIZE, paginaSafe * PAGE_SIZE)
 
   const facturasCliente = clienteSeleccionado ? facturas.filter(f => f.clienteId === clienteSeleccionado.id) : []
 
@@ -228,7 +235,7 @@ export default function Cobros() {
       </div>
 
       {/* ── Aging + Previsión + Concentración ── */}
-      <div className="cobros-aging" style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:12 }}>
+      <div className="cobros-aging" style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:12, alignItems:'start' }}>
 
         {/* Aging */}
         <div style={{ ...card, padding:'22px 24px', display:'flex', flexDirection:'column' }}>
@@ -236,7 +243,7 @@ export default function Cobros() {
             <div style={{ fontSize:9, fontWeight:600, color:'#1a1a1a', textTransform:'uppercase', letterSpacing:'0.12em' }}>Antigüedad de saldo</div>
             <div style={{ fontSize:11, color:'#B0B7C3', marginTop:2 }}>Clasificación de facturas pendientes por tiempo vencido.</div>
           </div>
-          <div style={{ flex:1, minHeight:200 }}>
+          <div style={{ height:260 }}>
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={aging} margin={{ top:4, right:4, left:0, bottom:0 }} barCategoryGap="30%">
                 <CartesianGrid strokeDasharray="3 3" stroke="#F0F0F2" vertical={false} />
@@ -288,28 +295,39 @@ export default function Cobros() {
                 <div style={{ fontSize:9, fontWeight:600, color:'#1a1a1a', textTransform:'uppercase', letterSpacing:'0.12em' }}>Concentración</div>
                 <div style={{ fontSize:11, color:'#B0B7C3', marginTop:2 }}>Top clientes por saldo pendiente.</div>
               </div>
-              <button disabled title="Próximamente enlazará con tu ERP"
-                style={{ fontSize:11, fontWeight:500, color:'#B0B7C3', border:'none', background:'transparent', cursor:'not-allowed', fontFamily:'inherit', padding:0, flexShrink:0 }}>
-                Ver más ↓
-              </button>
+              {clientes.length > 10 && (
+                <button onClick={() => setVerMasConcentracion(v => !v)}
+                  style={{ fontSize:11, fontWeight:600, color:'#4361EE', border:'none', background:'transparent', cursor:'pointer', fontFamily:'inherit', padding:0, flexShrink:0 }}>
+                  {verMasConcentracion ? 'Ver menos ↑' : 'Ver más ↓'}
+                </button>
+              )}
             </div>
-            {[...clientes].sort((a,b)=>b.totalPendiente-a.totalPendiente).map((c, i) => {
-              const pct = totalPendiente > 0 ? Math.round((c.totalPendiente / totalPendiente) * 100) : 0
-              return (
-                <div key={i} style={{ marginBottom:12 }}>
-                  <div style={{ display:'flex', justifyContent:'space-between', marginBottom:5 }}>
-                    <div>
-                      <span style={{ fontSize:11, fontWeight:500, color:'#1a1a1a' }}>{c.nombre}</span>
-                      <span style={{ fontSize:10, color:'#B0B7C3', marginLeft:6 }}>{fmt(c.totalPendiente)}</span>
+            {(() => {
+              const ordenados = [...clientes].sort((a,b)=>b.totalPendiente-a.totalPendiente)
+              const totalConc = ordenados.reduce((a,c)=>a+c.totalPendiente,0)
+              const mostrados = verMasConcentracion ? ordenados.slice(0,25) : ordenados.slice(0,10)
+              return mostrados.map((c, i) => {
+                const pct = totalConc > 0 ? (c.totalPendiente / totalConc) * 100 : 0
+                const pctTxt = pct >= 1 ? `${Math.round(pct)}%` : pct > 0 ? '<1%' : '0%'
+                return (
+                  <div key={i} style={{ marginBottom:12 }}>
+                    <div style={{ display:'flex', justifyContent:'space-between', marginBottom:5 }}>
+                      <div>
+                        <span style={{ fontSize:11, fontWeight:500, color:'#1a1a1a' }}>{c.nombre}</span>
+                        <span style={{ fontSize:10, color:'#B0B7C3', marginLeft:6 }}>{fmt(c.totalPendiente)}</span>
+                      </div>
+                      <span style={{ fontSize:11, fontWeight:600, color:'#4361EE' }}>{pctTxt}</span>
                     </div>
-                    <span style={{ fontSize:11, fontWeight:600, color:'#4361EE' }}>{pct}%</span>
+                    <div style={{ height:5, background:'#EEF1FD', borderRadius:99, overflow:'hidden' }}>
+                      <div style={{ width:`${Math.max(pct,2)}%`, height:'100%', background:'#4361EE', borderRadius:99 }} />
+                    </div>
                   </div>
-                  <div style={{ height:5, background:'#EEF1FD', borderRadius:99, overflow:'hidden' }}>
-                    <div style={{ width:`${pct}%`, height:'100%', background:'#4361EE', borderRadius:99 }} />
-                  </div>
-                </div>
-              )
-            })}
+                )
+              })
+            })()}
+            {!verMasConcentracion && clientes.length > 10 && (
+              <div style={{ fontSize:10, color:'#B0B7C3', marginTop:2 }}>Mostrando los 10 mayores de {clientes.length} clientes.</div>
+            )}
           </div>
         </div>
       </div>
@@ -353,7 +371,7 @@ export default function Cobros() {
                 </tr>
               </thead>
               <tbody>
-                {facturasFiltradas.map(f => {
+                {facturasPagina.map(f => {
                   const pendiente = f.importe - f.cobrado
                   const est = ESTADO_STYLE[f.estado]
                   const isSelected = clienteSeleccionado?.id === f.clienteId
@@ -387,6 +405,24 @@ export default function Cobros() {
               <div style={{ textAlign:'center', padding:'32px', fontSize:13, color:'#B0B7C3' }}>No hay facturas con ese filtro</div>
             )}
           </div>
+          {facturasFiltradas.length > 0 && totalPaginas > 1 && (
+            <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', flexWrap:'wrap', gap:10, marginTop:16, paddingTop:14, borderTop:'1px solid #F4F5F7' }}>
+              <span style={{ fontSize:11, color:'#B0B7C3' }}>
+                Mostrando {(paginaSafe-1)*PAGE_SIZE+1}–{Math.min(paginaSafe*PAGE_SIZE, facturasFiltradas.length)} de {facturasFiltradas.length} facturas
+              </span>
+              <div style={{ display:'flex', alignItems:'center', gap:6 }}>
+                <button onClick={() => setPagina(p => Math.max(1, p-1))} disabled={paginaSafe<=1}
+                  style={{ display:'inline-flex', alignItems:'center', gap:4, padding:'6px 11px', fontSize:12, fontWeight:500, border:'1px solid #E8E8EC', borderRadius:8, background:'#fff', color:paginaSafe<=1?'#C7CDD6':'#1a1a1a', cursor:paginaSafe<=1?'not-allowed':'pointer', fontFamily:'inherit' }}>
+                  <i className="ti ti-chevron-left" style={{ fontSize:14 }} aria-hidden="true" />Anterior
+                </button>
+                <span style={{ fontSize:12, color:'#888', minWidth:96, textAlign:'center' }}>Página {paginaSafe} de {totalPaginas}</span>
+                <button onClick={() => setPagina(p => Math.min(totalPaginas, p+1))} disabled={paginaSafe>=totalPaginas}
+                  style={{ display:'inline-flex', alignItems:'center', gap:4, padding:'6px 11px', fontSize:12, fontWeight:500, border:'1px solid #E8E8EC', borderRadius:8, background:'#fff', color:paginaSafe>=totalPaginas?'#C7CDD6':'#1a1a1a', cursor:paginaSafe>=totalPaginas?'not-allowed':'pointer', fontFamily:'inherit' }}>
+                  Siguiente<i className="ti ti-chevron-right" style={{ fontSize:14 }} aria-hidden="true" />
+                </button>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Panel lateral cliente */}
