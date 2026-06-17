@@ -4,7 +4,7 @@ import { useDatos } from '@/contexts/DataContext'
 import { buildResumen } from '@/lib/contabilidad'
 import { getPlan } from '@/lib/presupuesto'
 import {
-  LineChart, Line, XAxis, YAxis,
+  ComposedChart, Bar, Line, AreaChart, Area, XAxis, YAxis,
   CartesianGrid, Tooltip, ResponsiveContainer,
 } from 'recharts'
 
@@ -36,14 +36,14 @@ function Badge({ trend, label }: { trend: 'up' | 'down' | 'neutral'; label: stri
 
 function TooltipPYG({ active, payload, label }: any) {
   if (!active || !payload?.length) return null
-  const names: Record<string, string> = { ingresos: 'Ingresos', ebitda: 'EBITDA', margenEbitda: 'Margen EBITDA' }
+  const names: Record<string, string> = { ingresos: 'Ingresos', gastos: 'Gastos', ebitda: 'EBITDA' }
   return (
     <div style={{ background: '#fff', border: '1px solid #E8E8EC', borderRadius: 10, padding: '10px 14px', fontSize: 12 }}>
       <div style={{ fontWeight: 600, color: '#1a1a1a', marginBottom: 6 }}>{label}</div>
       {payload.map((p: any) => (
         <div key={p.dataKey} style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 3 }}>
-          <div style={{ width: 7, height: 7, borderRadius: 2, background: p.stroke }} />
-          <span style={{ color: '#666' }}>{names[p.dataKey]}: {p.dataKey === 'margenEbitda' ? `${p.value}%` : fmt(p.value)}</span>
+          <div style={{ width: 7, height: 7, borderRadius: 2, background: p.color || p.stroke || p.fill }} />
+          <span style={{ color: '#666' }}>{names[p.dataKey]}: {fmt(p.value)}</span>
         </div>
       ))}
     </div>
@@ -57,7 +57,7 @@ function TooltipTes({ active, payload, label }: any) {
       <div style={{ fontWeight: 600, color: '#1a1a1a', marginBottom: 6 }}>{label}</div>
       {payload.map((p: any) => (
         <div key={p.dataKey} style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 3 }}>
-          <div style={{ width: 7, height: 7, borderRadius: 2, background: p.stroke }} />
+          <div style={{ width: 7, height: 7, borderRadius: 2, background: p.color || p.stroke || p.fill }} />
           <span style={{ color: '#666' }}>{names[p.dataKey]}: {p.dataKey === 'dso' ? `${p.value} d` : fmt(p.value)}</span>
         </div>
       ))}
@@ -153,7 +153,7 @@ export default function Dashboard() {
   return (
     <Layout title="Resumen">
       <style>{`
-        @media (max-width:900px){ .dash-main{grid-template-columns:1fr!important} }
+        @media (max-width:768px){ .kpi-row{grid-template-columns:1fr!important} }
       `}</style>
 
       {filtroOpen && <div onClick={() => setFiltroOpen(false)} style={{ position: 'fixed', inset: 0, zIndex: 40 }} />}
@@ -216,47 +216,48 @@ export default function Dashboard() {
         <div style={{ fontSize: 9, fontWeight: 700, color: '#B0B7C3', textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: 10 }}>
           Cuenta de pérdidas y ganancias · {filtroLabel}
         </div>
-        <div className="dash-main" style={{ display: 'grid', gridTemplateColumns: '300px 1fr', gap: 14 }}>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-            <KPICard lbl="Ingresos" val={fmt(ingresosVal)}
-              badge={ingDelta.badge} badgeLbl={ingDelta.lbl} sub={filtroLabel}
-              icon="ti-trending-up" iconBg="#F0F9F4" iconColor="#2DC653"
-              comparacion={hayPlan ? `Plan ${fmt(ingresosPlan)} · real ${fmt(ingresosVal)}` : 'Define tu plan en Presupuesto para comparar'} />
-            <KPICard lbl="EBITDA" val={fmt(ebitdaVal)}
-              badge={ebDelta.badge} badgeLbl={ebDelta.lbl} sub={`Margen ${margenVal}`}
-              icon="ti-chart-pie" iconBg="#FEF2F2" iconColor="#EF4444"
-              comparacion={hayPlan ? `Plan ${fmt(ebitdaPlan)} · real ${fmt(ebitdaVal)}` : undefined} />
-            <KPICard lbl="Margen EBITDA" val={margenVal}
-              badge="neutral" badgeLbl="EBITDA / Ingresos" sub="Explotación"
-              icon="ti-percentage" iconBg="#FFF8E6" iconColor="#F4A100" />
-          </div>
-          <div style={{ ...card, padding: '20px 24px', display: 'flex', flexDirection: 'column' }}>
-            <div style={{ marginBottom: 14 }}>
-              <div style={{ fontSize: 9, fontWeight: 700, color: '#B0B7C3', textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: 2 }}>Evolución</div>
-              <div style={{ fontSize: 12, color: '#888' }}>Ingresos · EBITDA · Margen EBITDA</div>
+        <div className="kpi-row" style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 12, marginBottom: 14 }}>
+          <KPICard lbl="Ingresos" val={fmt(ingresosVal)}
+            badge={ingDelta.badge} badgeLbl={ingDelta.lbl} sub={filtroLabel}
+            icon="ti-trending-up" iconBg="#F0F9F4" iconColor="#2DC653"
+            comparacion={hayPlan ? `Plan ${fmt(ingresosPlan)} · real ${fmt(ingresosVal)}` : 'Define tu plan en Presupuesto para comparar'} />
+          <KPICard lbl="EBITDA" val={fmt(ebitdaVal)}
+            badge={ebDelta.badge} badgeLbl={ebDelta.lbl} sub={`Margen ${margenVal}`}
+            icon="ti-chart-pie" iconBg="#FEF2F2" iconColor="#EF4444"
+            comparacion={hayPlan ? `Plan ${fmt(ebitdaPlan)} · real ${fmt(ebitdaVal)}` : undefined} />
+          <KPICard lbl="Margen EBITDA" val={margenVal}
+            badge="neutral" badgeLbl="EBITDA / Ingresos" sub="Explotación"
+            icon="ti-percentage" iconBg="#FFF8E6" iconColor="#F4A100" />
+        </div>
+        <div style={{ ...card, padding: '20px 24px' }}>
+          <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap', marginBottom: 16 }}>
+            <div>
+              <div style={{ fontSize: 9, fontWeight: 700, color: '#B0B7C3', textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: 2 }}>Evolución mensual</div>
+              <div style={{ fontSize: 12, color: '#888' }}>Ingresos y gastos · EBITDA</div>
             </div>
-            <div style={{ display: 'flex', gap: 14, marginBottom: 14, flexWrap: 'wrap' }}>
-              {[{ color: '#4361EE', lbl: 'Ingresos', dash: false }, { color: '#F4A100', lbl: 'EBITDA', dash: false }, { color: '#2DC653', lbl: 'Margen EBITDA (%)', dash: true }].map((l, i) => (
+            <div style={{ display: 'flex', gap: 14, flexWrap: 'wrap' }}>
+              {[{ color: '#4361EE', lbl: 'Ingresos', t: 'bar' }, { color: '#D4DBF0', lbl: 'Gastos', t: 'bar' }, { color: '#2DC653', lbl: 'EBITDA', t: 'line' }].map((l, i) => (
                 <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-                  <svg width="16" height="6"><line x1="0" y1="3" x2="16" y2="3" stroke={l.color} strokeWidth="2" strokeDasharray={l.dash ? '4 2' : undefined} /></svg>
-                  <span style={{ fontSize: 10, color: '#888' }}>{l.lbl}</span>
+                  {l.t === 'bar'
+                    ? <span style={{ width: 10, height: 10, borderRadius: 3, background: l.color }} />
+                    : <svg width="16" height="6"><line x1="0" y1="3" x2="16" y2="3" stroke={l.color} strokeWidth="2.5" /></svg>}
+                  <span style={{ fontSize: 11, color: '#888' }}>{l.lbl}</span>
                 </div>
               ))}
             </div>
-            <div style={{ flex: 1, minHeight: 220 }}>
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={evol} margin={{ top: 4, right: 8, left: 0, bottom: 0 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#F0F0F2" vertical={false} />
-                  <XAxis dataKey="mes" tick={{ fontSize: 11, fill: '#B0B7C3' }} axisLine={false} tickLine={false} />
-                  <YAxis yAxisId="eur" tick={{ fontSize: 11, fill: '#B0B7C3' }} axisLine={false} tickLine={false} tickFormatter={fmtK} width={40} />
-                  <YAxis yAxisId="pct" orientation="right" tick={{ fontSize: 11, fill: '#B0B7C3' }} axisLine={false} tickLine={false} tickFormatter={v => `${v}%`} width={40} />
-                  <Tooltip content={<TooltipPYG />} cursor={{ stroke: '#E8E8EC', strokeWidth: 1 }} />
-                  <Line yAxisId="eur" type="monotone" dataKey="ingresos"     stroke="#4361EE" strokeWidth={2.5} dot={{ r: 3 }} activeDot={{ r: 6 }} />
-                  <Line yAxisId="eur" type="monotone" dataKey="ebitda"       stroke="#F4A100" strokeWidth={2.5} dot={{ r: 3 }} activeDot={{ r: 6 }} />
-                  <Line yAxisId="pct" type="monotone" dataKey="margenEbitda" stroke="#2DC653" strokeWidth={2}   dot={{ r: 3 }} strokeDasharray="5 3" activeDot={{ r: 6 }} />
-                </LineChart>
-              </ResponsiveContainer>
-            </div>
+          </div>
+          <div style={{ width: '100%', height: 280 }}>
+            <ResponsiveContainer width="100%" height="100%">
+              <ComposedChart data={evol} margin={{ top: 8, right: 8, left: 0, bottom: 0 }} barGap={4} barCategoryGap="26%">
+                <CartesianGrid strokeDasharray="3 3" stroke="#F0F0F2" vertical={false} />
+                <XAxis dataKey="mes" tick={{ fontSize: 11, fill: '#B0B7C3' }} axisLine={false} tickLine={false} />
+                <YAxis tick={{ fontSize: 11, fill: '#B0B7C3' }} axisLine={false} tickLine={false} tickFormatter={fmtK} width={42} />
+                <Tooltip content={<TooltipPYG />} cursor={{ fill: '#F4F5F7' }} />
+                <Bar dataKey="ingresos" name="Ingresos" fill="#4361EE" radius={[5, 5, 0, 0]} maxBarSize={26} />
+                <Bar dataKey="gastos" name="Gastos" fill="#D4DBF0" radius={[5, 5, 0, 0]} maxBarSize={26} />
+                <Line type="monotone" dataKey="ebitda" name="EBITDA" stroke="#2DC653" strokeWidth={2.5} dot={{ r: 3, fill: '#2DC653', strokeWidth: 0 }} activeDot={{ r: 5 }} />
+              </ComposedChart>
+            </ResponsiveContainer>
           </div>
         </div>
       </div>
@@ -264,48 +265,48 @@ export default function Dashboard() {
       {/* Sección 2: Tesorería */}
       <div>
         <div style={{ fontSize: 9, fontWeight: 700, color: '#B0B7C3', textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: 10 }}>
-          Tesorería
+          Tesorería · {filtroLabel}
         </div>
-        <div className="dash-main" style={{ display: 'grid', gridTemplateColumns: '300px 1fr', gap: 14 }}>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-            <KPICard lbl="Tesorería" val={fmt(tesoreriaVal)}
-              badge="neutral" badgeLbl="saldo real" sub="Bancos y caja (grupo 57)"
-              icon="ti-building-bank" iconBg="#EEF1FD" iconColor="#4361EE"
-              comparacion={`Pendiente de cobro: ${fmt(resumen.pendienteCobro)} · de pago: ${fmt(resumen.pendientePago)}`} />
-            <KPICard lbl="DSO medio" val={`${dsoVal} días`}
-              badge="neutral" badgeLbl="días de cobro" sub="Sobre saldo de clientes"
-              icon="ti-clock" iconBg="#FEF2F2" iconColor="#EF4444" />
-            <KPICard lbl="Runway" val={runway != null ? `${runway} días` : '—'}
-              badge="neutral" badgeLbl="estimado" sub="Sin nuevas ventas"
-              icon="ti-shield" iconBg="#FFF8E6" iconColor="#F4A100"
-              comparacion={burn > 0 ? `Burn rate mensual: ${fmt(Math.round(burn))}` : 'Sin gastos registrados aún'} />
+        <div className="kpi-row" style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 12, marginBottom: 14 }}>
+          <KPICard lbl="Tesorería" val={fmt(tesoreriaVal)}
+            badge="neutral" badgeLbl="saldo real" sub="Bancos y caja (grupo 57)"
+            icon="ti-building-bank" iconBg="#EEF1FD" iconColor="#4361EE"
+            comparacion={`Pendiente de cobro: ${fmt(resumen.pendienteCobro)} · de pago: ${fmt(resumen.pendientePago)}`} />
+          <KPICard lbl="DSO medio" val={`${dsoVal} días`}
+            badge="neutral" badgeLbl="días de cobro" sub="Sobre saldo de clientes"
+            icon="ti-clock" iconBg="#FEF2F2" iconColor="#EF4444" />
+          <KPICard lbl="Runway" val={runway != null ? `${runway} días` : '—'}
+            badge="neutral" badgeLbl="estimado" sub="Sin nuevas ventas"
+            icon="ti-shield" iconBg="#FFF8E6" iconColor="#F4A100"
+            comparacion={burn > 0 ? `Burn rate mensual: ${fmt(Math.round(burn))}` : 'Sin gastos registrados aún'} />
+        </div>
+        <div style={{ ...card, padding: '20px 24px' }}>
+          <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap', marginBottom: 16 }}>
+            <div>
+              <div style={{ fontSize: 9, fontWeight: 700, color: '#B0B7C3', textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: 2 }}>Evolución de la tesorería</div>
+              <div style={{ fontSize: 12, color: '#888' }}>Saldo de bancos y caja, mes a mes</div>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+              <span style={{ width: 10, height: 10, borderRadius: 3, background: '#4361EE' }} />
+              <span style={{ fontSize: 11, color: '#888' }}>Tesorería</span>
+            </div>
           </div>
-          <div style={{ ...card, padding: '20px 24px', display: 'flex', flexDirection: 'column' }}>
-            <div style={{ marginBottom: 14 }}>
-              <div style={{ fontSize: 9, fontWeight: 700, color: '#B0B7C3', textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: 2 }}>Evolución</div>
-              <div style={{ fontSize: 12, color: '#888' }}>Tesorería acumulada · DSO</div>
-            </div>
-            <div style={{ display: 'flex', gap: 14, marginBottom: 14, flexWrap: 'wrap' }}>
-              {[{ color: '#4361EE', lbl: 'Tesorería' }, { color: '#EF4444', lbl: 'DSO (días)' }].map((l, i) => (
-                <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-                  <svg width="16" height="6"><line x1="0" y1="3" x2="16" y2="3" stroke={l.color} strokeWidth="2" /></svg>
-                  <span style={{ fontSize: 10, color: '#888' }}>{l.lbl}</span>
-                </div>
-              ))}
-            </div>
-            <div style={{ flex: 1, minHeight: 220 }}>
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={evol} margin={{ top: 4, right: 8, left: 0, bottom: 0 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#F0F0F2" vertical={false} />
-                  <XAxis dataKey="mes" tick={{ fontSize: 11, fill: '#B0B7C3' }} axisLine={false} tickLine={false} />
-                  <YAxis yAxisId="eur" tick={{ fontSize: 11, fill: '#B0B7C3' }} axisLine={false} tickLine={false} tickFormatter={fmtK} width={40} />
-                  <YAxis yAxisId="dso" orientation="right" tick={{ fontSize: 11, fill: '#B0B7C3' }} axisLine={false} tickLine={false} width={32} />
-                  <Tooltip content={<TooltipTes />} cursor={{ stroke: '#E8E8EC', strokeWidth: 1 }} />
-                  <Line yAxisId="eur" type="monotone" dataKey="tesoreria" stroke="#4361EE" strokeWidth={2.5} dot={{ r: 3 }} activeDot={{ r: 6 }} />
-                  <Line yAxisId="dso" type="monotone" dataKey="dso"       stroke="#EF4444" strokeWidth={2.5} dot={{ r: 3 }} activeDot={{ r: 6 }} />
-                </LineChart>
-              </ResponsiveContainer>
-            </div>
+          <div style={{ width: '100%', height: 280 }}>
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart data={evol} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
+                <defs>
+                  <linearGradient id="gTes" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#4361EE" stopOpacity={0.26} />
+                    <stop offset="100%" stopColor="#4361EE" stopOpacity={0.02} />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" stroke="#F0F0F2" vertical={false} />
+                <XAxis dataKey="mes" tick={{ fontSize: 11, fill: '#B0B7C3' }} axisLine={false} tickLine={false} />
+                <YAxis tick={{ fontSize: 11, fill: '#B0B7C3' }} axisLine={false} tickLine={false} tickFormatter={fmtK} width={42} />
+                <Tooltip content={<TooltipTes />} cursor={{ stroke: '#C7D2F8', strokeWidth: 1, strokeDasharray: '4 3' }} />
+                <Area type="monotone" dataKey="tesoreria" name="Tesorería" stroke="#4361EE" strokeWidth={2.5} fill="url(#gTes)" dot={false} activeDot={{ r: 5, fill: '#4361EE', stroke: '#fff', strokeWidth: 2 }} />
+              </AreaChart>
+            </ResponsiveContainer>
           </div>
         </div>
       </div>
