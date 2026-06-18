@@ -2,6 +2,9 @@ import { useState, useMemo, useEffect } from 'react'
 import Layout from '@/components/Layout'
 import { useDatos } from '@/contexts/DataContext'
 import { buildCobros } from '@/lib/contabilidad'
+import { MESES } from '@/lib/periodo'
+import { usePeriodo } from '@/hooks/usePeriodo'
+import PeriodoFilter from '@/components/PeriodoFilter'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts'
 
 // ─── Tipos ───────────────────────────────────────────────────────────────────
@@ -16,7 +19,7 @@ interface Cliente {
   riesgo: 'bajo' | 'medio' | 'alto'
 }
 
-// \u2500\u2500\u2500 Fechas (render y filtro por mes) \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
+// ─── Fechas (render y filtro por mes) ─────────────────────────────────────────
 function parseFecha(v?: string): Date | null {
   if (!v) return null
   const s = String(v).trim()
@@ -28,6 +31,11 @@ function parseFecha(v?: string): Date | null {
   const d = new Date(s)
   return isNaN(d.getTime()) ? null : d
 }
+// vencimiento -> 'YYYY-MM'
+function ymDe(v?: string): string | null {
+  const d = parseFecha(v)
+  return d ? `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}` : null
+}
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 function fmt(n: number) {
@@ -35,7 +43,7 @@ function fmt(n: number) {
 }
 function fmtFecha(iso: string) {
   const d = parseFecha(iso)
-  if (!d) return '\u2014'
+  if (!d) return '—'
   return new Intl.DateTimeFormat('es-ES', { day:'numeric', month:'short', year:'numeric' }).format(d)
 }
 
@@ -64,21 +72,6 @@ function Aviso({ icon, texto }: { icon: string; texto: string }) {
 
 // ─── Componente principal ─────────────────────────────────────────────────────
 export default function Cobros() {
-  // Filtro periodo — igual que Presupuesto y Pagos
-  const MESES_LABEL = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic']
-  const MES_ACTUAL = 4
-  const [filtroOpen, setFiltroOpen] = useState(false)
-  const [filtro, setFiltro]         = useState<number | 'anual'>(MES_ACTUAL)
-  const filtroLabel = filtro === 'anual' ? 'Este año' : MESES_LABEL[filtro as number]
-  const opcionesFiltro = [
-    ...Array.from({ length: MES_ACTUAL + 1 }, (_, m) => ({
-      key: m as number | 'anual',
-      label: m === MES_ACTUAL ? `${MESES_LABEL[m]} (este mes)` : MESES_LABEL[m],
-      group: '2026',
-    })).reverse(),
-    { key: 'anual' as const, label: 'Este año', group: 'Acumulado' },
-  ]
-
   const [clienteSeleccionado, setClienteSeleccionado] = useState<Cliente | null>(null)
   const [filtroEstado,        setFiltroEstado]         = useState<string>('todos')
   const [filtroCliente,       setFiltroCliente]         = useState<string>('todos')
@@ -91,11 +84,20 @@ export default function Cobros() {
   const { clientes, facturas } = useMemo(() => buildCobros(data?.diario ?? []), [data])
   const clientesPend = useMemo(() => clientes.filter(c => c.totalPendiente > 0.5).sort((a,b) => b.totalPendiente - a.totalPendiente), [clientes])
 
-  // ── Totales ──
-  // Facturas filtradas por periodo
-  const facturasPeriodo = filtro === 'anual'
+  // ── Filtro de periodo (mes · trimestre · anual) ──
+  // Meses disponibles = los que tienen facturas con vencimiento.
+  const periodos = useMemo(() => {
+    const m = new Map<string, number>()
+    facturas.forEach(f => { const ym = ymDe(f.vencimiento); if (ym) m.set(ym, parseFecha(f.vencimiento)!.getMonth()) })
+    return [...m.entries()].sort((a, b) => a[0].localeCompare(b[0])).map(([ym, idx]) => ({ ym, label: MESES[idx] }))
+  }, [facturas])
+  // Cambia 'anual' por periodos.at(-1)?.ym ?? 'anual' si quieres abrir en el último mes.
+  const { periodo, setPeriodo, open, setOpen, yms, label: filtroLabel } = usePeriodo(periodos, 'anual')
+
+  // ── Totales (sobre las facturas del periodo) ──
+  const facturasPeriodo = periodo === 'anual'
     ? facturas
-    : facturas.filter(f => parseFecha(f.vencimiento)?.getMonth() === (filtro as number))
+    : facturas.filter(f => { const ym = ymDe(f.vencimiento); return ym ? yms.includes(ym) : false })
 
   const totalPendiente = facturasPeriodo.filter(f => f.estado !== 'cobrada').reduce((a, f) => a + (f.importe - f.cobrado), 0)
   const totalVencido   = facturasPeriodo.filter(f => f.estado === 'vencida' || (f.estado === 'parcial' && f.diasVencida > 0)).reduce((a, f) => a + (f.importe - f.cobrado), 0)
@@ -155,15 +157,7 @@ export default function Cobros() {
         @media (max-width:600px){ .cobros-kgrid{grid-template-columns:1fr!important} }
         .cobros-tr:hover{background:#FAFAFA;cursor:pointer}
         .cobros-filtro{border:none;cursor:pointer;font-family:inherit;font-size:12px;padding:5px 12px;border-radius:6px;transition:background .12s}
-        .cdd-item{display:flex;align-items:center;justify-content:space-between;width:100%;padding:8px 12px;font-size:13px;border:none;background:transparent;cursor:pointer;font-family:inherit;text-align:left;color:#1a1a1a;border-radius:7px}
-        .cdd-item:hover{background:#F4F5F7}
-        .cdd-item.active{color:#4361EE;font-weight:600;background:#EEF1FD}
       `}</style>
-
-      {/* Overlay filtro */}
-      {filtroOpen && (
-        <div onClick={() => setFiltroOpen(false)} style={{ position:'fixed', inset:0, zIndex:40 }} />
-      )}
 
       {/* ── Encabezado ── */}
       <div style={{ display:'flex', alignItems:'flex-start', justifyContent:'space-between', gap:12, flexWrap:'wrap' }}>
@@ -171,34 +165,7 @@ export default function Cobros() {
           <div style={{ fontSize:22, fontWeight:700, color:'#1a1a1a', letterSpacing:'-0.4px', marginBottom:3 }}>Cobros</div>
           <div style={{ fontSize:12, color:'#888' }}>Facturas pendientes, antigüedad y previsión de cobro</div>
         </div>
-        <div style={{ position:'relative' }}>
-          <button onClick={() => setFiltroOpen(o => !o)}
-            style={{ display:'inline-flex', alignItems:'center', gap:8, padding:'8px 14px', fontSize:13, fontWeight:500, border:'1px solid #E8E8EC', borderRadius:10, background:'#F4F5F7', color:'#1a1a1a', cursor:'pointer', fontFamily:'inherit' }}>
-            {filtroLabel}
-            <i className="ti ti-chevron-down" style={{ fontSize:14, color:'#888' }} aria-hidden="true" />
-          </button>
-          {filtroOpen && (
-            <div style={{ position:'absolute', top:'calc(100% + 6px)', right:0, zIndex:50, background:'#fff', border:'1px solid #E8E8EC', borderRadius:12, padding:'6px', minWidth:190, boxShadow:'0 4px 20px rgba(0,0,0,0.08)' }}>
-              <div style={{ fontSize:9, fontWeight:700, color:'#B0B7C3', textTransform:'uppercase', letterSpacing:'0.1em', padding:'4px 12px 6px' }}>2026</div>
-              {opcionesFiltro.filter(o => o.group === '2026').map(o => (
-                <button key={String(o.key)} className={`cdd-item${filtro===o.key?' active':''}`}
-                  onClick={() => { setFiltro(o.key); setFiltroOpen(false) }}>
-                  {o.label}
-                  {filtro === o.key && <i className="ti ti-check" style={{ fontSize:13 }} aria-hidden="true" />}
-                </button>
-              ))}
-              <div style={{ height:'1px', background:'#F4F5F7', margin:'4px 0' }} />
-              <div style={{ fontSize:9, fontWeight:700, color:'#B0B7C3', textTransform:'uppercase', letterSpacing:'0.1em', padding:'4px 12px 6px' }}>Acumulado</div>
-              {opcionesFiltro.filter(o => o.group === 'Acumulado').map(o => (
-                <button key={String(o.key)} className={`cdd-item${filtro===o.key?' active':''}`}
-                  onClick={() => { setFiltro(o.key); setFiltroOpen(false) }}>
-                  {o.label}
-                  {filtro === o.key && <i className="ti ti-check" style={{ fontSize:13 }} aria-hidden="true" />}
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
+        <PeriodoFilter value={periodo} open={open} setOpen={setOpen} onChange={setPeriodo} meses={periodos} />
       </div>
 
       {/* ── KPI cards ── */}
@@ -206,7 +173,7 @@ export default function Cobros() {
         {[
           { lbl:'Pendiente de cobro', desc:'Facturas emitidas sin cobrar.',    val:fmt(totalPendiente), pct:pctPendiente, pctColor:'#4361EE', iconBg:'#EEF1FD', iconColor:'#4361EE', icon:'ti-file-invoice' },
           { lbl:'Vencido sin cobrar', desc:'Facturas pasadas de fecha.',        val:fmt(totalVencido),   pct:pctVencido,   pctColor:'#EF4444', iconBg:'#FEF2F2', iconColor:'#EF4444', icon:'ti-alert-triangle' },
-          { lbl:'Cobrado este mes',   desc:'Total ingresado en el periodo.',    val:fmt(cobradoMes),     pct:pctCobrado,   pctColor:'#2DC653', iconBg:'#F0F9F4', iconColor:'#2DC653', icon:'ti-circle-check' },
+          { lbl:'Cobrado en el periodo', desc:'Total ingresado en el periodo.', val:fmt(cobradoMes),     pct:pctCobrado,   pctColor:'#2DC653', iconBg:'#F0F9F4', iconColor:'#2DC653', icon:'ti-circle-check' },
           { lbl:'DSO medio',          desc:'Días medios hasta cobro efectivo.', val:`${dsoGlobal} días`, pct:null,         pctColor:'#F4A100', iconBg:'#FFF8E6', iconColor:'#F4A100', icon:'ti-clock' },
         ].map((k, i) => (
           <div key={i} style={{ ...card, padding:'20px 22px' }}>
