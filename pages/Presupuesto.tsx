@@ -98,7 +98,7 @@ export default function Presupuesto() {
     let cancel = false
     getPlan().then(plan => {
       if (cancel) return
-      const base = (plan ?? []) as Partida[]
+      const base = (plan ?? []) as Omit<Partida, 'real'>[]
       const { real, mesesConReal } = buildReal(
         data?.diario ?? [],
         base.map(p => ({ id: p.id, cuentaCodigo: p.cuentaCodigo ?? '', tipo: p.tipo })),

@@ -405,7 +405,7 @@ export default function Pagos() {
                   <thead>
                     <tr style={{ borderBottom:'1px solid #ECEEF3' }}>
                       {['Nº','Fecha','Cuota total','Capital','Intereses','Saldo pendiente'].map((h, i) => (
-                        <th key={i} style={{ fontSize:9, fontWeight:700, color:'#B0B7C3', textTransform:'uppercase', letterSpacing:'0.1em', padding:'0 10px 10px', textAlign:(i>1?'right':'left') as const }}>{h}</th>
+                        <th key={i} style={{ fontSize:9, fontWeight:700, color:'#B0B7C3', textTransform:'uppercase', letterSpacing:'0.1em', padding:'0 10px 10px', textAlign:(i>1?'right':'left') as 'right' | 'left' }}>{h}</th>
                       ))}
                     </tr>
                   </thead>
