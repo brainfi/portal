@@ -2,6 +2,9 @@ import { useState, useMemo, useEffect, useRef } from 'react'
 import Layout from '@/components/Layout'
 import { useDatos } from '@/contexts/DataContext'
 import { buildPagos } from '@/lib/contabilidad'
+import { MESES } from '@/lib/periodo'
+import { usePeriodo } from '@/hooks/usePeriodo'
+import PeriodoFilter from '@/components/PeriodoFilter'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts'
 
 // ─── Tipos ───────────────────────────────────────────────────────────────────
@@ -24,7 +27,7 @@ interface Prestamo {
   proximaFecha: string; mesesRestantes: number
 }
 
-// \u2500\u2500\u2500 Fechas (para render) \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
+// ─── Fechas (para render) ─────────────────────────────────────────────────────
 function parseFecha(v?: string): Date | null {
   if (!v) return null
   const s = String(v).trim()
@@ -106,20 +109,19 @@ function Aviso({ icon, texto }: { icon: string; texto: string }) {
 
 // ─── Componente principal ─────────────────────────────────────────────────────
 export default function Pagos() {
-  // Filtro periodo — igual que Presupuesto y Cobros
-  const MESES_LABEL = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic']
-  const MES_ACTUAL = 4
-  const [filtroOpen, setFiltroOpen]       = useState(false)
-  const [filtro, setFiltro]               = useState<number | 'anual'>(MES_ACTUAL)
-  const filtroLabel = filtro === 'anual' ? 'Este año' : MESES_LABEL[filtro as number]
-  const opcionesFiltro = [
-    ...Array.from({ length: MES_ACTUAL + 1 }, (_, m) => ({
-      key: m as number | 'anual',
-      label: m === MES_ACTUAL ? `${MESES_LABEL[m]} (este mes)` : MESES_LABEL[m],
-      group: '2026',
-    })).reverse(),
-    { key: 'anual' as const, label: 'Este año', group: 'Acumulado' },
-  ]
+  // ── Filtro de periodo (mes · trimestre · anual) ──
+  // Pagos no filtra por fecha: el periodo es un multiplicador de meses para proyectar cuotas.
+  const periodos = useMemo(() => {
+    const hoy = new Date()
+    const anio = hoy.getFullYear()
+    return Array.from({ length: hoy.getMonth() + 1 }, (_, m) => ({
+      ym: `${anio}-${String(m + 1).padStart(2, '0')}`,
+      label: MESES[m],
+    }))
+  }, [])
+  // Cambia 'anual' por periodos.at(-1)?.ym ?? 'anual' para abrir en el mes actual (1 mes de cuotas).
+  const { periodo, setPeriodo, open, setOpen, label: filtroLabel } = usePeriodo(periodos, 'anual')
+  const numMeses = periodo === 'anual' ? 12 : periodo.includes('-T') ? 3 : 1
 
   // Filtros tabla obligaciones
   const [filtroEstado,    setFiltroEstado]    = useState<string>('todos')
@@ -144,7 +146,6 @@ export default function Pagos() {
   const proximoVenc = obligaciones.filter(o => o.diasRestantes >= 0).sort((a, b) => a.diasRestantes - b.diasRestantes)[0]
 
   // ── Importes del periodo filtrado ──
-  const numMeses = filtro === 'anual' ? 12 : 1
   const deudaFinMes   = prestamos.filter(p => p.clasificacion === 'financiera' && p.cuotaMensual > 0).reduce((a, p) => a + p.cuotaMensual, 0) * numMeses
   const deudaNoFinMes = prestamos.filter(p => p.clasificacion === 'no_financiera').reduce((a, p) => {
     const m = Math.min(p.mesesRestantes, numMeses)
@@ -186,15 +187,7 @@ export default function Pagos() {
         .pagos-filtro{border:none;cursor:pointer;font-family:inherit;font-size:12px;padding:5px 12px;border-radius:6px;transition:background .12s}
         .pagos-pres{transition:all .12s}
         .pagos-pres:hover{background:#F4F6FF!important}
-        .pdd-item{display:flex;align-items:center;justify-content:space-between;width:100%;padding:8px 12px;font-size:13px;border:none;background:transparent;cursor:pointer;font-family:inherit;text-align:left;color:#1a1a1a;border-radius:7px}
-        .pdd-item:hover{background:#F4F5F7}
-        .pdd-item.active{color:#4361EE;font-weight:600;background:#EEF1FD}
       `}</style>
-
-      {/* Overlay filtro */}
-      {filtroOpen && (
-        <div onClick={() => setFiltroOpen(false)} style={{ position:'fixed', inset:0, zIndex:40 }} />
-      )}
 
       {/* ── Encabezado ── */}
       <div style={{ display:'flex', alignItems:'flex-start', justifyContent:'space-between', gap:12, flexWrap:'wrap' }}>
@@ -202,34 +195,7 @@ export default function Pagos() {
           <div style={{ fontSize:22, fontWeight:700, color:'#1a1a1a', letterSpacing:'-0.4px', marginBottom:3 }}>Pagos</div>
           <div style={{ fontSize:12, color:'#888' }}>Obligaciones operativas, deuda financiera y no financiera</div>
         </div>
-        <div style={{ position:'relative' }}>
-          <button onClick={() => setFiltroOpen(o => !o)}
-            style={{ display:'inline-flex', alignItems:'center', gap:8, padding:'8px 14px', fontSize:13, fontWeight:500, border:'1px solid #E8E8EC', borderRadius:10, background:'#F4F5F7', color:'#1a1a1a', cursor:'pointer', fontFamily:'inherit' }}>
-            {filtroLabel}
-            <i className="ti ti-chevron-down" style={{ fontSize:14, color:'#888' }} aria-hidden="true" />
-          </button>
-          {filtroOpen && (
-            <div style={{ position:'absolute', top:'calc(100% + 6px)', right:0, zIndex:50, background:'#fff', border:'1px solid #E8E8EC', borderRadius:12, padding:'6px', minWidth:190, boxShadow:'0 4px 20px rgba(0,0,0,0.08)' }}>
-              <div style={{ fontSize:9, fontWeight:700, color:'#B0B7C3', textTransform:'uppercase', letterSpacing:'0.1em', padding:'4px 12px 6px' }}>2026</div>
-              {opcionesFiltro.filter(o => o.group === '2026').map(o => (
-                <button key={String(o.key)} className={`pdd-item${filtro === o.key ? ' active' : ''}`}
-                  onClick={() => { setFiltro(o.key); setFiltroOpen(false) }}>
-                  {o.label}
-                  {filtro === o.key && <i className="ti ti-check" style={{ fontSize:13 }} aria-hidden="true" />}
-                </button>
-              ))}
-              <div style={{ height:'1px', background:'#F4F5F7', margin:'4px 0' }} />
-              <div style={{ fontSize:9, fontWeight:700, color:'#B0B7C3', textTransform:'uppercase', letterSpacing:'0.1em', padding:'4px 12px 6px' }}>Acumulado</div>
-              {opcionesFiltro.filter(o => o.group === 'Acumulado').map(o => (
-                <button key={String(o.key)} className={`pdd-item${filtro === o.key ? ' active' : ''}`}
-                  onClick={() => { setFiltro(o.key); setFiltroOpen(false) }}>
-                  {o.label}
-                  {filtro === o.key && <i className="ti ti-check" style={{ fontSize:13 }} aria-hidden="true" />}
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
+        <PeriodoFilter value={periodo} open={open} setOpen={setOpen} onChange={setPeriodo} meses={periodos} />
       </div>
 
       {/* ── KPI cards ── */}
