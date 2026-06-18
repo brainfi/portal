@@ -4,14 +4,14 @@ import Layout from '@/components/Layout'
 import { useDatos } from '@/contexts/DataContext'
 import { getPlan } from '@/lib/presupuesto'
 import { buildReal } from '@/lib/contabilidad'
+import { usePeriodo } from '@/hooks/usePeriodo'
+import PeriodoFilter from '@/components/PeriodoFilter'
 import {
   AreaChart, Area, Line, XAxis, YAxis, CartesianGrid,
   Tooltip, ResponsiveContainer, ComposedChart,
 } from 'recharts'
 
 type TipoPartida = 'ingreso' | 'gasto'
-// filtro: número de mes (0-11) o 'anual'
-type FiltroPeriodo = number | 'anual'
 
 interface Partida {
   id: number
@@ -109,8 +109,13 @@ export default function Presupuesto() {
       .finally(() => { if (!cancel) setCargandoPlan(false) })
     return () => { cancel = true }
   }, [data])
-  const [filtro, setFiltro] = useState<FiltroPeriodo>(MES_ACTUAL)
-  const [filtroOpen, setFiltroOpen] = useState(false)
+  // Filtro de periodo compartido (mes · trimestre · anual)
+  const periodos = useMemo(() => Array.from({ length: MES_ACTUAL + 1 }, (_, m) => ({
+    ym: `2026-${String(m + 1).padStart(2, '0')}`,
+    label: MESES[m],
+  })), [])
+  // Cambia 'anual' por periodos.at(-1)?.ym ?? 'anual' para abrir en el mes actual.
+  const { periodo, setPeriodo, open, setOpen } = usePeriodo(periodos, 'anual')
   const [editandoPlan, setEditandoPlan] = useState<number | null>(null)
   const [vistaPL,     setVistaPL]     = useState<'anual' | 'trimestral' | 'mensual'>('anual')
   const [modalPL,     setModalPL]     = useState(false)
@@ -123,11 +128,10 @@ export default function Presupuesto() {
   const [nuevaMensual, setNuevaMensual] = useState<number[]>(Array(12).fill(0))
 
   const mesesActivos = useMemo(() => {
-    return filtro === 'anual' ? [0,1,2,3,4,5,6,7,8,9,10,11] : [filtro as number]
-  }, [filtro])
-
-  // Label del filtro activo
-  const filtroLabel = filtro === 'anual' ? 'Último año' : MESES[filtro as number]
+    if (periodo === 'anual') return [0,1,2,3,4,5,6,7,8,9,10,11]
+    if (periodo.includes('-T')) { const q = Number(periodo.split('-T')[1]); const ini = (q - 1) * 3; return [ini, ini + 1, ini + 2] }
+    return [parseInt(periodo.slice(5, 7), 10) - 1]
+  }, [periodo])
 
   const mesesConReal = mesesActivos.filter(m => MESES_CON_REAL.includes(m))
   const hayReal = mesesConReal.length > 0
@@ -219,15 +223,6 @@ export default function Presupuesto() {
   const td: React.CSSProperties = { padding:'11px 10px', fontSize:12, color:'#1a1a1a', textAlign:'right' as const, verticalAlign:'middle' as const }
   const tdTotal: React.CSSProperties = { ...td, background:'#EEF1FD', fontWeight:700 }
 
-  // Opciones del dropdown: meses pasados del año + último año
-  const opcionesFiltro: { key: FiltroPeriodo; label: string; group: string }[] = [
-    ...Array.from({ length: MES_ACTUAL + 1 }, (_, m) => ({
-      key: m as FiltroPeriodo,
-      label: m === MES_ACTUAL ? `${MESES[m]} (este mes)` : MESES[m],
-      group: '2026',
-    })).reverse(),
-    { key: 'anual', label: 'Último año', group: 'Acumulado' },
-  ]
 
   // Orden y agrupación P&L según PGC
   const PL_TEMPLATE: { codigo:string; nombre:string; tipo:'ingreso'|'gasto'; seccion:string }[] = [
@@ -545,14 +540,8 @@ export default function Presupuesto() {
         @media (max-width: 900px) { .pres-kgrid { grid-template-columns: 1fr 1fr !important; }
         @media (max-width: 1100px) { .pres-kgrid { grid-template-columns: 1fr 1fr !important; } } }
         @media (max-width: 600px) { .pres-kgrid { grid-template-columns: 1fr !important; } }
-        .pres-dd-item { display:flex; align-items:center; justify-content:space-between; width:100%; padding:8px 12px; font-size:13px; border:none; background:transparent; cursor:pointer; font-family:inherit; text-align:left; color:#1a1a1a; border-radius:7px; }
-        .pres-dd-item:hover { background:#F4F5F7; }
-        .pres-dd-item.active { color:#4361EE; font-weight:600; }
       `}</style>
 
-      {filtroOpen && (
-        <div onClick={() => setFiltroOpen(false)} style={{ position:'fixed', inset:0, zIndex:40 }} />
-      )}
 
       {/* ── Encabezado ── */}
       <div style={{ display:'flex', alignItems:'flex-start', justifyContent:'space-between', gap:12, flexWrap:'wrap' }}>
@@ -572,47 +561,7 @@ export default function Presupuesto() {
             <i className="ti ti-settings" style={{ fontSize:13 }} aria-hidden="true" />
             Configurar
           </button>
-          {/* Dropdown estilo imagen */}
-          <div style={{ position:'relative' }}>
-            <button
-              onClick={() => setFiltroOpen(o => !o)}
-              style={{
-                display:'inline-flex', alignItems:'center', gap:8,
-                padding:'8px 14px', fontSize:13, fontWeight:500,
-                border:'1px solid #E8E8EC', borderRadius:10,
-                background:'#F4F5F7', color:'#1a1a1a',
-                cursor:'pointer', fontFamily:'inherit',
-              }}>
-              {filtroLabel}
-              <i className="ti ti-chevron-down" style={{ fontSize:14, color:'#888' }} aria-hidden="true" />
-            </button>
-            {filtroOpen && (
-              <div style={{
-                position:'absolute', top:'calc(100% + 6px)', right:0, zIndex:50,
-                background:'#fff', border:'1px solid #E8E8EC', borderRadius:12,
-                padding:'6px', minWidth:180,
-                boxShadow:'0 4px 20px rgba(0,0,0,0.08)',
-              }}>
-                <div style={{ fontSize:9, fontWeight:700, color:'#B0B7C3', textTransform:'uppercase', letterSpacing:'0.1em', padding:'4px 12px 6px' }}>2026</div>
-                {opcionesFiltro.filter(o => o.group === '2026').map(o => (
-                  <button key={String(o.key)} className={`pres-dd-item${filtro===o.key?' active':''}`}
-                    onClick={() => { setFiltro(o.key); setFiltroOpen(false) }}>
-                    {o.label}
-                    {filtro === o.key && <i className="ti ti-check" style={{ fontSize:13 }} aria-hidden="true" />}
-                  </button>
-                ))}
-                <div style={{ height:'1px', background:'#F4F5F7', margin:'4px 0' }} />
-                <div style={{ fontSize:9, fontWeight:700, color:'#B0B7C3', textTransform:'uppercase', letterSpacing:'0.1em', padding:'4px 12px 6px' }}>Acumulado</div>
-                {opcionesFiltro.filter(o => o.group === 'Acumulado').map(o => (
-                  <button key={String(o.key)} className={`pres-dd-item${filtro===o.key?' active':''}`}
-                    onClick={() => { setFiltro(o.key); setFiltroOpen(false) }}>
-                    {o.label}
-                    {filtro === o.key && <i className="ti ti-check" style={{ fontSize:13 }} aria-hidden="true" />}
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
+          <PeriodoFilter value={periodo} open={open} setOpen={setOpen} onChange={setPeriodo} meses={periodos} />
 
         </div>
       </div>
