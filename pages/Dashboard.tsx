@@ -3,6 +3,8 @@ import Layout from '@/components/Layout'
 import { useDatos } from '@/contexts/DataContext'
 import { buildResumen } from '@/lib/contabilidad'
 import { getPlan } from '@/lib/presupuesto'
+import { usePeriodo } from '@/hooks/usePeriodo'
+import PeriodoFilter from '@/components/PeriodoFilter'
 import {
   ComposedChart, Bar, Line, AreaChart, Area, XAxis, YAxis,
   CartesianGrid, Tooltip, ResponsiveContainer,
@@ -107,18 +109,22 @@ export default function Dashboard() {
   useEffect(() => { getPlan().then(p => setPlanPartidas((p as any) ?? [])).catch(() => {}) }, [])
 
   const dias = diasRestantesMes()
-  const [filtroOpen, setFiltroOpen] = useState(false)
-  const [filtro, setFiltro] = useState<string>('anual')   // 'anual' | ym ('2026-05')
-  const opciones = [{ key: 'anual', label: 'Este año' }, ...[...evol].reverse().map(e => ({ key: e.ym, label: e.mes }))]
-  const filtroLabel = filtro === 'anual' ? 'Este año' : (evol.find(e => e.ym === filtro)?.mes ?? 'Mes')
 
-  // Cifras según el filtro
-  const mes = filtro === 'anual' ? null : evol.find(e => e.ym === filtro)
-  const ingresosVal  = mes ? mes.ingresos : resumen.ingresos
-  const ebitdaVal    = mes ? mes.ebitda   : resumen.ebitda
+  // ── Filtro de periodo compartido (mes · trimestre · anual) ──
+  const periodos = useMemo(() => evol.map(e => ({ ym: e.ym, label: e.mes })), [evol])
+  const { periodo, setPeriodo, open, setOpen, yms, label: filtroLabel } = usePeriodo(periodos, 'anual')
+
+  const esAnual = periodo === 'anual'
+  const sel = evol.filter(e => yms.includes(e.ym))         // meses que abarca el periodo
+  const ultimo = sel.length ? sel[sel.length - 1] : null   // último mes (para saldos de fin de periodo)
+
+  // Flujos (Ingresos, EBITDA): se suman. Para 'anual' usamos el agregado precalculado.
+  const ingresosVal  = esAnual ? resumen.ingresos : sel.reduce((a, e) => a + e.ingresos, 0)
+  const ebitdaVal    = esAnual ? resumen.ebitda   : sel.reduce((a, e) => a + e.ebitda, 0)
   const margenVal    = ingresosVal > 0 ? ((ebitdaVal / ingresosVal) * 100).toFixed(1) + '%' : '—'
-  const tesoreriaVal = mes ? mes.tesoreria : resumen.tesoreria
-  const dsoVal       = mes ? mes.dso       : resumen.dso
+  // Saldos de fin de periodo (Tesorería, DSO): NO se suman -> último mes del periodo.
+  const tesoreriaVal = esAnual ? resumen.tesoreria : (ultimo ? ultimo.tesoreria : resumen.tesoreria)
+  const dsoVal       = esAnual ? resumen.dso       : (ultimo ? ultimo.dso : resumen.dso)
 
   // Burn rate (media de gastos de los meses con gasto) y runway
   const conGasto = evol.filter(e => e.gastos > 0)
@@ -128,7 +134,7 @@ export default function Dashboard() {
   // ── Comparativa vs plan (plan guardado en Supabase) ──
   const hayPlan = planPartidas.length > 0
   const mesesData = evol.filter(e => e.ingresos > 0 || e.gastos > 0).map(e => parseInt(e.ym.slice(5, 7), 10) - 1)
-  const idxPeriodo = mes ? [parseInt(mes.ym.slice(5, 7), 10) - 1] : mesesData
+  const idxPeriodo = esAnual ? mesesData : sel.map(e => parseInt(e.ym.slice(5, 7), 10) - 1)
   const planDe = (tipo: 'ingreso' | 'gasto') => planPartidas
     .filter(p => p.tipo === tipo)
     .reduce((a, p) => a + idxPeriodo.reduce((sm, mi) => sm + (p.planMensual[mi] ?? 0), 0), 0)
@@ -156,33 +162,13 @@ export default function Dashboard() {
         @media (max-width:768px){ .kpi-row{grid-template-columns:1fr!important} }
       `}</style>
 
-      {filtroOpen && <div onClick={() => setFiltroOpen(false)} style={{ position: 'fixed', inset: 0, zIndex: 40 }} />}
-
       {/* Encabezado */}
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
         <div>
           <div style={{ fontSize: 22, fontWeight: 700, color: '#1a1a1a', letterSpacing: '-0.4px', marginBottom: 3 }}>Resumen</div>
           <div style={{ fontSize: 13, color: '#888' }}>Visión consolidada del estado financiero de tu empresa</div>
         </div>
-        <div style={{ position: 'relative' }}>
-          <button onClick={() => setFiltroOpen(o => !o)}
-            style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '8px 14px', fontSize: 13, fontWeight: 500, border: '1px solid #E8E8EC', borderRadius: 10, background: '#F4F5F7', color: '#1a1a1a', cursor: 'pointer', fontFamily: 'inherit' }}>
-            {filtroLabel}
-            <i className="ti ti-chevron-down" style={{ fontSize: 14, color: '#888' }} aria-hidden="true" />
-          </button>
-          {filtroOpen && (
-            <div style={{ position: 'absolute', top: 'calc(100% + 6px)', right: 0, zIndex: 50, background: '#fff', border: '1px solid #E8E8EC', borderRadius: 12, padding: '6px', minWidth: 180, maxHeight: 300, overflowY: 'auto', boxShadow: '0 4px 20px rgba(0,0,0,0.08)' }}>
-              {opciones.map(o => (
-                <button key={o.key} type="button"
-                  onClick={() => { setFiltro(o.key); setFiltroOpen(false) }}
-                  style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', padding: '8px 12px', fontSize: 13, border: 'none', borderRadius: 7, cursor: 'pointer', fontFamily: 'inherit', textAlign: 'left', background: filtro === o.key ? '#EEF1FD' : 'transparent', color: filtro === o.key ? '#4361EE' : '#1a1a1a', fontWeight: filtro === o.key ? 600 : 400 }}>
-                  {o.label}
-                  {filtro === o.key && <i className="ti ti-check" style={{ fontSize: 13 }} aria-hidden="true" />}
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
+        <PeriodoFilter value={periodo} open={open} setOpen={setOpen} onChange={setPeriodo} meses={periodos} />
       </div>
 
       {/* CFO Brainfi */}
