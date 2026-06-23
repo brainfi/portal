@@ -4,9 +4,8 @@ import { useAuth } from '@/contexts/AuthContext'
 const navGroups = [
   { section:'General', items:[
     { label:'Resumen',     path:'/',                       icon:<GridIcon/>,    disabled:false },
+    { label:'Previsiones', path:'/previsiones',            icon:<ForecastIcon/>, disabled:false },
     { label:'Cobros',      path:'/cobros',                 icon:<CobrosIcon/>,  disabled:false },
-    { label:'Pagos',       path:'/pagos',                  icon:<PagosIcon/>,   disabled:false },
-    { label:'Presupuesto', path:'/presupuesto',            icon:<TableIcon/>,   disabled:false },
   ]},
   { section:'Admin', items:[
     { label:'Configurar',  path:'/presupuesto/configurar', icon:<ConfigIcon/>,  disabled:false },
@@ -94,3 +93,4 @@ function CobrosIcon() { return <svg width="14" height="14" viewBox="0 0 16 16" f
 function PagosIcon()  { return <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><rect x="1" y="3" width="14" height="10" rx="1.5"/><line x1="1" y1="7" x2="15" y2="7"/><line x1="4" y1="11" x2="7" y2="11"/></svg> }
 function TableIcon()  { return <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><rect x="1" y="1" width="14" height="14" rx="1.5"/><line x1="1" y1="5" x2="15" y2="5"/><line x1="1" y1="9" x2="15" y2="9"/><line x1="5" y1="5" x2="5" y2="15"/></svg> }
 function ConfigIcon() { return <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="8" cy="8" r="2"/><path d="M8 1v2M8 13v2M1 8h2M13 8h2M3.1 3.1l1.4 1.4M11.5 11.5l1.4 1.4M3.1 12.9l1.4-1.4M11.5 4.5l1.4-1.4"/></svg> }
+function ForecastIcon() { return <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M2 11l4-4 3 3 5-6"/><path d="M11 4h3v3"/></svg> }

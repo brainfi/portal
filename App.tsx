@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { AuthProvider, useAuth } from '@/contexts/AuthContext'
 import { DataProvider } from '@/contexts/DataContext'
+import { ScenariosProvider } from '@/contexts/ScenariosContext'
 import Login from '@/pages/Login'
 import Dashboard from '@/pages/Dashboard'
 import Ajustes from '@/pages/Ajustes'
@@ -8,6 +9,7 @@ import Presupuesto from '@/pages/Presupuesto'
 import Cobros from '@/pages/Cobros'
 import Pagos from '@/pages/Pagos'
 import PresupuestoConfig from '@/pages/PresupuestoConfig'
+import Previsiones from '@/pages/Previsiones'
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth()
@@ -31,6 +33,7 @@ function AppRoutes() {
     <Routes>
       <Route path="/login" element={user ? <Navigate to="/" replace /> : <Login />} />
       <Route path="/" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+      <Route path="/previsiones" element={<ProtectedRoute><Previsiones /></ProtectedRoute>} />
       <Route path="/cobros" element={<ProtectedRoute><Cobros /></ProtectedRoute>} />
       <Route path="/pagos" element={<ProtectedRoute><Pagos /></ProtectedRoute>} />
       <Route path="/presupuesto" element={<ProtectedRoute><Presupuesto /></ProtectedRoute>} />
@@ -45,9 +48,11 @@ export default function App() {
   return (
     <AuthProvider>
       <DataProvider>
-        <BrowserRouter>
-          <AppRoutes />
-        </BrowserRouter>
+        <ScenariosProvider>
+          <BrowserRouter>
+            <AppRoutes />
+          </BrowserRouter>
+        </ScenariosProvider>
       </DataProvider>
     </AuthProvider>
   )
