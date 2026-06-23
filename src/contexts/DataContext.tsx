@@ -33,7 +33,6 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
   const [syncedAt, setSyncedAt] = useState<string | null>(null)
 
   const refresh = useCallback(async () => {
-    if (!user) return
     setLoading(true)
     setError(null)
     try {
