@@ -17,6 +17,11 @@ export interface Conexion {
 
 // Lee la conexión guardada del usuario actual (RLS devuelve solo su fila).
 export async function getConnection(): Promise<Conexion | null> {
+  console.log('1. fetchDatos arranca')
+  const { data: { session } } = await supabase.auth.getSession()
+  console.log('2. session:', session ? 'SÍ hay' : 'NO hay')
+  if (!session) throw new SheetError('no_session', 'No hay sesión activa.')
+  console.log('3. a punto de llamar a sheets-cobros')
   const { data, error } = await supabase
     .from('data_source')
     .select('sheet_id, sheet_url, last_synced_at')

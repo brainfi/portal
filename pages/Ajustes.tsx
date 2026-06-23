@@ -43,6 +43,16 @@ export default function Ajustes() {
 
   const handleConnect = async () => {
     setConectando(true); setConnErr('')
+    console.log('X. handleConnect arranca, sheetUrl =', sheetUrl)
+    try {
+      await saveConnection(sheetUrl)
+      console.log('Y. saveConnection OK, llamando refresh')
+      await refresh()
+      console.log('Z. refresh terminó')
+    }
+    catch (e: any) { console.log('ERROR:', e?.message); setConnErr(e?.message ?? String(e)) }
+    finally { setConectando(false) }
+    setConectando(true); setConnErr('')
     try { await saveConnection(sheetUrl); await refresh() }
     catch (e: any) { setConnErr(e?.message ?? String(e)) }
     finally { setConectando(false) }

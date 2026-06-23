@@ -33,6 +33,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
   const [syncedAt, setSyncedAt] = useState<string | null>(null)
 
   const refresh = useCallback(async () => {
+    console.log('CORRE EL DE RAIZ')
     setLoading(true)
     setError(null)
     try {
