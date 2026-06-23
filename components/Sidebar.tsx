@@ -4,8 +4,10 @@ import { useAuth } from '@/contexts/AuthContext'
 const navGroups = [
   { section:'General', items:[
     { label:'Resumen',     path:'/',                       icon:<GridIcon/>,    disabled:false },
-    { label:'Previsiones', path:'/previsiones',            icon:<ForecastIcon/>, disabled:false },
     { label:'Cobros',      path:'/cobros',                 icon:<CobrosIcon/>,  disabled:false },
+    { label:'Pagos',       path:'/pagos',                  icon:<PagosIcon/>,   disabled:false },
+    { label:'Presupuesto', path:'/presupuesto',            icon:<TableIcon/>,   disabled:false },
+    { label:'Previsiones', path:'/previsiones',            icon:<ForecastIcon/>, disabled:false },
   ]},
   { section:'Admin', items:[
     { label:'Configurar',  path:'/presupuesto/configurar', icon:<ConfigIcon/>,  disabled:false },
