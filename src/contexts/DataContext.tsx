@@ -33,11 +33,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
   const [syncedAt, setSyncedAt] = useState<string | null>(null)
 
   const refresh = useCallback(async () => {
-    console.log('CORRE EL DE SRC')
-    console.log('A. refresh arranca')
     setLoading(true)
-    setLoading(true)
-    setError(null)
     try {
       const r = await fetchDatos()
       setData({

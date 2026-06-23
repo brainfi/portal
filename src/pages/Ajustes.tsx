@@ -43,7 +43,10 @@ export default function Ajustes() {
 
   const handleConnect = async () => {
     setConectando(true); setConnErr('')
-    try { await saveConnection(sheetUrl); await refresh() }
+    try {
+      await saveConnection(sheetUrl)
+      await refresh()
+    }
     catch (e: any) { setConnErr(e?.message ?? String(e)) }
     finally { setConectando(false) }
   }
