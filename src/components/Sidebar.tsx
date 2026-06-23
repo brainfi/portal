@@ -8,7 +8,6 @@ const navGroups = [
     { label:'Escenarios', path:'/escenarios', icon:<ScenarioIcon/>, disabled:true },
     { label:'Cashflow', path:'/cashflow', icon:<CashflowIcon/>, disabled:true },
     { label:'Análisis', path:'/analisis', icon:<ChartIcon/>, disabled:true },
-    { label:'Impuestos', path:'/impuestos', icon:<TaxIcon/>, disabled:false },
   ]},
   { section:'Admin', items:[
     { label:'Ajustes', path:'/ajustes', icon:<SettingsIcon/>, disabled:false },
