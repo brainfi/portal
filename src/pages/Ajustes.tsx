@@ -57,7 +57,7 @@ export default function Ajustes() {
     : dsError?.code === 'no_access' ? 'Sin acceso · comparte tu hoja con el email de abajo'
     : dsError?.code === 'not_found' ? 'No encontramos la hoja · revisa la URL'
     : dsError ? `Error: ${dsError.message}`
-    : data ? `Conectada · ${data.clientes.length} clientes, ${data.facturas.length} facturas${syncedAt ? ' · ' + new Date(syncedAt).toLocaleString('es-ES') : ''}`
+    : data ? `Conectada · ${data.diario.length} apuntes leídos${syncedAt ? ' · ' + new Date(syncedAt).toLocaleString('es-ES') : ''}`
     : 'Sin conectar'
   const [nombre, setNombre] = useState('')
   const [empresa, setEmpresa] = useState('')
