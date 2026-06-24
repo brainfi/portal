@@ -8,6 +8,7 @@ const navGroups = [
     { label:'Pagos',       path:'/pagos',                  icon:<PagosIcon/>,   disabled:false },
     { label:'Presupuesto', path:'/presupuesto',            icon:<TableIcon/>,   disabled:false },
     { label:'Previsiones', path:'/previsiones',            icon:<ForecastIcon/>, disabled:false },
+    { label:'Escenarios', path:'/escenarios',              icon:<ScenarioIcon/>, disabled:false },
   ]},
   { section:'Admin', items:[
     { label:'Configurar',  path:'/presupuesto/configurar', icon:<ConfigIcon/>,  disabled:false },

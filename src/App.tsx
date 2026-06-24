@@ -10,6 +10,7 @@ import Pagos from '@/pages/Pagos'
 import Presupuesto from '@/pages/Presupuesto'
 import PresupuestoConfig from '@/pages/PresupuestoConfig'
 import Previsiones from '@/pages/Previsiones'
+import Escenarios from '@/pages/Escenarios'
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth()
@@ -40,6 +41,7 @@ function AppRoutes() {
       <Route path="/presupuesto/configurar" element={<ProtectedRoute><PresupuestoConfig /></ProtectedRoute>} />
       <Route path="/ajustes" element={<ProtectedRoute><Ajustes /></ProtectedRoute>} />
       <Route path="*" element={<Navigate to="/" replace />} />
+      <Route path="/escenarios" element={<ProtectedRoute><Escenarios /></ProtectedRoute>} />
     </Routes>
   )
 }
