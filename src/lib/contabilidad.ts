@@ -321,86 +321,26 @@ export function buildReal(
   }
   return { real, mesesConReal: Array.from(meses).sort((x, y) => x - y) }
 }
-// ─── Presupuesto: cuenta de resultados plan vs real, hasta EBITDA ───────────────
-// Agrega plan y real por grupos de la P&L usando el prefijo de cuenta PGC,
-// sobre el rango de meses `yms` del filtro de periodo compartido.
-
-export interface LineaPYG {
-  clave: string
-  label: string
-  tipo: 'ingreso' | 'gasto' | 'subtotal'
-  plan: number
-  real: number
-  desviacion: number    // real - plan
-  favorable: boolean
-  destacado?: boolean   // subtotales (Margen bruto, EBITDA)
-}
-
-// Grupo PGC de una cuenta para la cuenta de resultados.
-function grupoPYG(cuenta: string): 'ingresos' | 'aprovisionamientos' | 'personal' | 'otros' | null {
-  if (/^7[0-5]/.test(cuenta)) return 'ingresos'
-  if (/^60/.test(cuenta)) return 'aprovisionamientos'
-  if (/^64/.test(cuenta)) return 'personal'
-  if (/^6[1-2]/.test(cuenta) || /^62/.test(cuenta) || /^65/.test(cuenta)) return 'otros'
-  if (/^6/.test(cuenta) && !/^66/.test(cuenta) && !/^63/.test(cuenta)) return 'otros'
-  return null
-}
-
-/**
- * @param rows  filas del Diario
- * @param plan  partidas del plan (getPlan)
- * @param yms   meses del periodo activo, p.ej. ['2026-01','2026-02','2026-03']
- *              (de usePeriodo). Vacío = sin datos.
- */
-export function buildPresupuestoPYG(
+// ─── Real por familia de cuenta PGC, en un rango de meses ──────────────────────
+// Devuelve el importe real de las cuentas que empiezan por `prefijo`, sumando
+// solo los apuntes cuyos meses (yyyy-mm) estén en `yms`. `tipo` fija el signo:
+// ingresos = haber-debe, gastos = debe-haber.
+export function realPorCuenta(
   rows: Record<string, string>[],
-  plan: PartidaPlan[],
+  prefijo: string,
+  tipo: 'ingreso' | 'gasto',
   yms: string[],
-): LineaPYG[] {
+): number {
   const ap = parseDiario(rows)
   const setYms = new Set(yms)
-  const mesEnRango = (d: Date | null) => d ? setYms.has(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`) : false
-
-  // ── REAL agregado por grupo P&L (solo meses del periodo) ──
-  const real = { ingresos: 0, aprovisionamientos: 0, personal: 0, otros: 0 }
+  const enRango = (d: Date | null) =>
+    d ? setYms.has(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`) : false
+  const pref = prefijo.padEnd(3, '0').slice(0, prefijo.length) // normaliza ("700")
+  let total = 0
   for (const a of ap) {
-    if (!mesEnRango(a.fechaReg)) continue
-    const g = grupoPYG(a.cuenta)
-    if (!g) continue
-    if (g === 'ingresos') real.ingresos += (a.haber - a.debe)
-    else real[g] += (a.debe - a.haber)
+    if (!enRango(a.fechaReg)) continue
+    if (!a.cuenta.startsWith(prefijo)) continue
+    total += tipo === 'ingreso' ? (a.haber - a.debe) : (a.debe - a.haber)
   }
-
-  // ── PLAN agregado por grupo P&L (solo meses del periodo) ──
-  // Índices de mes (0-11) que abarca el periodo. Usamos los del propio plan: si
-  // el plan es de 12 meses, sumamos los meses presentes en yms.
-  const mesesIdx = Array.from(setYms).map(ym => parseInt(ym.slice(5, 7), 10) - 1)
-  const plan_ = { ingresos: 0, aprovisionamientos: 0, personal: 0, otros: 0 }
-  for (const p of plan) {
-    const g = grupoPYG(p.cuentaCodigo.padEnd(3, '0'))
-    if (!g) continue
-    const suma = mesesIdx.reduce((s, mi) => s + (p.planMensual[mi] ?? 0), 0)
-    plan_[g] += suma
-  }
-
-  const margenPlan = plan_.ingresos - plan_.aprovisionamientos
-  const margenReal = real.ingresos - real.aprovisionamientos
-  const ebitdaPlan = margenPlan - plan_.personal - plan_.otros
-  const ebitdaReal = margenReal - real.personal - real.otros
-
-  const linea = (clave: string, label: string, tipo: LineaPYG['tipo'], pl: number, re: number, destacado = false): LineaPYG => {
-    const desviacion = re - pl
-    // favorable: ingresos/subtotales mejor si real>=plan; gastos mejor si real<=plan
-    const favorable = tipo === 'gasto' ? re <= pl : re >= pl
-    return { clave, label, tipo, plan: pl, real: re, desviacion, favorable, destacado }
-  }
-
-  return [
-    linea('ingresos', 'Ingresos de explotación', 'ingreso', plan_.ingresos, real.ingresos),
-    linea('aprov', 'Aprovisionamientos', 'gasto', plan_.aprovisionamientos, real.aprovisionamientos),
-    linea('margen', 'Margen bruto', 'subtotal', margenPlan, margenReal, true),
-    linea('personal', 'Gastos de personal', 'gasto', plan_.personal, real.personal),
-    linea('otros', 'Otros gastos de explotación', 'gasto', plan_.otros, real.otros),
-    linea('ebitda', 'EBITDA', 'subtotal', ebitdaPlan, ebitdaReal, true),
-  ]
+  return total
 }

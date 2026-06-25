@@ -1,8 +1,8 @@
 import { useState, useMemo, useEffect } from 'react'
 import Layout from '@/components/Layout'
 import { useDatos } from '@/contexts/DataContext'
-import { buildResumen } from '@/lib/contabilidad'
-import { getPlan } from '@/lib/presupuesto'
+import { buildResumen, realPorCuenta } from '@/lib/contabilidad'
+import { getPlan, type PartidaPlan } from '@/lib/presupuesto'
 import { usePeriodo } from '@/hooks/usePeriodo'
 import PeriodoFilter from '@/components/PeriodoFilter'
 import {
@@ -105,8 +105,8 @@ export default function Dashboard() {
   const { data, loading, error } = useDatos()
   const resumen = useMemo(() => buildResumen(data?.diario ?? []), [data])
   const evol = resumen.evolucion
-  const [planPartidas, setPlanPartidas] = useState<{ tipo: 'ingreso' | 'gasto'; planMensual: number[] }[]>([])
-  useEffect(() => { getPlan().then(p => setPlanPartidas((p as any) ?? [])).catch(() => {}) }, [])
+  const [planPartidas, setPlanPartidas] = useState<PartidaPlan[]>([])
+  useEffect(() => { getPlan().then(p => setPlanPartidas(p ?? [])).catch(() => {}) }, [])
 
   const dias = diasRestantesMes()
 
@@ -140,6 +140,24 @@ export default function Dashboard() {
     .reduce((a, p) => a + idxPeriodo.reduce((sm, mi) => sm + (p.planMensual[mi] ?? 0), 0), 0)
   const ingresosPlan = planDe('ingreso')
   const ebitdaPlan = ingresosPlan - planDe('gasto')
+  // ── Tabla de presupuesto: partidas con plan anual > 0, real por cuenta ──
+  const filasPpto = useMemo(() => planPartidas
+    .filter(p => (p.planAnual ?? 0) > 0)
+    .map(p => {
+      const plan = idxPeriodo.reduce((sm, mi) => sm + (p.planMensual[mi] ?? 0), 0)
+      const real = realPorCuenta(data?.diario ?? [], p.cuentaCodigo, p.tipo, yms)
+      const desviacion = real - plan
+      const favorable = p.tipo === 'ingreso' ? real >= plan : real <= plan
+      const cumplimiento = plan !== 0 ? (real / plan) * 100 : 0
+      return { ...p, plan, real, desviacion, favorable, cumplimiento }
+    }), [planPartidas, idxPeriodo, data, yms])
+
+  const totPptoIng = filasPpto.filter(f => f.tipo === 'ingreso')
+  const totPptoGas = filasPpto.filter(f => f.tipo === 'gasto')
+  const sumPlan = (arr: typeof filasPpto) => arr.reduce((a, f) => a + f.plan, 0)
+  const sumReal = (arr: typeof filasPpto) => arr.reduce((a, f) => a + f.real, 0)
+  const ebitdaPptoPlan = sumPlan(totPptoIng) - sumPlan(totPptoGas)
+  const ebitdaPptoReal = sumReal(totPptoIng) - sumReal(totPptoGas)
   const deltaVsPlan = (real: number, plan: number): { badge: 'up' | 'down' | 'neutral'; lbl: string } => {
     if (!hayPlan || plan === 0) return { badge: 'neutral', lbl: 'sin plan' }
     const d = ((real - plan) / Math.abs(plan)) * 100
@@ -296,6 +314,54 @@ export default function Dashboard() {
           </div>
         </div>
       </div>
+    {/* ── PRESUPUESTO: plan vs real por partida ── */}
+      {filasPpto.length > 0 && (
+        <div>
+          <div style={{ fontSize: 9, fontWeight: 700, color: '#B0B7C3', textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: 10 }}>
+            Presupuesto · {filtroLabel}
+          </div>
+          <div style={{ background: '#fff', borderRadius: 16, border: '1px solid #E8E8EC', padding: '20px 24px' }}>
+            <style>{`@media (max-width: 768px){ .dpto-hide{ display:none !important } .dpto-row{ grid-template-columns: 1.6fr 1fr 1.1fr !important } }`}</style>
+            <div className="dpto-row" style={{ display: 'grid', gridTemplateColumns: '1.8fr 1fr 1fr 1.1fr 70px', fontSize: 10, color: '#B0B7C3', fontWeight: 600, paddingBottom: 10, borderBottom: '1px solid #ECEEF3' }}>
+              <span>Partida</span>
+              <span className="dpto-hide" style={{ textAlign: 'right', paddingRight: 14 }}>Plan</span>
+              <span style={{ textAlign: 'right', paddingRight: 14 }}>Real</span>
+              <span style={{ textAlign: 'right', paddingRight: 14 }}>Desviación</span>
+              <span className="dpto-hide" style={{ textAlign: 'right' }}>Ejec.</span>
+            </div>
+
+            {[['Ingresos', totPptoIng], ['Gastos', totPptoGas]].map(([titulo, items]: any) => items.length > 0 && (
+              <div key={titulo}>
+                <div style={{ fontSize: 10, fontWeight: 700, color: '#B0B7C3', textTransform: 'uppercase', letterSpacing: '0.1em', padding: '12px 0 4px' }}>{titulo}</div>
+                {items.map((f: any) => (
+                  <div key={f.id} className="dpto-row" style={{ display: 'grid', gridTemplateColumns: '1.8fr 1fr 1fr 1.1fr 70px', alignItems: 'center', padding: '10px 0', borderBottom: '1px solid #F4F5F7' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 9 }}>
+                      <div style={{ width: 26, height: 26, borderRadius: 7, background: (f.color || '#4361EE') + '22', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                        <i className={`ti ${f.icono}`} aria-hidden="true" style={{ fontSize: 13, color: f.color || '#4361EE' }} />
+                      </div>
+                      <span style={{ fontSize: 13, color: '#1a1a1a' }}>{f.categoria}</span>
+                    </div>
+                    <span className="dpto-hide" style={{ fontSize: 12, color: '#888', textAlign: 'right', paddingRight: 14 }}>{fmt(f.plan)}</span>
+                    <span style={{ fontSize: 12, fontWeight: 600, color: '#1a1a1a', textAlign: 'right', paddingRight: 14 }}>{fmt(f.real)}</span>
+                    <span style={{ fontSize: 12, fontWeight: 600, color: f.favorable ? '#1a7a3a' : '#b01a2b', textAlign: 'right', paddingRight: 14 }}>{(f.desviacion >= 0 ? '+' : '−') + fmt(Math.abs(f.desviacion))}</span>
+                    <span className="dpto-hide" style={{ textAlign: 'right' }}>
+                      <span style={{ fontSize: 11, fontWeight: 600, color: f.favorable ? '#1a7a3a' : '#b01a2b', background: f.favorable ? '#d4f5df' : '#fdd', padding: '2px 7px', borderRadius: 99 }}>{isFinite(f.cumplimiento) ? Math.round(f.cumplimiento) + '%' : '—'}</span>
+                    </span>
+                  </div>
+                ))}
+              </div>
+            ))}
+
+            <div style={{ display: 'grid', gridTemplateColumns: '1.8fr 1fr 1fr 1.1fr 70px', alignItems: 'center', padding: '13px 0 2px', marginTop: 4, borderTop: '1px solid #ECEEF3' }}>
+              <span style={{ fontSize: 13, fontWeight: 700, color: '#1a1a1a' }}>EBITDA</span>
+              <span className="dpto-hide" style={{ fontSize: 12, fontWeight: 600, color: '#888', textAlign: 'right', paddingRight: 14 }}>{fmt(ebitdaPptoPlan)}</span>
+              <span style={{ fontSize: 13, fontWeight: 700, color: '#1a1a1a', textAlign: 'right', paddingRight: 14 }}>{fmt(ebitdaPptoReal)}</span>
+              <span style={{ fontSize: 12, fontWeight: 600, color: (ebitdaPptoReal >= ebitdaPptoPlan) ? '#1a7a3a' : '#b01a2b', textAlign: 'right', paddingRight: 14 }}>{((ebitdaPptoReal - ebitdaPptoPlan) >= 0 ? '+' : '−') + fmt(Math.abs(ebitdaPptoReal - ebitdaPptoPlan))}</span>
+              <span></span>
+            </div>
+          </div>
+        </div>
+      )}
     </Layout>
   )
 }
