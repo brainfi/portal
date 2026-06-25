@@ -72,7 +72,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
       }
 
   return (
-    <DataContext.Provider value={{ data: dataServida, loading, error, syncedAt, isDemo, refresh }}>
+    <DataContext.Provider value={{ data: dataServida, loading, error: isDemo ? null : error, syncedAt, isDemo, refresh }}>
       {children}
     </DataContext.Provider>
   )
