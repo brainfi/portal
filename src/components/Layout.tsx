@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '@/contexts/AuthContext'
+import { useDatos } from '@/contexts/DataContext'
 import Sidebar from './Sidebar'
 
 interface LayoutProps { children: React.ReactNode; title?: string }
@@ -23,6 +24,17 @@ const SEARCH_INDEX = [
 ]
 
 export default function Layout({ children, title = 'Resumen' }: LayoutProps) {
+  const { isDemo } = useDatos()
+  const [avisoReal, setAvisoReal] = useState(false)
+  const demoPrev = useRef(isDemo)
+  useEffect(() => {
+    if (demoPrev.current && !isDemo) {
+      setAvisoReal(true)
+      const t = setTimeout(() => setAvisoReal(false), 4000)
+      return () => clearTimeout(t)
+    }
+    demoPrev.current = isDemo
+  }, [isDemo])
   const { user } = useAuth()
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const navigate     = useNavigate()
@@ -161,6 +173,21 @@ export default function Layout({ children, title = 'Resumen' }: LayoutProps) {
               )}
             </div>
             <div style={{ width:34, height:34, borderRadius:8, background:'#4361EE', display:'flex', alignItems:'center', justifyContent:'center', fontSize:11, fontWeight:700, color:'#fff', cursor:'pointer', flexShrink:0 }}>{initials}</div>
+          {avisoReal && (
+          <div style={{ display:'flex', alignItems:'center', justifyContent:'center', gap:9, padding:'9px 16px', background:'#EAFAF0', borderBottom:'1px solid #B7E9C9', fontSize:12.5, color:'#1a7a3a', flexShrink:0 }}>
+            <i className="ti ti-circle-check" aria-hidden="true" style={{ fontSize:15, color:'#2DC653' }} />
+            <span><strong>Datos reales cargados.</strong> Ya estás viendo tu contabilidad.</span>
+          </div>
+        )}
+          {isDemo && (
+          <div style={{ display:'flex', alignItems:'center', justifyContent:'center', gap:10, padding:'9px 16px', background:'#EEF1FD', borderBottom:'1px solid #D6DCFA', fontSize:12.5, color:'#3B4A8C', flexShrink:0, flexWrap:'wrap' }}>
+            <i className="ti ti-flask" aria-hidden="true" style={{ fontSize:15, color:'#4361EE' }} />
+            <span>Estás viendo <strong>datos de demostración</strong>. Conecta tu hoja en Ajustes para ver tus números reales.</span>
+            <button onClick={() => navigate('/ajustes')} style={{ marginLeft:4, padding:'4px 12px', fontSize:12, fontWeight:600, color:'#fff', background:'#4361EE', border:'none', borderRadius:7, cursor:'pointer', fontFamily:'Inter,sans-serif' }}>
+              Conectar →
+            </button>
+          </div>
+        )}
           </div>
         </div>
         <main className="tb-main" style={{ flex:1, overflow:'auto', padding:'0 28px 28px', background:'#F4F5F7', display:'flex', flexDirection:'column', gap:14 }}>

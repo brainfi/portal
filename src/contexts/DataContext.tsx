@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState, useCallback } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
 import { fetchDatos, SheetError } from '@/lib/sheets'
+import { DIARIO_DEMO } from '@/lib/demoData'
 
 export interface DatosRaw {
   diario: Record<string, string>[]
@@ -16,12 +17,14 @@ interface DatosState {
   loading: boolean
   error: { code: string; message: string } | null
   syncedAt: string | null
+  /** true cuando se están mostrando datos de demostración (sin hoja conectada). */
+  isDemo: boolean
   /** Vuelve a leer la hoja. Úsalo tras conectar/cambiar la hoja en Ajustes. */
   refresh: () => Promise<void>
 }
 
 const DataContext = createContext<DatosState>({
-  data: null, loading: false, error: null, syncedAt: null,
+  data: null, loading: false, error: null, syncedAt: null, isDemo: false,
   refresh: async () => {},
 })
 
@@ -58,8 +61,18 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     else { setData(null); setSyncedAt(null); setError(null) }
   }, [user, refresh])
 
+// ── Demo: si no hay diario real con apuntes, servimos el Diario de demostración ──
+  const tieneReal = !!data && Array.isArray(data.diario) && data.diario.length > 0
+  const isDemo = !loading && !tieneReal
+  const dataServida: DatosRaw | null = tieneReal
+    ? data
+    : {
+        diario: DIARIO_DEMO,
+        clientes: [], facturas: [], pagos: [], prestamos: [], presupuesto: [],
+      }
+
   return (
-    <DataContext.Provider value={{ data, loading, error, syncedAt, refresh }}>
+    <DataContext.Provider value={{ data: dataServida, loading, error, syncedAt, isDemo, refresh }}>
       {children}
     </DataContext.Provider>
   )
