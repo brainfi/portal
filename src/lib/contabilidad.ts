@@ -1,3 +1,4 @@
+import type { PartidaPlan } from '@/lib/presupuesto'
 // Motor contable: interpreta el libro mayor (pestaña Diario) y deriva las vistas
 // del portal usando la lógica de grupos del PGC español.
 
@@ -319,4 +320,85 @@ export function buildReal(
     meses.add(a.fechaReg.getMonth())
   }
   return { real, mesesConReal: Array.from(meses).sort((x, y) => x - y) }
+}
+// ─── Presupuesto: plan vs real ─────────────────────────────────────────────
+// Cruza el plan presupuestario (por cuenta PGC y mes) con el real del Diario.
+
+export interface FilaPresupuesto {
+  id: number
+  categoria: string
+  cuentaCodigo: string
+  tipo: 'ingreso' | 'gasto'
+  color: string
+  icono: string
+  plan: number
+  real: number
+  desviacion: number
+  favorable: boolean
+  cumplimiento: number
+}
+
+export interface ResumenPresupuesto {
+  filas: FilaPresupuesto[]
+  totalPlanIngresos: number
+  totalRealIngresos: number
+  totalPlanGastos: number
+  totalRealGastos: number
+}
+
+export function buildPresupuesto(
+  rows: Record<string, string>[],
+  plan: PartidaPlan[],
+  modo: 'mes' | 'ytd',
+  mesIdx: number,
+): ResumenPresupuesto {
+  const ap = parseDiario(rows)
+
+  const realPorPrefijo = new Map<string, number[]>()
+  const ensure = (p: string) => {
+    if (!realPorPrefijo.has(p)) realPorPrefijo.set(p, new Array(12).fill(0))
+    return realPorPrefijo.get(p)!
+  }
+
+  const prefijos = Array.from(new Set(plan.map(p => p.cuentaCodigo)))
+
+  for (const a of ap) {
+    if (!a.fechaReg) continue
+    const mes = a.fechaReg.getMonth()
+    for (const pref of prefijos) {
+      if (a.cuenta.startsWith(pref)) {
+        const part = plan.find(p => p.cuentaCodigo === pref)
+        const val = part?.tipo === 'gasto' ? (a.debe - a.haber) : (a.haber - a.debe)
+        ensure(pref)[mes] += val
+      }
+    }
+  }
+
+  const sumaPeriodo = (arr: number[]) =>
+    modo === 'mes' ? (arr[mesIdx] ?? 0) : arr.slice(0, mesIdx + 1).reduce((s, v) => s + v, 0)
+
+  const filas: FilaPresupuesto[] = plan.map(p => {
+    const planArr = p.planMensual ?? []
+    const plan_ = modo === 'mes' ? (planArr[mesIdx] ?? 0) : planArr.slice(0, mesIdx + 1).reduce((s, v) => s + v, 0)
+    const real_ = sumaPeriodo(realPorPrefijo.get(p.cuentaCodigo) ?? new Array(12).fill(0))
+    const desviacion = real_ - plan_
+    const favorable = p.tipo === 'ingreso' ? real_ >= plan_ : real_ <= plan_
+    const cumplimiento = plan_ !== 0 ? (real_ / plan_) * 100 : 0
+    return {
+      id: p.id, categoria: p.categoria, cuentaCodigo: p.cuentaCodigo, tipo: p.tipo,
+      color: p.color, icono: p.icono,
+      plan: plan_, real: real_, desviacion, favorable, cumplimiento,
+    }
+  })
+
+  const sumBy = (tipo: 'ingreso' | 'gasto', campo: 'plan' | 'real') =>
+    filas.filter(f => f.tipo === tipo).reduce((s, f) => s + f[campo], 0)
+
+  return {
+    filas,
+    totalPlanIngresos: sumBy('ingreso', 'plan'),
+    totalRealIngresos: sumBy('ingreso', 'real'),
+    totalPlanGastos: sumBy('gasto', 'plan'),
+    totalRealGastos: sumBy('gasto', 'real'),
+  }
 }

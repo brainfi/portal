@@ -1,365 +1,221 @@
 import Layout from '@/components/Layout'
 import { useNavigate } from 'react-router-dom'
-import { useMemo, useState } from 'react'
+import { useMemo, useState, useEffect } from 'react'
 import {
-  ComposedChart, Area, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine,
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell, Legend,
 } from 'recharts'
-import { useScenarios } from '@/contexts/ScenariosContext'
 import { useDatos } from '@/contexts/DataContext'
-import { buildResumen } from '@/lib/contabilidad'
-import { construirPrevision, type FilaPrevision } from '@/lib/forecast'
+import { buildPresupuesto, type FilaPresupuesto } from '@/lib/contabilidad'
+import { getPlan, type PartidaPlan } from '@/lib/presupuesto'
 
-const HORIZONTES = [3, 6, 12]
+const MESES = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic']
 
-const card: React.CSSProperties = { background:'#fff', borderRadius:16, border:'1px solid #E8E8EC' }
-const sectionLbl: React.CSSProperties = { fontSize:9, fontWeight:600, color:'#999', textTransform:'uppercase', letterSpacing:'0.12em' }
+const card: React.CSSProperties = { background: '#fff', borderRadius: 16, border: '1px solid #E8E8EC' }
+const sectionLbl: React.CSSProperties = { fontSize: 9, fontWeight: 600, color: '#999', textTransform: 'uppercase', letterSpacing: '0.12em' }
 
 function fmt(n: number) {
   return Math.round(n).toLocaleString('es-ES') + ' €'
 }
-function fmtK(n: number) {
-  return `€${Math.round(n / 1000)}k`
+function fmtDelta(n: number) {
+  const s = n >= 0 ? '+' : '−'
+  return `${s}${Math.abs(Math.round(n)).toLocaleString('es-ES')} €`
 }
 function pct(n: number) {
   if (!isFinite(n)) return '—'
-  const s = n >= 0 ? '+' : '−'
-  return `${s}${Math.abs(n).toFixed(1)}%`
+  return `${Math.round(n)}%`
 }
 
-function ChartTooltip({ active, payload, label }: any) {
+function BarTooltip({ active, payload, label }: any) {
   if (!active || !payload?.length) return null
-  const get = (k: string) => payload.find((p: any) => p.dataKey === k)?.value
-  const hist = get('cajaHist'), base = get('cajaBase'), esc = get('cajaEsc')
   return (
-    <div style={{ background:'#fff', border:'1px solid #E8E8EC', borderRadius:10, padding:'10px 14px', fontSize:12 }}>
-      <div style={{ fontWeight:600, color:'#1a1a1a', marginBottom:8 }}>{label}</div>
-      {hist != null && <Row color="#3B5BDB" lbl="Caja real" val={fmt(hist)} />}
-      {base != null && <Row color="#7DD3FC" lbl="Previsión base" val={fmt(base)} />}
-      {esc != null && esc !== base && <Row color="#2DC653" lbl="Con escenarios" val={fmt(esc)} />}
-    </div>
-  )
-}
-function Row({ color, lbl, val }: { color:string; lbl:string; val:string }) {
-  return (
-    <div style={{ display:'flex', alignItems:'center', gap:6, marginBottom:4 }}>
-      <div style={{ width:7, height:7, borderRadius:2, background:color }} />
-      <span style={{ color:'#666' }}>{lbl}: <strong style={{ color:'#1a1a1a', fontWeight:600 }}>{val}</strong></span>
+    <div style={{ background: '#fff', border: '1px solid #E8E8EC', borderRadius: 10, padding: '10px 14px', fontSize: 12 }}>
+      <div style={{ fontWeight: 600, color: '#1a1a1a', marginBottom: 8 }}>{label}</div>
+      {payload.map((p: any) => (
+        <div key={p.dataKey} style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
+          <div style={{ width: 7, height: 7, borderRadius: 2, background: p.fill }} />
+          <span style={{ color: '#666' }}>{p.dataKey === 'plan' ? 'Plan' : 'Real'}: <strong style={{ color: '#1a1a1a' }}>{fmt(p.value)}</strong></span>
+        </div>
+      ))}
     </div>
   )
 }
 
-function Toggle({ on, onToggle }: { on: boolean; onToggle: () => void }) {
-  return (
-    <div onClick={onToggle} style={{ width:36, height:20, background: on ? '#4361EE' : '#E8E8EC', borderRadius:99, position:'relative', cursor:'pointer', flexShrink:0, transition:'background .15s' }}>
-      <div style={{ position:'absolute', width:14, height:14, background:'#fff', borderRadius:'50%', top:3, left: on ? 19 : 3, transition:'left .15s' }} />
-    </div>
-  )
-}
-
-export default function Previsiones() {
+export default function Presupuesto() {
   const navigate = useNavigate()
-  const { escenarios, toggle } = useScenarios()
-  const { data, loading } = useDatos()
-  const [horizonte, setHorizonte] = useState(6)
-  const [verEscenarios, setVerEscenarios] = useState(true)
+  const { data } = useDatos()
+  const [plan, setPlan] = useState<PartidaPlan[] | null>(null)
+  const [cargandoPlan, setCargandoPlan] = useState(true)
+  const [modo, setModo] = useState<'mes' | 'ytd'>('mes')
+  const [mesIdx, setMesIdx] = useState(new Date().getMonth())
 
-  const activos = escenarios.filter(e => e.activo)
+  useEffect(() => {
+    getPlan().then(setPlan).catch(() => setPlan(null)).finally(() => setCargandoPlan(false))
+  }, [])
 
-  // ── Histórico REAL derivado del Diario ──
-  const resumen = useMemo(() => buildResumen(data?.diario ?? []), [data])
-  const evol = resumen.evolucion
+  const resumen = useMemo(() => {
+    if (!plan) return null
+    return buildPresupuesto(data?.diario ?? [], plan, modo, mesIdx)
+  }, [data, plan, modo, mesIdx])
 
-  const histIngresos = evol.map(m => m.ingresos)
-  const histGastos   = evol.map(m => m.gastos)
-  const histMeses    = evol.map(m => m.mes)
-  const cajaInicial  = resumen.tesoreria
-
-  // Mes/año de inicio de la previsión = mes siguiente al último real
-  const ultimoYm = evol.at(-1)?.ym
-  let mesInicioPrevision = new Date().getMonth()
-  let anioInicioPrevision = new Date().getFullYear()
-  if (ultimoYm) {
-    const [y, m] = ultimoYm.split('-').map(Number)
-    mesInicioPrevision = m % 12          // mes siguiente (0-index)
-    anioInicioPrevision = m === 12 ? y + 1 : y
-  }
-
-  const ingUlt = histIngresos.at(-1) ?? 0
-  const gasUlt = histGastos.at(-1) ?? 0
-  const netoUlt = ingUlt - gasUlt
-
-  const filas: FilaPrevision[] = useMemo(() => construirPrevision({
-    histIngresos,
-    histGastos,
-    histMeses,
-    cajaInicial,
-    mesInicioPrevision,
-    anioInicioPrevision,
-    periodos: horizonte,
-    escenarios: verEscenarios ? escenarios : [],
-  }), [histIngresos, histGastos, histMeses, cajaInicial, mesInicioPrevision, anioInicioPrevision, horizonte, verEscenarios, escenarios])
-
-  const previsiones = filas.filter(f => f.tipo === 'prevision')
-  const ultima = previsiones[previsiones.length - 1]
-
-  const sinDatos = evol.length === 0
-  const pocoHistorico = evol.length > 0 && evol.length < 3
-
-  const netoMedio = previsiones.length ? previsiones.reduce((a, f) => a + f.neto, 0) / previsiones.length : 0
-  const ingMensualFin = ultima?.ingresos ?? 0
-  const dso = resumen.dso
-  const pendienteActual = resumen.pendienteCobro
-  const pendientePrevisto = ingMensualFin * (dso / 30)
-
-  const kpis = ultima ? [
-    {
-      lbl: 'Caja proyectada', sub: `fin de ${ultima.mes}`,
-      val: fmt(ultima.caja),
-      delta: pct(cajaInicial !== 0 ? ((ultima.caja - cajaInicial) / Math.abs(cajaInicial)) * 100 : NaN),
-      positivo: ultima.caja >= cajaInicial, icon: 'ti-wallet', iconBg:'#EEF1FD', iconColor:'#3B5BDB',
-    },
-    {
-      lbl: 'Cashflow neto medio', sub: 'por mes · previsión',
-      val: fmt(netoMedio),
-      delta: pct(netoUlt !== 0 ? ((netoMedio - netoUlt) / Math.abs(netoUlt)) * 100 : NaN),
-      positivo: netoMedio >= 0, icon: 'ti-trending-up', iconBg:'#F0F9F4', iconColor:'#2DC653',
-    },
-    {
-      lbl: 'Ingresos previstos', sub: `mensual · ${ultima.mes}`,
-      val: fmt(ingMensualFin),
-      delta: pct(ingUlt !== 0 ? ((ingMensualFin - ingUlt) / Math.abs(ingUlt)) * 100 : NaN),
-      positivo: ingMensualFin >= ingUlt, icon: 'ti-arrow-up-right', iconBg:'#EEF1FD', iconColor:'#3B5BDB',
-    },
-    {
-      lbl: 'Pendiente de cobro', sub: `proyectado · DSO ${dso}d`,
-      val: fmt(pendientePrevisto),
-      delta: pct(pendienteActual !== 0 ? ((pendientePrevisto - pendienteActual) / Math.abs(pendienteActual)) * 100 : NaN),
-      positivo: pendientePrevisto <= pendienteActual, icon: 'ti-file-invoice', iconBg:'#FFF8E6', iconColor:'#F4A100',
-    },
-  ] : []
-
-  const idxBoundary = filas.findIndex(f => f.tipo === 'prevision') - 1
-  const chartData = filas.map((f, i) => {
-    const esBoundary = i === idxBoundary
-    return {
-      mes: f.mes,
-      cajaHist: f.tipo === 'historico' ? f.caja : null,
-      cajaBase: f.tipo === 'prevision' || esBoundary ? f.cajaBase : null,
-      cajaEsc: f.tipo === 'prevision' || esBoundary ? f.caja : null,
-      bandaBase: f.tipo === 'prevision' ? f.cajaInf : (esBoundary ? f.caja : null),
-      bandaRango: f.tipo === 'prevision' ? f.cajaSup - f.cajaInf : (esBoundary ? 0 : null),
-    }
-  })
-
-  const hayActivos = activos.length > 0 && verEscenarios
-
-  if (sinDatos) {
+  // ── Sin plan configurado ──
+  if (!cargandoPlan && (!plan || plan.length === 0)) {
     return (
       <Layout title="Presupuesto">
-        <div style={{ ...card, padding:'48px 24px', textAlign:'center' }}>
-          <div style={{ width:48, height:48, borderRadius:12, background:'#EEF1FD', display:'inline-flex', alignItems:'center', justifyContent:'center', marginBottom:14 }}>
-            <i className="ti ti-chart-line" aria-hidden="true" style={{ fontSize:22, color:'#4361EE' }} />
+        <div style={{ ...card, padding: '48px 24px', textAlign: 'center' }}>
+          <div style={{ width: 48, height: 48, borderRadius: 12, background: '#EEF1FD', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', marginBottom: 14 }}>
+            <i className="ti ti-table" aria-hidden="true" style={{ fontSize: 22, color: '#4361EE' }} />
           </div>
-          <div style={{ fontSize:15, fontWeight:600, color:'#1a1a1a', marginBottom:6 }}>
-            {loading ? 'Cargando tus datos…' : 'Aún no hay histórico para proyectar'}
+          <div style={{ fontSize: 15, fontWeight: 600, color: '#1a1a1a', marginBottom: 6 }}>Aún no has definido tu presupuesto</div>
+          <div style={{ fontSize: 13, color: '#888', maxWidth: 420, margin: '0 auto 18px' }}>
+            Configura tus objetivos por categoría para comparar tu plan con lo que ocurre de verdad.
           </div>
-          <div style={{ fontSize:13, color:'#888', maxWidth:420, margin:'0 auto' }}>
-            {loading ? 'Un momento.' : 'Conecta tu hoja en Ajustes y registra movimientos con fecha para que podamos calcular previsiones.'}
-          </div>
+          <button onClick={() => navigate('/presupuesto/configurar')} style={{ padding: '10px 20px', fontSize: 13, fontWeight: 600, color: '#fff', background: '#4361EE', border: 'none', borderRadius: 9, cursor: 'pointer', fontFamily: 'Inter, sans-serif' }}>
+            Configurar presupuesto →
+          </button>
         </div>
       </Layout>
     )
   }
 
+  if (!resumen) {
+    return (
+      <Layout title="Presupuesto">
+        <div style={{ ...card, padding: '48px 24px', textAlign: 'center', fontSize: 13, color: '#888' }}>Cargando presupuesto…</div>
+      </Layout>
+    )
+  }
+
+  const { filas, totalPlanIngresos, totalRealIngresos, totalPlanGastos, totalRealGastos } = resumen
+  const ingresos = filas.filter(f => f.tipo === 'ingreso')
+  const gastos = filas.filter(f => f.tipo === 'gasto')
+
+  const planNeto = totalPlanIngresos - totalPlanGastos
+  const realNeto = totalRealIngresos - totalRealGastos
+
+  // Datos del gráfico: top partidas por plan, plan vs real
+  const chartData = [...filas]
+    .sort((a, b) => b.plan - a.plan)
+    .slice(0, 7)
+    .map(f => ({ nombre: f.categoria.length > 14 ? f.categoria.slice(0, 13) + '…' : f.categoria, plan: f.plan, real: f.real }))
+
+  const periodoLbl = modo === 'mes' ? MESES[mesIdx] : `Ene–${MESES[mesIdx]}`
+
+  const TablaSeccion = ({ titulo, items }: { titulo: string; items: FilaPresupuesto[] }) => (
+    <div style={{ marginBottom: 8 }}>
+      <div style={{ fontSize: 10, fontWeight: 700, color: '#B0B7C3', textTransform: 'uppercase', letterSpacing: '0.1em', padding: '12px 0 6px' }}>{titulo}</div>
+      {items.map((f, i) => (
+        <div key={f.id} className="ppto-row" style={{ display: 'grid', gridTemplateColumns: '1.6fr 1fr 1fr 1.2fr 80px', alignItems: 'center', padding: '11px 0', borderBottom: i < items.length - 1 ? '1px solid #F4F5F7' : 'none' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 9 }}>
+            <div style={{ width: 8, height: 8, borderRadius: 2, background: f.color, flexShrink: 0 }} />
+            <span style={{ fontSize: 13, color: '#1a1a1a' }}>{f.categoria}</span>
+          </div>
+          <span className="ppto-hide" style={{ fontSize: 12, color: '#888', textAlign: 'right', paddingRight: 14 }}>{fmt(f.plan)}</span>
+          <span style={{ fontSize: 12, fontWeight: 600, color: '#1a1a1a', textAlign: 'right', paddingRight: 14 }}>{fmt(f.real)}</span>
+          <span style={{ fontSize: 12, fontWeight: 600, color: f.favorable ? '#1a7a3a' : '#b01a2b', textAlign: 'right', paddingRight: 14 }}>{fmtDelta(f.desviacion)}</span>
+          <span style={{ textAlign: 'right' }}>
+            <span style={{ fontSize: 11, fontWeight: 600, color: f.favorable ? '#1a7a3a' : '#b01a2b', background: f.favorable ? '#d4f5df' : '#fdd', padding: '2px 7px', borderRadius: 99 }}>{pct(f.cumplimiento)}</span>
+          </span>
+        </div>
+      ))}
+    </div>
+  )
+
   return (
     <Layout title="Presupuesto">
       <style>{`
-        @media (max-width: 1024px) { .prev-row2 { grid-template-columns: 1fr !important; } }
         @media (max-width: 768px) {
-          .prev-kpi { grid-template-columns: 1fr 1fr !important; }
-          .prev-hide { display: none !important; }
-          .prev-tbl-hdr, .prev-tbl-row { grid-template-columns: 90px 1fr 1fr !important; }
+          .ppto-kpi { grid-template-columns: 1fr 1fr !important; }
+          .ppto-hide { display: none !important; }
+          .ppto-hdr, .ppto-row { grid-template-columns: 1.6fr 1fr 1.2fr 70px !important; }
         }
-        @media (max-width: 480px) { .prev-kpi { grid-template-columns: 1fr !important; } }
       `}</style>
 
-      {pocoHistorico && (
-        <div style={{ ...card, padding:'12px 16px', display:'flex', alignItems:'center', gap:10, borderColor:'#FDE8C4', background:'#FFF8E6' }}>
-          <i className="ti ti-alert-triangle" aria-hidden="true" style={{ fontSize:16, color:'#F4A100' }} />
-          <span style={{ fontSize:12, color:'#92400E' }}>
-            Solo hay {evol.length} {evol.length === 1 ? 'mes' : 'meses'} de histórico. La previsión es orientativa y se afinará a medida que registres más movimientos.
-          </span>
-        </div>
-      )}
-
-      <div style={{ ...card, padding:'14px 18px', display:'flex', alignItems:'center', justifyContent:'space-between', gap:16, flexWrap:'wrap' }}>
-        <div style={{ display:'flex', alignItems:'center', gap:10 }}>
-          <span style={sectionLbl}>Horizonte</span>
-          <div style={{ display:'flex', gap:4, background:'#F4F5F7', borderRadius:9, padding:3 }}>
-            {HORIZONTES.map(h => (
-              <button key={h} onClick={() => setHorizonte(h)} style={{
-                padding:'6px 14px', fontSize:12, fontWeight:600, borderRadius:7, border:'none', cursor:'pointer',
-                fontFamily:'Inter, sans-serif',
-                background: horizonte === h ? '#fff' : 'transparent',
-                color: horizonte === h ? '#4361EE' : '#888',
-                boxShadow: horizonte === h ? '0 1px 2px rgba(0,0,0,0.06)' : 'none',
-              }}>{h} meses</button>
+      {/* CONTROLES */}
+      <div style={{ ...card, padding: '14px 18px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <span style={sectionLbl}>Vista</span>
+          <div style={{ display: 'flex', gap: 4, background: '#F4F5F7', borderRadius: 9, padding: 3 }}>
+            {([['mes', 'Mensual'], ['ytd', 'Acumulado']] as const).map(([v, l]) => (
+              <button key={v} onClick={() => setModo(v)} style={{
+                padding: '6px 14px', fontSize: 12, fontWeight: 600, borderRadius: 7, border: 'none', cursor: 'pointer', fontFamily: 'Inter, sans-serif',
+                background: modo === v ? '#fff' : 'transparent', color: modo === v ? '#4361EE' : '#888',
+                boxShadow: modo === v ? '0 1px 2px rgba(0,0,0,0.06)' : 'none',
+              }}>{l}</button>
             ))}
           </div>
         </div>
-        <div style={{ display:'flex', alignItems:'center', gap:10 }}>
-          <span style={{ fontSize:12, color:'#888' }}>Impacto de escenarios</span>
-          <Toggle on={verEscenarios} onToggle={() => setVerEscenarios(!verEscenarios)} />
-          {activos.length > 0 && (
-            <span style={{ fontSize:11, fontWeight:600, color:'#4361EE', background:'#EEF1FD', padding:'3px 9px', borderRadius:99 }}>
-              {activos.length} activo{activos.length > 1 ? 's' : ''}
-            </span>
-          )}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <span style={{ fontSize: 12, color: '#888' }}>{modo === 'mes' ? 'Mes' : 'Hasta'}</span>
+          <select value={mesIdx} onChange={e => setMesIdx(parseInt(e.target.value, 10))} style={{ padding: '7px 12px', fontSize: 13, border: '1px solid #E8E8EC', borderRadius: 8, background: '#fff', color: '#1a1a1a', fontFamily: 'Inter, sans-serif', appearance: 'auto' }}>
+            {MESES.map((m, i) => <option key={i} value={i}>{m}</option>)}
+          </select>
         </div>
       </div>
 
-      <div className="prev-kpi" style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:12 }}>
-        {kpis.map((k, i) => (
-          <div key={i} style={{ ...card, padding:'20px 22px' }}>
-            <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:14 }}>
-              <div style={sectionLbl}>{k.lbl}</div>
-              <div style={{ width:32, height:32, borderRadius:8, background:k.iconBg, display:'flex', alignItems:'center', justifyContent:'center' }}>
-                <i className={`ti ${k.icon}`} aria-hidden="true" style={{ fontSize:16, color:k.iconColor }} />
-              </div>
-            </div>
-            <div style={{ fontFamily:'Inter, sans-serif', fontSize:28, fontWeight:400, color:'#1a1a1a', marginBottom:10, letterSpacing:'-0.01em' }}>{k.val}</div>
-            <div style={{ display:'flex', alignItems:'center', gap:6 }}>
-              <span style={{ fontSize:11, fontWeight:600, color: k.positivo ? '#1a7a3a' : '#b01a2b', background: k.positivo ? '#d4f5df' : '#fdd', padding:'2px 7px', borderRadius:99 }}>{k.delta}</span>
-              <span style={{ fontSize:11, color:'#aaa' }}>{k.sub}</span>
-            </div>
-          </div>
-        ))}
-      </div>
-
-      <div className="prev-row2" style={{ display:'grid', gridTemplateColumns:'2fr 1fr', gap:14 }}>
-
-        <div style={{ ...card, padding:'24px' }}>
-          <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:6 }}>
-            <div>
-              <div style={{ ...sectionLbl, marginBottom:4 }}>Caja proyectada</div>
-              <div style={{ fontSize:12, color:'#aaa' }}>Histórico + previsión a {horizonte} meses · banda de confianza 80%</div>
-            </div>
-          </div>
-          <div style={{ display:'flex', gap:16, margin:'8px 0 14px', flexWrap:'wrap' }}>
-            <Leyenda color="#3B5BDB" lbl="Caja real" solido />
-            <Leyenda color="#7DD3FC" lbl="Previsión base" />
-            {hayActivos && <Leyenda color="#2DC653" lbl="Con escenarios" />}
-          </div>
-          <ResponsiveContainer width="100%" height={260}>
-            <ComposedChart data={chartData} margin={{ top:4, right:6, left:0, bottom:0 }}>
-              <defs>
-                <linearGradient id="banda" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#BAE6FD" stopOpacity={0.35}/>
-                  <stop offset="100%" stopColor="#BAE6FD" stopOpacity={0.08}/>
-                </linearGradient>
-              </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke="#F0F0F2" vertical={false}/>
-              <XAxis dataKey="mes" tick={{ fontSize:10, fill:'#aaa' }} axisLine={false} tickLine={false} interval="preserveStartEnd"/>
-              <YAxis tick={{ fontSize:11, fill:'#aaa' }} axisLine={false} tickLine={false} tickFormatter={fmtK} width={46}/>
-              <Tooltip content={<ChartTooltip />} cursor={{ stroke:'#BAE6FD', strokeWidth:1, strokeDasharray:'3 3' }}/>
-              <ReferenceLine y={0} stroke="#EF4444" strokeDasharray="4 4" strokeWidth={1} />
-              <Area type="monotone" dataKey="bandaBase" stackId="b" stroke="none" fill="transparent" connectNulls isAnimationActive={false}/>
-              <Area type="monotone" dataKey="bandaRango" stackId="b" stroke="none" fill="url(#banda)" connectNulls isAnimationActive={false}/>
-              <Line type="monotone" dataKey="cajaHist" stroke="#3B5BDB" strokeWidth={2.5} dot={false} connectNulls activeDot={{ r:5, fill:'#3B5BDB', stroke:'#fff', strokeWidth:2 }}/>
-              <Line type="monotone" dataKey="cajaBase" stroke="#7DD3FC" strokeWidth={2.5} strokeDasharray="5 4" dot={false} connectNulls activeDot={{ r:5, fill:'#0EA5E9', stroke:'#fff', strokeWidth:2 }}/>
-              {hayActivos && <Line type="monotone" dataKey="cajaEsc" stroke="#2DC653" strokeWidth={2.5} strokeDasharray="5 4" dot={false} connectNulls activeDot={{ r:5, fill:'#2DC653', stroke:'#fff', strokeWidth:2 }}/>}
-            </ComposedChart>
-          </ResponsiveContainer>
-        </div>
-
-        <div style={{ ...card, padding:'22px 24px', display:'flex', flexDirection:'column' }}>
-          <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:14 }}>
-            <div style={sectionLbl}>Escenarios</div>
-            <button onClick={() => navigate('/escenarios')}
-              style={{ fontSize:11, fontWeight:600, color:'#4361EE', background:'#EEF1FD', border:'none', borderRadius:7, padding:'5px 10px', cursor:'pointer', fontFamily:'Inter, sans-serif' }}>
-              Gestionar →
-            </button>
-          </div>
-
-          {escenarios.length === 0 && (
-            <div style={{ fontSize:12, color:'#aaa', padding:'20px 0', textAlign:'center' }}>
-              Aún no hay escenarios. Créalos en la página Escenarios para ver su impacto aquí.
-            </div>
-          )}
-
-          <div style={{ display:'flex', flexDirection:'column', gap:2 }}>
-            {escenarios.map(e => {
-              const signo = e.importe >= 0 ? '+' : '−'
-              const colorImporte = e.tipo === 'ingreso'
-                ? (e.importe >= 0 ? '#2DC653' : '#EF4444')
-                : '#EF4444'
-              return (
-                <div key={e.id} style={{ display:'flex', alignItems:'center', gap:10, padding:'11px 0', borderBottom:'1px solid #F4F5F7' }}>
-                  <div style={{ flex:1, minWidth:0 }}>
-                    <div style={{ fontSize:12, fontWeight:500, color: e.activo ? '#1a1a1a' : '#999', marginBottom:2, whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis' }}>{e.nombre}</div>
-                    <div style={{ fontSize:10, color:'#B0B7C3' }}>
-                      <span style={{ color:colorImporte, fontWeight:600 }}>{signo}{fmt(Math.abs(e.importe))}</span>
-                      {' · '}{e.recurrencia === 'mensual' ? '/mes' : 'puntual'}
-                    </div>
-                  </div>
-                  <Toggle on={e.activo} onToggle={() => toggle(e.id)} />
+      {/* KPIs */}
+      <div className="ppto-kpi" style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 12 }}>
+        {[
+          { lbl: 'Ingresos', plan: totalPlanIngresos, real: totalRealIngresos, favorable: totalRealIngresos >= totalPlanIngresos, icon: 'ti-trending-up', bg: '#EEF1FD', col: '#3B5BDB' },
+          { lbl: 'Gastos', plan: totalPlanGastos, real: totalRealGastos, favorable: totalRealGastos <= totalPlanGastos, icon: 'ti-trending-down', bg: '#FEF0F0', col: '#EF233C' },
+          { lbl: 'Resultado neto', plan: planNeto, real: realNeto, favorable: realNeto >= planNeto, icon: 'ti-scale', bg: '#F0F9F4', col: '#2DC653' },
+        ].map((k, i) => {
+          const desv = k.real - k.plan
+          return (
+            <div key={i} style={{ ...card, padding: '20px 22px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 14 }}>
+                <div style={sectionLbl}>{k.lbl} · {periodoLbl}</div>
+                <div style={{ width: 32, height: 32, borderRadius: 8, background: k.bg, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <i className={`ti ${k.icon}`} aria-hidden="true" style={{ fontSize: 16, color: k.col }} />
                 </div>
-              )
-            })}
-          </div>
-
-          {hayActivos && ultima && (
-            <div style={{ marginTop:14, paddingTop:14, borderTop:'1px solid #ECEEF3', background:'#EEF1FD', margin:'14px -24px -22px', padding:'14px 24px', borderRadius:'0 0 16px 16px' }}>
-              <div style={{ fontSize:10, fontWeight:700, color:'#4361EE', textTransform:'uppercase', letterSpacing:'0.1em', marginBottom:4 }}>Impacto a fin de horizonte</div>
-              <div style={{ fontSize:13, color:'#1a1a1a' }}>
-                {ultima.caja >= ultima.cajaBase ? '+' : '−'}{fmt(Math.abs(ultima.caja - ultima.cajaBase))} sobre la previsión base
               </div>
+              <div style={{ fontFamily: 'Inter, sans-serif', fontSize: 26, fontWeight: 400, color: '#1a1a1a', marginBottom: 4, letterSpacing: '-0.01em' }}>{fmt(k.real)}</div>
+              <div style={{ fontSize: 11, color: '#aaa', marginBottom: 10 }}>Plan: {fmt(k.plan)}</div>
+              <span style={{ fontSize: 11, fontWeight: 600, color: k.favorable ? '#1a7a3a' : '#b01a2b', background: k.favorable ? '#d4f5df' : '#fdd', padding: '2px 7px', borderRadius: 99 }}>{fmtDelta(desv)}</span>
             </div>
-          )}
-        </div>
+          )
+        })}
       </div>
 
-      <div style={{ ...card, padding:'22px 24px' }}>
-        <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:16 }}>
-          <div>
-            <div style={{ fontSize:15, fontWeight:700, color:'#1a1a1a' }}>Previsión mensual</div>
-            <div style={{ fontSize:11, color:'#888', marginTop:2 }}>
-              {hayActivos ? 'Incluye escenarios activos' : 'Previsión base'} · próximos {horizonte} meses
-            </div>
-          </div>
+      {/* GRÁFICO RESUMEN */}
+      <div style={{ ...card, padding: '24px' }}>
+        <div style={{ marginBottom: 6 }}>
+          <div style={{ ...sectionLbl, marginBottom: 4 }}>Plan vs Real por categoría</div>
+          <div style={{ fontSize: 12, color: '#aaa' }}>{periodoLbl} · principales partidas</div>
         </div>
-        <div className="prev-tbl-hdr" style={{ display:'grid', gridTemplateColumns:'110px 1fr 1fr 1fr 1.2fr', fontSize:10, color:'#B0B7C3', fontWeight:600, paddingBottom:10, borderBottom:'1px solid #ECEEF3' }}>
-          <span>Mes</span>
-          <span className="prev-hide" style={{ textAlign:'right', paddingRight:14 }}>Ingresos</span>
-          <span className="prev-hide" style={{ textAlign:'right', paddingRight:14 }}>Gastos</span>
-          <span style={{ textAlign:'right', paddingRight:14 }}>Neto</span>
-          <span style={{ textAlign:'right' }}>Caja acumulada</span>
+        <div style={{ display: 'flex', gap: 16, margin: '8px 0 14px' }}>
+          <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}><div style={{ width: 10, height: 10, borderRadius: 3, background: '#C7D2F8' }} /><span style={{ fontSize: 11, color: '#888' }}>Plan</span></span>
+          <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}><div style={{ width: 10, height: 10, borderRadius: 3, background: '#4361EE' }} /><span style={{ fontSize: 11, color: '#888' }}>Real</span></span>
         </div>
-        {previsiones.map((f, i) => (
-          <div key={i} className="prev-tbl-row" style={{ display:'grid', gridTemplateColumns:'110px 1fr 1fr 1fr 1.2fr', alignItems:'center', padding:'11px 0', borderBottom: i < previsiones.length - 1 ? '1px solid #F4F5F7' : 'none' }}>
-            <span style={{ fontSize:12, fontWeight:600, color:'#1a1a1a' }}>{f.mes}</span>
-            <span className="prev-hide" style={{ fontSize:12, color:'#555', textAlign:'right', paddingRight:14 }}>{fmt(f.ingresos)}</span>
-            <span className="prev-hide" style={{ fontSize:12, color:'#555', textAlign:'right', paddingRight:14 }}>{fmt(f.gastos)}</span>
-            <span style={{ fontSize:12, fontWeight:600, color: f.neto >= 0 ? '#1a7a3a' : '#b01a2b', textAlign:'right', paddingRight:14 }}>
-              {f.neto >= 0 ? '+' : '−'}{fmt(Math.abs(f.neto))}
-            </span>
-            <span style={{ fontSize:12, fontWeight:600, color: f.caja >= 0 ? '#1a1a1a' : '#EF4444', textAlign:'right' }}>{fmt(f.caja)}</span>
-          </div>
-        ))}
-        <div style={{ display:'flex', justifyContent:'space-between', paddingTop:12, marginTop:4, borderTop:'1px solid #ECEEF3' }}>
-          <span style={{ fontSize:11, color:'#888' }}>Caja prevista a {horizonte} meses</span>
-          <span style={{ fontSize:15, fontWeight:700, color: (ultima?.caja ?? 0) >= 0 ? '#1a1a1a' : '#EF4444' }}>{fmt(ultima?.caja ?? 0)}</span>
+        <ResponsiveContainer width="100%" height={260}>
+          <BarChart data={chartData} margin={{ top: 4, right: 6, left: 0, bottom: 0 }} barGap={4}>
+            <CartesianGrid strokeDasharray="3 3" stroke="#F0F0F2" vertical={false} />
+            <XAxis dataKey="nombre" tick={{ fontSize: 10, fill: '#aaa' }} axisLine={false} tickLine={false} interval={0} angle={-15} textAnchor="end" height={50} />
+            <YAxis tick={{ fontSize: 11, fill: '#aaa' }} axisLine={false} tickLine={false} tickFormatter={(v) => `€${Math.round(v / 1000)}k`} width={46} />
+            <Tooltip content={<BarTooltip />} cursor={{ fill: '#F4F5F7' }} />
+            <Bar dataKey="plan" fill="#C7D2F8" radius={[4, 4, 0, 0]} />
+            <Bar dataKey="real" fill="#4361EE" radius={[4, 4, 0, 0]} />
+          </BarChart>
+        </ResponsiveContainer>
+      </div>
+
+      {/* TABLA */}
+      <div style={{ ...card, padding: '22px 24px' }}>
+        <div style={{ marginBottom: 8 }}>
+          <div style={{ fontSize: 15, fontWeight: 700, color: '#1a1a1a' }}>Detalle por partida</div>
+          <div style={{ fontSize: 11, color: '#888', marginTop: 2 }}>Desviación = real − plan · {periodoLbl}</div>
         </div>
+
+        <div className="ppto-hdr" style={{ display: 'grid', gridTemplateColumns: '1.6fr 1fr 1fr 1.2fr 80px', fontSize: 10, color: '#B0B7C3', fontWeight: 600, paddingBottom: 8, borderBottom: '1px solid #ECEEF3' }}>
+          <span>Categoría</span>
+          <span className="ppto-hide" style={{ textAlign: 'right', paddingRight: 14 }}>Plan</span>
+          <span style={{ textAlign: 'right', paddingRight: 14 }}>Real</span>
+          <span style={{ textAlign: 'right', paddingRight: 14 }}>Desviación</span>
+          <span style={{ textAlign: 'right' }}>Ejec.</span>
+        </div>
+
+        {ingresos.length > 0 && <TablaSeccion titulo="Ingresos" items={ingresos} />}
+        {gastos.length > 0 && <TablaSeccion titulo="Gastos" items={gastos} />}
       </div>
     </Layout>
-  )
-}
-
-function Leyenda({ color, lbl, solido }: { color:string; lbl:string; solido?:boolean }) {
-  return (
-    <div style={{ display:'flex', alignItems:'center', gap:6 }}>
-      <div style={{ width:18, height:0, borderTop:`2.5px ${solido ? 'solid' : 'dashed'} ${color}` }} />
-      <span style={{ fontSize:11, color:'#888' }}>{lbl}</span>
-    </div>
   )
 }
