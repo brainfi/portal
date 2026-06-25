@@ -2,18 +2,20 @@ import { useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '@/contexts/AuthContext'
 
 const navGroups = [
-  { section:'General', items:[
+  { section:'Actual', items:[
     { label:'Resumen',     path:'/',                       icon:<GridIcon/>,    disabled:false },
     { label:'Cobros',      path:'/cobros',                 icon:<CobrosIcon/>,  disabled:false },
     { label:'Pagos',       path:'/pagos',                  icon:<PagosIcon/>,   disabled:false },
-    { label:'Presupuesto', path:'/presupuesto',            icon:<TableIcon/>,   disabled:false },
+  ]},
+  { section:'Planificación', items:[
+    { label:'Presupuesto', path:'/presupuesto',            icon:<TableIcon/>,    disabled:false },
+    { label:'Configurar',  path:'/presupuesto/configurar', icon:<ConfigIcon/>,   disabled:false },
     { label:'Previsiones', path:'/previsiones',            icon:<ForecastIcon/>, disabled:false },
-    { label:'Escenarios', path:'/escenarios',              icon:<ScenarioIcon/>, disabled:false },
+    { label:'Escenarios',  path:'/escenarios',             icon:<ScenarioIcon/>, disabled:false },
   ]},
   { section:'Admin', items:[
-    { label:'Configurar',  path:'/presupuesto/configurar', icon:<ConfigIcon/>,  disabled:false },
-    { label:'Ajustes', path:'/ajustes', icon:<SettingsIcon/>, disabled:false },
-  ]}
+    { label:'Ajustes',     path:'/ajustes',                icon:<SettingsIcon/>, disabled:false },
+  ]},
 ]
 
 interface SidebarProps { onClose?: () => void }

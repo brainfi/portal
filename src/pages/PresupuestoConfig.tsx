@@ -339,7 +339,7 @@ export default function PresupuestoConfig() {
   }
 
   return (
-    <Layout title="Configurar presupuesto">
+    <Layout title="Configurar">
       <style>{`input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none}input[type=number]{-moz-appearance:textfield}`}</style>
 
       {/* ── Encabezado ── */}

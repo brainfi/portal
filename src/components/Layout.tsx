@@ -91,7 +91,9 @@ export default function Layout({ children, title = 'Resumen' }: LayoutProps) {
               <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="#888" strokeWidth="1.5"><path d="M2 4h12M2 8h12M2 12h12"/></svg>
             </button>
             <span style={{ fontSize:10, fontWeight:600, color:'#B0B7C3', textTransform:'uppercase', letterSpacing:'0.12em' }}>
-              {(title.includes('Ajustes') || title.includes('Configurar')) ? 'Admin' : 'General'}
+              {title.includes('Ajustes') ? 'Admin'
+                : (title.includes('Presupuesto') || title.includes('Configurar') || title.includes('Previsiones') || title.includes('Escenarios')) ? 'Planificación'
+                : 'Actual'}
               {' / '}{title.toUpperCase()}
             </span>
           </div>

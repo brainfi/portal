@@ -155,7 +155,7 @@ export default function Previsiones() {
 
   if (sinDatos) {
     return (
-      <Layout title="Previsiones">
+      <Layout title="Presupuesto">
         <div style={{ ...card, padding:'48px 24px', textAlign:'center' }}>
           <div style={{ width:48, height:48, borderRadius:12, background:'#EEF1FD', display:'inline-flex', alignItems:'center', justifyContent:'center', marginBottom:14 }}>
             <i className="ti ti-chart-line" aria-hidden="true" style={{ fontSize:22, color:'#4361EE' }} />
@@ -172,7 +172,7 @@ export default function Previsiones() {
   }
 
   return (
-    <Layout title="Previsiones">
+    <Layout title="Presupuesto">
       <style>{`
         @media (max-width: 1024px) { .prev-row2 { grid-template-columns: 1fr !important; } }
         @media (max-width: 768px) {
