@@ -6,15 +6,8 @@ import {
 } from 'recharts'
 import { useScenarios } from '@/contexts/ScenariosContext'
 import { construirPrevision, type FilaPrevision } from '@/lib/forecast'
-
-// ── Histórico mensual (mock · 12 meses hasta May 2026) ────────────────────
-// Sustituir por datos del ERP cuando Holded esté conectado.
-const HIST_MESES = ['Jun 25','Jul 25','Ago 25','Sep 25','Oct 25','Nov 25','Dic 25','Ene 26','Feb 26','Mar 26','Abr 26','May 26']
-const HIST_INGRESOS = [78000,82000,80000,88000,90000,95000,110000,98000,102000,112000,108000,118000]
-const HIST_GASTOS   = [40000,41000,42000,43000,44000,45000, 48000,44000, 45000, 46000, 47000, 48000]
-const CAJA_INICIAL = 5620          // "Dinero real hoy" del Resumen
-const DSO = 38                     // días medios de cobro (cobros)
-const PENDIENTE_ACTUAL = 61381     // pendiente de cobro actual
+import { useDatos } from '@/contexts/DataContext'
+import { buildResumen } from '@/lib/contabilidad'
 
 const HORIZONTES = [3, 6, 12]
 
@@ -64,30 +57,55 @@ function Toggle({ on, onToggle }: { on: boolean; onToggle: () => void }) {
 
 export default function Previsiones() {
   const navigate = useNavigate()
+  const { data } = useDatos()
   const { escenarios, toggle } = useScenarios()
   const [horizonte, setHorizonte] = useState(6)
   const [verEscenarios, setVerEscenarios] = useState(true)
-
   const activos = escenarios.filter(e => e.activo)
+
+  // ── Histórico REAL derivado del Diario ──
+  const resumen = useMemo(() => buildResumen(data?.diario ?? []), [data])
+  const evol = resumen.evolucion
+
+  const HIST_INGRESOS = evol.map(e => e.ingresos)
+  const HIST_GASTOS = evol.map(e => e.gastos)
+  const HIST_MESES = evol.map(e => e.mes)
+  const CAJA_INICIAL = resumen.tesoreria
+  const DSO = resumen.dso
+  const PENDIENTE_ACTUAL = resumen.pendienteCobro
+
+  // Mes/año de inicio de la previsión = mes siguiente al último real
+  const ultimoYm = evol.length ? evol[evol.length - 1].ym : null
+  let mesInicioPrevision = new Date().getMonth()
+  let anioInicioPrevision = new Date().getFullYear()
+  if (ultimoYm) {
+    const [y, m] = ultimoYm.split('-').map(Number)
+    mesInicioPrevision = m % 12          // mes siguiente (0-index): si m=12→0 (Ene)
+    anioInicioPrevision = m === 12 ? y + 1 : y
+  }
 
   const filas: FilaPrevision[] = useMemo(() => construirPrevision({
     histIngresos: HIST_INGRESOS,
     histGastos: HIST_GASTOS,
     histMeses: HIST_MESES,
     cajaInicial: CAJA_INICIAL,
-    mesInicioPrevision: 5,   // Junio
-    anioInicioPrevision: 2026,
+    mesInicioPrevision,
+    anioInicioPrevision,
     periodos: horizonte,
     escenarios: verEscenarios ? escenarios : [],
-  }), [horizonte, verEscenarios, escenarios])
+  }), [horizonte, verEscenarios, escenarios, data])
 
   const previsiones = filas.filter(f => f.tipo === 'prevision')
   const ultima = previsiones[previsiones.length - 1]
 
   // ── KPIs proyectados ──
-  const netoMedio = previsiones.reduce((a, f) => a + f.neto, 0) / previsiones.length
-  const ingMensualFin = ultima.ingresos
+  const netoMedio = previsiones.length ? previsiones.reduce((a, f) => a + f.neto, 0) / previsiones.length : 0
+  const ingMensualFin = ultima?.ingresos ?? 0
   const pendientePrevisto = ingMensualFin * (DSO / 30)
+  // Últimos valores reales (con protección si no hay histórico)
+  const ingFin = HIST_INGRESOS.length ? HIST_INGRESOS[HIST_INGRESOS.length - 1] : 0
+  const gasFin = HIST_GASTOS.length ? HIST_GASTOS[HIST_GASTOS.length - 1] : 0
+  const netoFin = ingFin - gasFin
 
   const kpis = [
     {
@@ -97,17 +115,17 @@ export default function Previsiones() {
     },
     {
       lbl: 'Cashflow neto medio', sub: 'por mes · previsión',
-      val: fmt(netoMedio), delta: pct(((netoMedio - (HIST_INGRESOS.at(-1)! - HIST_GASTOS.at(-1)!)) / Math.abs(HIST_INGRESOS.at(-1)! - HIST_GASTOS.at(-1)!)) * 100),
+      val: fmt(netoMedio), delta: netoFin !== 0 ? pct(((netoMedio - netoFin) / Math.abs(netoFin)) * 100) : '—',
       positivo: netoMedio >= 0, icon: 'ti-trending-up', iconBg:'#F0F9F4', iconColor:'#2DC653',
     },
     {
       lbl: 'Ingresos previstos', sub: `mensual · ${ultima.mes}`,
-      val: fmt(ingMensualFin), delta: pct(((ingMensualFin - HIST_INGRESOS.at(-1)!) / HIST_INGRESOS.at(-1)!) * 100),
-      positivo: ingMensualFin >= HIST_INGRESOS.at(-1)!, icon: 'ti-arrow-up-right', iconBg:'#EEF1FD', iconColor:'#3B5BDB',
+      val: fmt(ingMensualFin), delta: ingFin !== 0 ? pct(((ingMensualFin - ingFin) / ingFin) * 100) : '—',
+      positivo: ingMensualFin >= ingFin, icon: 'ti-arrow-up-right', iconBg:'#EEF1FD', iconColor:'#3B5BDB',
     },
     {
       lbl: 'Pendiente de cobro', sub: `proyectado · DSO ${DSO}d`,
-      val: fmt(pendientePrevisto), delta: pct(((pendientePrevisto - PENDIENTE_ACTUAL) / PENDIENTE_ACTUAL) * 100),
+      val: fmt(pendientePrevisto), delta: PENDIENTE_ACTUAL !== 0 ? pct(((pendientePrevisto - PENDIENTE_ACTUAL) / PENDIENTE_ACTUAL) * 100) : '—',
       positivo: pendientePrevisto <= PENDIENTE_ACTUAL, icon: 'ti-file-invoice', iconBg:'#FFF8E6', iconColor:'#F4A100',
     },
   ]
